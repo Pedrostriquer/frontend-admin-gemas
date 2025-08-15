@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import './ContractsPage.css';
+import ReactDOM from 'react-dom';
+import styles from './ContractsPage.styles.js';
 
 // --- Dados Estáticos ---
 const staticContracts = [
@@ -16,73 +17,71 @@ const staticContracts = [
 const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const ITEMS_PER_PAGE = 5;
 
+// --- Estilos Globais para Animações ---
+const GlobalStyles = () => (
+    <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes scaleDown { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
+    `}</style>
+);
+
 // --- Hook e Componente de Dropdown Customizado ---
 const useOutsideAlerter = (ref, callback) => { useEffect(() => { function handleClickOutside(event) { if (ref.current && !ref.current.contains(event.target)) { callback(); } } document.addEventListener("mousedown", handleClickOutside); return () => document.removeEventListener("mousedown", handleClickOutside); }, [ref, callback]); }
 const CustomDropdown = ({ options, selected, onSelect, placeholder }) => {
-    const [isOpen, setIsOpen] = useState(false); const wrapperRef = useRef(null); useOutsideAlerter(wrapperRef, () => setIsOpen(false));
+    const [isOpen, setIsOpen] = useState(false);
+    const wrapperRef = useRef(null);
+    useOutsideAlerter(wrapperRef, () => setIsOpen(false));
     return (
-        <div className="custom-dropdown-container-ct" ref={wrapperRef}>
-            <button className="dropdown-header-ct" onClick={() => setIsOpen(!isOpen)}>{options.find(opt => opt.value === selected)?.label || placeholder}<i className={`fa-solid fa-chevron-down ${isOpen ? 'open' : ''}`}></i></button>
-            {isOpen && (<ul className="dropdown-list-ct">{options.map(option => (<li key={option.value} onClick={() => { onSelect(option.value); setIsOpen(false); }}>{option.label}</li>))}</ul>)}
+        <div style={styles.customDropdownContainer} ref={wrapperRef}>
+            <button style={styles.dropdownHeader} onClick={() => setIsOpen(!isOpen)}>{options.find(opt => opt.value === selected)?.label || placeholder}<i className={`fa-solid fa-chevron-down`} style={{...styles.dropdownHeaderIcon, ...(isOpen && styles.dropdownHeaderIconOpen)}}></i></button>
+            {isOpen && (<ul style={styles.dropdownList}>{options.map(option => (<li key={option.value} style={styles.dropdownListItem} onClick={() => { onSelect(option.value); setIsOpen(false); }}>{option.label}</li>))}</ul>)}
         </div>
     );
 };
 
-// --- Componente do Modal de Detalhes (Completo) ---
+// --- Componente do Modal de Detalhes ---
 const ContractDetailModal = ({ contract, onClose, isClosing }) => {
-    return (
-        <div className={`modal-backdrop-ct ${isClosing ? 'closing' : ''}`} onClick={onClose}>
-            <div className={`modal-content-ct large ${isClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
-                <div className="modal-header-ct">
-                    <h2>Detalhes do Contrato</h2>
-                    <button className="login-as-client-button-ct">
-                        <i className="fa-solid fa-right-to-bracket"></i>
-                        Logar com cliente
-                    </button>
+    return ReactDOM.createPortal(
+        <div style={{...styles.modalBackdrop, animation: isClosing ? 'fadeOut 0.3s ease forwards' : 'fadeIn 0.3s ease'}}>
+            <GlobalStyles />
+            <div style={{...styles.modalContent, animation: isClosing ? 'scaleDown 0.3s ease forwards' : 'scaleUp 0.3s ease'}} onClick={e => e.stopPropagation()}>
+                <div style={styles.modalHeader}>
+                    <h2 style={styles.modalHeaderH2}>Detalhes do Contrato</h2>
+                    <button style={styles.loginAsClientButton}><i className="fa-solid fa-right-to-bracket"></i>Logar com cliente</button>
                 </div>
-                <div className="modal-body-ct">
-                    <div className="detail-grid-v3">
-                        <div className="detail-item-v3"><span>Cliente</span><p>{contract.clientName}</p></div>
-                        <div className="detail-item-v3"><span>CPF</span><p>{contract.cpf}</p></div>
-                        <div className="detail-item-v3"><span>ID</span><p>#{contract.id}</p></div>
-                        <div className="detail-item-v3"><span>Data da Compra</span><p>{contract.purchaseDate}</p></div>
-                        <div className="detail-item-v3"><span>Primeiro Rendimento</span><p>{contract.firstYieldDate}</p></div>
-                        <div className="detail-item-v3"><span>Finaliza em</span><p>{contract.endDate}</p></div>
-                        <div className="detail-item-v3"><span>Valor Investido</span><p>{formatCurrency(contract.value)}</p></div>
-                        <div className="detail-item-v3"><span>Total de Lucro Atual (%)</span><p>{contract.profitPercent.toFixed(2)}%</p></div>
-                        <div className="detail-item-v3"><span>Valor Lucro do Contrato (R$)</span><p>{formatCurrency(contract.profitAmount)}</p></div>
-                        <div className="detail-item-v3 full-width"><span>Descrição</span><p>{contract.description || 'Sem descrição.'}</p></div>
-                        <div className="detail-item-v3"><span>Permitir Reinvestimento</span>
-                            <select className="detail-select-ct" defaultValue={contract.reinvestmentAllowed ? 'sim' : 'nao'}>
+                <div>
+                    <div style={styles.detailGrid}>
+                        <div><span style={styles.detailItemSpan}>Cliente</span><p style={styles.detailItemP}>{contract.clientName}</p></div>
+                        <div><span style={styles.detailItemSpan}>CPF</span><p style={styles.detailItemP}>{contract.cpf}</p></div>
+                        <div><span style={styles.detailItemSpan}>ID</span><p style={styles.detailItemP}>#{contract.id}</p></div>
+                        <div><span style={styles.detailItemSpan}>Data da Compra</span><p style={styles.detailItemP}>{contract.purchaseDate}</p></div>
+                        <div><span style={styles.detailItemSpan}>Primeiro Rendimento</span><p style={styles.detailItemP}>{contract.firstYieldDate}</p></div>
+                        <div><span style={styles.detailItemSpan}>Finaliza em</span><p style={styles.detailItemP}>{contract.endDate}</p></div>
+                        <div><span style={styles.detailItemSpan}>Valor Investido</span><p style={styles.detailItemP}>{formatCurrency(contract.value)}</p></div>
+                        <div><span style={styles.detailItemSpan}>Total de Lucro Atual (%)</span><p style={styles.detailItemP}>{contract.profitPercent.toFixed(2)}%</p></div>
+                        <div><span style={styles.detailItemSpan}>Valor Lucro do Contrato (R$)</span><p style={styles.detailItemP}>{formatCurrency(contract.profitAmount)}</p></div>
+                        <div style={styles.detailItemFullWidth}><span style={styles.detailItemSpan}>Descrição</span><p style={styles.detailItemP}>{contract.description || 'Sem descrição.'}</p></div>
+                        <div><span style={styles.detailItemSpan}>Permitir Reinvestimento</span>
+                            <select style={styles.detailSelect} defaultValue={contract.reinvestmentAllowed ? 'sim' : 'nao'}>
                                 <option value="sim">PERMITIR</option>
                                 <option value="nao">NÃO PERMITIR</option>
                             </select>
                         </div>
                     </div>
-                    <div className="action-sections-grid-ct">
-                        <div className="action-section-ct">
-                            <h4>Deseja realizar a recompra?</h4>
-                            <div className="action-input-group-ct single">
-                                <input type="text" placeholder="Digite SIM para confirmar a recompra" />
-                                <button>Confirmar</button>
-                            </div>
-                        </div>
-                        <div className="action-section-ct">
-                            <h4>Prolongar/Reativar Contrato</h4>
-                            <div className="action-input-group-ct triple">
-                                <input type="number" placeholder="Meses a adicionar" />
-                                <input type="text" placeholder="Novo teto de valorização" />
-                                <input type="text" placeholder="Digite SIM para confirmar" />
-                            </div>
-                        </div>
+                    <div style={styles.actionSectionsGrid}>
+                        <div><h4 style={styles.actionSectionH4}>Deseja realizar a recompra?</h4><div style={{...styles.actionInputGroup, ...styles.actionInputGroupSingle}}><input type="text" placeholder="Digite SIM para confirmar a recompra" style={styles.actionInput} /><button style={styles.actionButton}>Confirmar</button></div></div>
+                        <div><h4 style={styles.actionSectionH4}>Prolongar/Reativar Contrato</h4><div style={styles.actionInputGroup}><input type="number" placeholder="Meses a adicionar" style={styles.actionInput} /><input type="text" placeholder="Novo teto de valorização" style={styles.actionInput} /><input type="text" placeholder="Digite SIM para confirmar" style={styles.actionInput} /></div></div>
                     </div>
                 </div>
-                 <div className="modal-footer-ct">
-                    <button className="modal-action-button-ct primary"><i className="fa-solid fa-pencil"></i> Editar</button>
-                    <button className="modal-close-button-ct" onClick={onClose}><i className="fa-solid fa-xmark"></i> Fechar</button>
+                 <div style={styles.modalFooter}>
+                    <button style={{...styles.modalActionButton, ...styles.modalActionButtonPrimary}}><i className="fa-solid fa-pencil"></i> Editar</button>
+                    <button style={styles.modalCloseButton} onClick={onClose}><i className="fa-solid fa-xmark"></i> Fechar</button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
@@ -92,6 +91,7 @@ function ContractsPage() {
   const [selectedContract, setSelectedContract] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
   const [filters, setFilters] = useState({ searchTerm: '', status: 'Todos', sort: 'date_desc' });
+  const [hoveredRow, setHoveredRow] = useState(null);
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -140,28 +140,22 @@ function ContractsPage() {
   const paginatedContracts = filteredAndSortedContracts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="contracts-page-container">
-      <header className="contracts-page-header"><h1>Contratos</h1></header>
+    <div style={styles.contractsPageContainer}>
+      <header style={styles.contractsPageHeader}><h1 style={styles.contractsPageHeaderH1}>Contratos</h1></header>
 
-      <section className="contract-kpi-card">
-        <div className="kpi-total">
-            <p>Total de Contratos</p>
-            <span>{staticContracts.length}</span>
-        </div>
-        <div className="kpi-divider"></div>
-        <div className="kpi-status-breakdown">
-            <div className="status-item"><span>{contractStatusCounts['Valorizando'] || 0}</span><p>Valorizando</p></div>
-            <div className="status-item"><span>{contractStatusCounts['Pendente'] || 0}</span><p>Pendentes</p></div>
-            <div className="status-item"><span>{contractStatusCounts['Finalizado'] || 0}</span><p>Finalizados</p></div>
+      <section style={styles.contractKpiCard}>
+        <div style={styles.kpiTotal}><p style={styles.kpiTotalP}>Total de Contratos</p><span style={styles.kpiTotalSpan}>{staticContracts.length}</span></div>
+        <div style={styles.kpiDivider}></div>
+        <div style={styles.kpiStatusBreakdown}>
+            <div style={styles.statusItem}><span style={styles.statusItemSpan}>{contractStatusCounts['Valorizando'] || 0}</span><p style={styles.statusItemP}>Valorizando</p></div>
+            <div style={styles.statusItem}><span style={styles.statusItemSpan}>{contractStatusCounts['Pendente'] || 0}</span><p style={styles.statusItemP}>Pendentes</p></div>
+            <div style={styles.statusItem}><span style={styles.statusItemSpan}>{contractStatusCounts['Finalizado'] || 0}</span><p style={styles.statusItemP}>Finalizados</p></div>
         </div>
       </section>
 
-      <div className="table-controls-header-ct">
-        <div className="search-box-ct">
-            <i className="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Buscar por Cliente, CPF ou ID..." onChange={(e) => handleFilterChange('searchTerm', e.target.value)} />
-        </div>
-        <div className="filters-ct">
+      <div style={styles.tableControlsHeader}>
+        <div style={styles.searchBox}><i className="fa-solid fa-magnifying-glass" style={styles.searchBoxIcon}></i><input type="text" placeholder="Buscar por Cliente, CPF ou ID..." onChange={(e) => handleFilterChange('searchTerm', e.target.value)} style={styles.searchInput} /></div>
+        <div style={styles.filters}>
             <CustomDropdown 
                 placeholder="Status"
                 options={[
@@ -187,27 +181,27 @@ function ContractsPage() {
         </div>
       </div>
 
-      <div className="contracts-table-card">
-        <table className="contracts-table">
-          <thead><tr><th>ID</th><th>Cliente</th><th>CPF</th><th>Valor Investido</th><th>Lucro Atual (%)</th><th>Finaliza em</th><th>Status</th></tr></thead>
+      <div style={styles.contractsTableCard}>
+        <table style={styles.contractsTable}>
+          <thead><tr><th style={{...styles.tableCell, ...styles.tableHeader}}>ID</th><th style={{...styles.tableCell, ...styles.tableHeader}}>Cliente</th><th style={{...styles.tableCell, ...styles.tableHeader}}>CPF</th><th style={{...styles.tableCell, ...styles.tableHeader}}>Valor Investido</th><th style={{...styles.tableCell, ...styles.tableHeader}}>Lucro Atual (%)</th><th style={{...styles.tableCell, ...styles.tableHeader}}>Finaliza em</th><th style={{...styles.tableCell, ...styles.tableHeader}}>Status</th></tr></thead>
           <tbody>
             {paginatedContracts.map(contract => (
-              <tr key={contract.id} onClick={() => handleOpenModal(contract)}>
-                <td>#{contract.id}</td>
-                <td>{contract.clientName}</td>
-                <td>{contract.cpf}</td>
-                <td>{formatCurrency(contract.value)}</td>
-                <td>{contract.profitPercent.toFixed(2)}%</td>
-                <td>{contract.endDate}</td>
-                <td><span className={`status-badge-ct status-${contract.status.toLowerCase()}`}>{contract.status}</span></td>
+              <tr key={contract.id} onClick={() => handleOpenModal(contract)} onMouseEnter={() => setHoveredRow(contract.id)} onMouseLeave={() => setHoveredRow(null)} style={{...styles.tableRow, ...(hoveredRow === contract.id && styles.tableRowHover)}}>
+                <td style={styles.tableCell}>#{contract.id}</td>
+                <td style={styles.tableCell}>{contract.clientName}</td>
+                <td style={styles.tableCell}>{contract.cpf}</td>
+                <td style={styles.tableCell}>{formatCurrency(contract.value)}</td>
+                <td style={styles.tableCell}>{contract.profitPercent.toFixed(2)}%</td>
+                <td style={styles.tableCell}>{contract.endDate}</td>
+                <td style={styles.tableCell}><span style={{...styles.statusBadge, ...styles[`status${contract.status.toLowerCase()}`]}}>{contract.status}</span></td>
               </tr>
             ))}
           </tbody>
         </table>
-        <div className="pagination-container-ct">
-            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Anterior</button>
-            <span>Página {currentPage} de {totalPages}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Próxima</button>
+        <div style={styles.paginationContainer}>
+            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} style={{...styles.paginationButton, ...(currentPage === 1 && styles.paginationButtonDisabled)}}>Anterior</button>
+            <span style={styles.paginationSpan}>Página {currentPage} de {totalPages}</span>
+            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} style={{...styles.paginationButton, ...(currentPage === totalPages && styles.paginationButtonDisabled)}}>Próxima</button>
         </div>
       </div>
 

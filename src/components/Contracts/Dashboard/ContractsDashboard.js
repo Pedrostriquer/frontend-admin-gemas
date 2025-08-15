@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import './ContractsDashboard.css';
+import styles from './ContractsDashboard.styles.js';
 
 // --- Componente Customizado para Barras Arredondadas ---
 const RoundedBar = (props) => {
@@ -33,23 +33,30 @@ const sellersData = [
 const formatCurrency = (value) => `R$${value.toLocaleString('pt-BR')}`;
 
 function ContractsDashboard() {
+  const [hoveredCard, setHoveredCard] = useState(null);
+
   return (
-    <div className="dashboard-neumorph-container">
-      <header className="dashboard-header-neumorph">
-        <h1>Dashboard</h1>
-        <p>Visão geral do desempenho dos contratos</p>
+    <div style={styles.dashboardContainer}>
+      <header style={styles.dashboardHeader}>
+        <h1 style={styles.headerH1}>Dashboard</h1>
+        <p style={styles.headerP}>Visão geral do desempenho dos contratos</p>
       </header>
 
-      <section className="kpi-grid-neumorph">
+      <section style={styles.kpiGrid}>
         {kpiData.map((kpi, index) => (
-          <div key={index} className="kpi-card-final-compact">
-            <div className="kpi-border-neumorph"></div>
-            <div className="kpi-content-neumorph">
-              <span className="kpi-title-neumorph">{kpi.title}</span>
-              <span className="kpi-value-neumorph">{kpi.value}</span>
-              <span className={`kpi-change-neumorph ${kpi.change.startsWith('+') ? 'positive' : 'negative'}`}>{kpi.change}</span>
+          <div 
+            key={index} 
+            style={{...styles.cardBase, ...styles.kpiCard, ...(hoveredCard === `kpi-${index}` && styles.cardHover)}}
+            onMouseEnter={() => setHoveredCard(`kpi-${index}`)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <div style={styles.kpiBorder}></div>
+            <div style={styles.kpiContent}>
+              <span style={styles.kpiTitle}>{kpi.title}</span>
+              <span style={styles.kpiValue}>{kpi.value}</span>
+              <span style={{...styles.kpiChange, ...(kpi.change.startsWith('+') ? styles.kpiChangePositive : styles.kpiChangeNegative)}}>{kpi.change}</span>
             </div>
-            <div className="kpi-chart-neumorph">
+            <div style={styles.kpiChart}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={kpi.data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                   <defs>
@@ -66,9 +73,13 @@ function ContractsDashboard() {
         ))}
       </section>
 
-      <section className="main-grid-neumorph">
-        <div className="main-chart-card-neumorph">
-          <h3 className="card-title-neumorph">Visão Geral do Faturamento</h3>
+      <section style={styles.mainGrid}>
+        <div 
+            style={{...styles.cardBase, ...styles.mainChartCard, ...(hoveredCard === 'chart' && styles.cardHover)}}
+            onMouseEnter={() => setHoveredCard('chart')}
+            onMouseLeave={() => setHoveredCard(null)}
+        >
+          <h3 style={styles.cardTitle}>Visão Geral do Faturamento</h3>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={barChartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -80,17 +91,21 @@ function ContractsDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="sellers-card-neumorph">
-          <h3 className="card-title-neumorph">Melhores Vendedores</h3>
-          <ul className="sellers-list-neumorph">
+        <div 
+            style={{...styles.cardBase, ...styles.sellersCard, ...(hoveredCard === 'sellers' && styles.cardHover)}}
+            onMouseEnter={() => setHoveredCard('sellers')}
+            onMouseLeave={() => setHoveredCard(null)}
+        >
+          <h3 style={styles.cardTitle}>Melhores Vendedores</h3>
+          <ul style={styles.sellersList}>
             {sellersData.map((seller, index) => (
-                <li key={index}>
-                    <img src={seller.avatar} alt={seller.name} className="seller-avatar-neumorph"/>
-                    <div className="seller-info-neumorph">
-                        <span>{seller.name}</span>
-                        <div className="progress-bar-neumorph"><div className="progress-neumorph" style={{ width: `${(seller.sales / seller.goal) * 100}%` }}></div></div>
+                <li key={index} style={styles.sellerItem}>
+                    <img src={seller.avatar} alt={seller.name} style={styles.sellerAvatar}/>
+                    <div style={styles.sellerInfo}>
+                        <span style={styles.sellerName}>{seller.name}</span>
+                        <div style={styles.progressBar}><div style={{...styles.progress, width: `${(seller.sales / seller.goal) * 100}%` }}></div></div>
                     </div>
-                    <span className="seller-sales-neumorph">{formatCurrency(seller.sales)}</span>
+                    <span style={styles.sellerSales}>{formatCurrency(seller.sales)}</span>
                 </li>
             ))}
           </ul>

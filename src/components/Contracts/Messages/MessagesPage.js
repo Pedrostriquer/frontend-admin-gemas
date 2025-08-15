@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import './MessagesPage.css';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
+import styles from './MessagesPage.styles.js';
 
-// --- Dados Estáticos (Expandidos) ---
+// --- Dados Estáticos ---
 const staticMessages = [
     { id: 1, title: 'Manutenção Programada', type: 'Aviso', message: 'Nosso sistema passará por uma manutenção programada na próxima sexta-feira.', link: '', creationDate: '2025-08-10' },
     { id: 2, title: 'Nova Oportunidade de Investimento', type: 'Promoção', message: 'Confira nossa nova oferta de contrato com valorização especial!', link: 'https://gemasbrilhantes.com/nova-oferta', creationDate: '2025-08-08' },
@@ -14,29 +15,91 @@ const sentHistory = [
     { messageTitle: 'Boletim Semanal do Mercado', date: '2025-08-05', recipients: 'Todos os Clientes' },
     { messageTitle: 'Dia das Mães 2024', date: '2024-05-12', recipients: 'Clientes VIP' },
     { messageTitle: 'Natal Iluminado', date: '2024-12-25', recipients: 'Todos os Clientes' },
-    { messageTitle: 'Atualização de Segurança', date: '2025-06-15', recipients: 'Todos os Clientes' },
-    { messageTitle: 'Convite para Evento', date: '2025-07-20', recipients: 'Golden Treinamento' },
 ];
-const staticClients = [ { id: 1, name: 'Andrei Ferreira' }, { id: 2, name: 'Eduardo Lopes Cardoso' }, { id: 3, name: 'Golden Treinamento' } ];
 
 const ITEMS_PER_PAGE = 5;
+
+// --- Estilos Globais para Animações ---
+const GlobalStyles = () => (
+    <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes scaleDown { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
+    `}</style>
+);
 
 // --- Hook e Componente de Dropdown Customizado ---
 const useOutsideAlerter = (ref, callback) => { useEffect(() => { function handleClickOutside(event) { if (ref.current && !ref.current.contains(event.target)) { callback(); } } document.addEventListener("mousedown", handleClickOutside); return () => document.removeEventListener("mousedown", handleClickOutside); }, [ref, callback]); }
 const CustomDropdown = ({ options, selected, onSelect, placeholder }) => {
     const [isOpen, setIsOpen] = useState(false); const wrapperRef = useRef(null); useOutsideAlerter(wrapperRef, () => setIsOpen(false));
     return (
-        <div className="custom-dropdown-container-msg" ref={wrapperRef}>
-            <button className="dropdown-header-msg" onClick={() => setIsOpen(!isOpen)}>{options.find(opt => opt.value === selected)?.label || placeholder}<i className={`fa-solid fa-chevron-down ${isOpen ? 'open' : ''}`}></i></button>
-            {isOpen && (<ul className="dropdown-list-msg">{options.map(option => (<li key={option.value} onClick={() => { onSelect(option.value); setIsOpen(false); }}>{option.label}</li>))}</ul>)}
+        <div style={styles.customDropdownContainer} ref={wrapperRef}>
+            <button style={styles.dropdownHeader} onClick={() => setIsOpen(!isOpen)}>{options.find(opt => opt.value === selected)?.label || placeholder}<i className={`fa-solid fa-chevron-down`} style={{...styles.dropdownHeaderIcon, ...(isOpen && styles.dropdownHeaderIconOpen)}}></i></button>
+            {isOpen && (<ul style={styles.dropdownList}>{options.map(option => (<li key={option.value} style={styles.dropdownListItem} onClick={() => { onSelect(option.value); setIsOpen(false); }}>{option.label}</li>))}</ul>)}
         </div>
     );
 };
 
 // --- Componentes dos Modais ---
-const ConfirmationModal = ({ message, onClose, isClosing }) => ( <div className={`modal-backdrop-msg ${isClosing ? 'closing' : ''}`} onClick={onClose}><div className={`modal-content-msg small ${isClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}><div className="modal-header-msg"><h3>Confirmar Exclusão</h3></div><p className="confirmation-text-msg">Você tem certeza que deseja excluir a mensagem "<strong>{message.title}</strong>"?</p><div className="modal-footer-msg confirmation"><button className="cancel-btn-msg" onClick={onClose}>Cancelar</button><button className="create-btn-msg danger"><i className="fa-solid fa-trash-can"></i> Confirmar</button></div></div></div> );
-const CreateEditModal = ({ message, onClose, isClosing }) => { /* ...código do modal... */ return null; };
-const SendModal = ({ message, onClose, isClosing }) => { /* ...código do modal... */ return null; };
+const ConfirmationModal = ({ message, onClose, isClosing }) => ( 
+    ReactDOM.createPortal(
+        <div style={{...styles.modalBackdrop, ...(isClosing && styles.modalBackdropClosing)}} onClick={onClose}>
+            <GlobalStyles />
+            <div style={{...styles.modalContent, ...styles.modalContentSmall, ...(isClosing && styles.modalContentClosing)}} onClick={e => e.stopPropagation()}>
+                <div style={styles.modalHeader}><h3 style={styles.modalHeaderH3}>Confirmar Exclusão</h3></div>
+                <p style={styles.confirmationText}>Você tem certeza que deseja excluir a mensagem "<strong>{message.title}</strong>"?</p>
+                <div style={{...styles.modalFooter, ...styles.modalFooterConfirmation}}>
+                    <button style={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+                    <button style={{...styles.createBtn, ...styles.createBtnDanger}}><i className="fa-solid fa-trash-can"></i> Confirmar</button>
+                </div>
+            </div>
+        </div>, document.body
+    )
+);
+const CreateEditModal = ({ message, onClose, isClosing }) => {
+    const isEditing = !!message;
+    return ReactDOM.createPortal(
+        <div style={{...styles.modalBackdrop, ...(isClosing && styles.modalBackdropClosing)}} onClick={onClose}>
+            <GlobalStyles />
+            <div style={{...styles.modalContent, ...(isClosing && styles.modalContentClosing)}} onClick={e => e.stopPropagation()}>
+                <div style={styles.modalHeader}><h3 style={styles.modalHeaderH3}>{isEditing ? 'Editar Mensagem' : 'Nova Mensagem'}</h3></div>
+                <div style={styles.createMessageForm}>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Tipo da Mensagem</label><select style={styles.formInput} defaultValue={isEditing ? message.type : 'Aviso'}><option>Aviso</option><option>Promoção</option><option>Atualização</option><option>Notícia</option></select></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Título</label><input type="text" style={styles.formInput} placeholder="Ex: Manutenção Programada" defaultValue={isEditing ? message.title : ''} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Mensagem</label><textarea rows="4" style={{...styles.formInput, ...styles.formTextarea}} placeholder="Descreva a mensagem aqui..." defaultValue={isEditing ? message.message : ''}></textarea></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Link (Opcional)</label><input type="text" style={styles.formInput} placeholder="Cole um link aqui..." defaultValue={isEditing ? message.link : ''} /></div>
+                </div>
+                <div style={styles.modalFooter}>
+                    <button style={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+                    <button style={styles.createBtn}>{isEditing ? 'Salvar Alterações' : 'Criar'}</button>
+                </div>
+            </div>
+        </div>, document.body
+    );
+};
+const SendModal = ({ message, onClose, isClosing }) => {
+    return ReactDOM.createPortal(
+        <div style={{...styles.modalBackdrop, ...(isClosing && styles.modalBackdropClosing)}} onClick={onClose}>
+            <GlobalStyles />
+            <div style={{...styles.modalContent, ...(isClosing && styles.modalContentClosing)}} onClick={e => e.stopPropagation()}>
+                <div style={styles.modalHeader}><h3 style={styles.modalHeaderH3}>Enviar Mensagem: {message.title}</h3></div>
+                <div style={styles.sendMessageBody}>
+                    <button style={styles.sendAllBtn}><i className="fa-solid fa-users"></i> Enviar para Todos os Clientes</button>
+                    <div style={styles.divider}><div style={styles.dividerLine}></div><span style={styles.dividerText}>OU</span><div style={styles.dividerLine}></div></div>
+                    <div style={styles.clientSearch}>
+                        <label style={styles.clientSearchLabel}>Enviar para um Cliente Específico</label>
+                        <input type="text" style={styles.formInput} placeholder="Pesquisar cliente por nome..." />
+                    </div>
+                </div>
+                 <div style={styles.modalFooter}>
+                    <button style={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+                    <button style={{...styles.createBtn, ...styles.sendBtn}}><i className="fa-solid fa-paper-plane"></i> Enviar</button>
+                </div>
+            </div>
+        </div>, document.body
+    );
+};
 
 // --- Componente Principal da Página ---
 function MessagesPage() {
@@ -44,10 +107,10 @@ function MessagesPage() {
     const [isClosing, setIsClosing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    // Novos estados para o histórico
     const [historySearchTerm, setHistorySearchTerm] = useState('');
     const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
     const [historySort, setHistorySort] = useState('date_desc');
+    const [hoveredButton, setHoveredButton] = useState(null);
     
     const handleOpenModal = (type, data = null) => { setModal({ type, data }); };
     const handleCloseModal = () => {
@@ -62,12 +125,11 @@ function MessagesPage() {
     const paginatedMessages = filteredMessages.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     const totalPages = Math.ceil(filteredMessages.length / ITEMS_PER_PAGE);
 
-    // Lógica de filtro e ordenação para o histórico
     const filteredAndSortedHistory = useMemo(() => {
         let history = sentHistory.filter(item => item.messageTitle.toLowerCase().includes(historySearchTerm.toLowerCase()));
         history.sort((a, b) => {
-            if (historySort === 'date_asc') return new Date(a.date) - new Date(b.date);
-            return new Date(b.date) - new Date(a.date);
+            if (historySort === 'date_asc') return new Date(a.date.split('/').reverse().join('-')) - new Date(b.date.split('/').reverse().join('-'));
+            return new Date(b.date.split('/').reverse().join('-')) - new Date(a.date.split('/').reverse().join('-'));
         });
         return history;
     }, [historySearchTerm, historySort]);
@@ -76,50 +138,62 @@ function MessagesPage() {
     const paginatedHistory = filteredAndSortedHistory.slice((historyCurrentPage - 1) * ITEMS_PER_PAGE, historyCurrentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="messages-page-container">
-            <header className="messages-page-header">
-                <h1>Mensagens</h1>
-                <p>Crie, gerencie e envie mensagens para seus clientes.</p>
+        <div style={styles.messagesPageContainer}>
+            <header style={styles.messagesPageHeader}>
+                <h1 style={styles.headerH1}>Mensagens</h1>
+                <p style={styles.headerP}>Crie, gerencie e envie mensagens para seus clientes.</p>
             </header>
 
-            <div className="messages-card">
-                <div className="card-header-msg">
-                    <i className="fa-solid fa-envelope-open-text"></i>
-                    <h3>Mensagens Criadas</h3>
-                    <div className="search-box-msg"><i className="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar por título..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} /></div>
-                    <button className="create-message-button" onClick={() => handleOpenModal('create')}><i className="fa-solid fa-plus"></i> Criar Nova</button>
+            <div style={styles.messagesCard}>
+                <div style={styles.cardHeader}>
+                    <i className="fa-solid fa-envelope-open-text" style={styles.cardHeaderIcon}></i>
+                    <h3 style={styles.cardHeaderH3}>Mensagens Criadas</h3>
+                    <div style={styles.searchBox}><i className="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar por título..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} style={styles.searchInput} /></div>
+                    <button style={styles.createMessageButton} onClick={() => handleOpenModal('create')}><i className="fa-solid fa-plus"></i> Criar Nova</button>
                 </div>
-                <table className="messages-table">
-                    <thead><tr><th>Título</th><th>Tipo</th><th>Data de Criação</th><th>Ações</th></tr></thead>
+                <table style={styles.messagesTable}>
+                    <thead><tr><th style={styles.tableHeaderCell}>Título</th><th style={styles.tableHeaderCell}>Tipo</th><th style={styles.tableHeaderCell}>Data de Criação</th><th style={styles.tableHeaderCell}>Ações</th></tr></thead>
                     <tbody>
                         {paginatedMessages.map(msg => (
                             <tr key={msg.id}>
-                                <td className="message-title-cell">{msg.title}</td>
-                                <td><span className={`type-badge-msg type-${msg.type.toLowerCase()}`}>{msg.type}</span></td>
-                                <td>{new Date(msg.creationDate).toLocaleDateString('pt-BR')}</td>
-                                <td>
-                                    <div className="action-buttons-msg">
-                                        <button className="send-btn-msg" onClick={() => handleOpenModal('send', msg)}><i className="fa-solid fa-paper-plane"></i></button>
-                                        <button className="edit-btn-msg" onClick={() => handleOpenModal('edit', msg)}><i className="fa-solid fa-pencil"></i></button>
-                                        <button className="delete-btn-msg" onClick={() => handleOpenModal('delete', msg)}><i className="fa-solid fa-trash-can"></i></button>
+                                <td style={{...styles.tableCell, ...styles.messageTitleCell}}>{msg.title}</td>
+                                <td style={styles.tableCell}><span style={{...styles.typeBadge, ...styles[`type${msg.type.toLowerCase()}`]}}>{msg.type}</span></td>
+                                <td style={styles.tableCell}>{new Date(msg.creationDate).toLocaleDateString('pt-BR')}</td>
+                                <td style={styles.tableCell}>
+                                    <div style={styles.actionButtons}>
+                                        <button style={{...styles.actionButton, ...styles.sendBtn}} onClick={() => handleOpenModal('send', msg)}><i className="fa-solid fa-paper-plane"></i></button>
+                                        <button style={{...styles.actionButton, ...styles.editBtn}} onClick={() => handleOpenModal('edit', msg)}><i className="fa-solid fa-pencil"></i></button>
+                                        <button style={{...styles.actionButton, ...styles.deleteBtn}} onClick={() => handleOpenModal('delete', msg)}><i className="fa-solid fa-trash-can"></i></button>
                                     </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                 <div className="pagination-container-msg">
-                    <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Anterior</button>
-                    <span>Página {currentPage} de {totalPages}</span>
-                    <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Próxima</button>
+                 <div style={styles.paginationContainer}>
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} 
+                        disabled={currentPage === 1}
+                        style={{...styles.paginationButton, ...(currentPage === 1 && styles.paginationButtonDisabled), ...(hoveredButton === 'prev1' && styles.paginationButtonHover)}}
+                        onMouseEnter={() => setHoveredButton('prev1')}
+                        onMouseLeave={() => setHoveredButton(null)}
+                    >Anterior</button>
+                    <span style={styles.paginationSpan}>Página {currentPage} de {totalPages}</span>
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} 
+                        disabled={currentPage === totalPages}
+                        style={{...styles.paginationButton, ...(currentPage === totalPages && styles.paginationButtonDisabled), ...(hoveredButton === 'next1' && styles.paginationButtonHover)}}
+                        onMouseEnter={() => setHoveredButton('next1')}
+                        onMouseLeave={() => setHoveredButton(null)}
+                    >Próxima</button>
                 </div>
             </div>
 
-            <div className="messages-card">
-                <div className="card-header-msg">
-                    <i className="fa-solid fa-history"></i>
-                    <h3>Histórico de Envios</h3>
-                    <div className="search-box-msg"><i className="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar por título..." value={historySearchTerm} onChange={e => { setHistorySearchTerm(e.target.value); setHistoryCurrentPage(1); }} /></div>
+            <div style={styles.messagesCard}>
+                <div style={styles.cardHeader}>
+                    <i className="fa-solid fa-history" style={styles.cardHeaderIcon}></i>
+                    <h3 style={styles.cardHeaderH3}>Histórico de Envios</h3>
+                    <div style={styles.searchBox}><i className="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar por título..." value={historySearchTerm} onChange={e => { setHistorySearchTerm(e.target.value); setHistoryCurrentPage(1); }} style={styles.searchInput} /></div>
                     <CustomDropdown 
                         options={[{value: 'date_desc', label: 'Mais Recentes'}, {value: 'date_asc', label: 'Mais Antigos'}]}
                         selected={historySort}
@@ -127,22 +201,34 @@ function MessagesPage() {
                         placeholder="Ordenar por"
                     />
                 </div>
-                <table className="messages-table">
-                    <thead><tr><th>Título da Mensagem</th><th>Data do Envio</th><th>Destinatários</th></tr></thead>
+                <table style={styles.messagesTable}>
+                    <thead><tr><th style={styles.tableHeaderCell}>Título da Mensagem</th><th style={styles.tableHeaderCell}>Data do Envio</th><th style={styles.tableHeaderCell}>Destinatários</th></tr></thead>
                     <tbody>
                         {paginatedHistory.map((item, index) => (
                             <tr key={index}>
-                                <td>{item.messageTitle}</td>
-                                <td>{new Date(item.date).toLocaleDateString('pt-BR')}</td>
-                                <td>{item.recipients}</td>
+                                <td style={styles.tableCell}>{item.messageTitle}</td>
+                                <td style={styles.tableCell}>{new Date(item.date).toLocaleDateString('pt-BR')}</td>
+                                <td style={styles.tableCell}>{item.recipients}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                <div className="pagination-container-msg">
-                    <button onClick={() => setHistoryCurrentPage(p => Math.max(p - 1, 1))} disabled={historyCurrentPage === 1}>Anterior</button>
-                    <span>Página {historyCurrentPage} de {totalHistoryPages}</span>
-                    <button onClick={() => setHistoryCurrentPage(p => Math.min(p + 1, totalHistoryPages))} disabled={historyCurrentPage === totalHistoryPages}>Próxima</button>
+                <div style={styles.paginationContainer}>
+                    <button 
+                        onClick={() => setHistoryCurrentPage(p => Math.max(p - 1, 1))} 
+                        disabled={historyCurrentPage === 1}
+                        style={{...styles.paginationButton, ...(historyCurrentPage === 1 && styles.paginationButtonDisabled), ...(hoveredButton === 'prev2' && styles.paginationButtonHover)}}
+                        onMouseEnter={() => setHoveredButton('prev2')}
+                        onMouseLeave={() => setHoveredButton(null)}
+                    >Anterior</button>
+                    <span style={styles.paginationSpan}>Página {historyCurrentPage} de {totalHistoryPages}</span>
+                    <button 
+                        onClick={() => setHistoryCurrentPage(p => Math.min(p + 1, totalHistoryPages))} 
+                        disabled={historyCurrentPage === totalHistoryPages}
+                        style={{...styles.paginationButton, ...(historyCurrentPage === totalHistoryPages && styles.paginationButtonDisabled), ...(hoveredButton === 'next2' && styles.paginationButtonHover)}}
+                        onMouseEnter={() => setHoveredButton('next2')}
+                        onMouseLeave={() => setHoveredButton(null)}
+                    >Próxima</button>
                 </div>
             </div>
 

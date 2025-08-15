@@ -1,5 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-.App {
-  /* Estilos globais para o aplicativo podem vir aqui no futuro */
+/* Remove margens e paddings padrão */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: #f3f4f6; /* Fundo cinza claro consistente */
+}
+
+/* --- Layout Principal --- */
+.app-layout {
+  display: flex;
+}
+
+.content-area {
+  flex-grow: 1;
+  /* Largura padrão da sidebar */
+  margin-left: 260px; 
+  padding: 32px;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease;
+}
+
+/* Quando a sidebar estiver recolhida, ajusta a margem */
+.app-layout.sidebar-collapsed .content-area {
+  margin-left: 88px; /* Largura da sidebar recolhida */
 }

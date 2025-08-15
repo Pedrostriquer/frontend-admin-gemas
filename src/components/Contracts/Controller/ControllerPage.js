@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import './ControllerPage.css';
+import React, { useState, useMemo, useEffect } from 'react';
+import ReactDOM from 'react-dom';
+import styles from './ControllerPage.styles.js';
 
+// --- Dados Estáticos ---
 const savedRulesData = [
     { id: 1, name: 'Plano Padrão', months: 12, valuation: 5.5, gemOption: true },
     { id: 2, name: 'Plano Ouro', months: 24, valuation: 6.0, gemOption: true },
@@ -9,70 +11,93 @@ const savedRulesData = [
     { id: 5, name: 'Plano Diamante', months: 48, valuation: 7.0, gemOption: true },
 ];
 const initialClientPages = [
-    { id: 1, name: "Dashboard", icon: "fa-solid fa-house", path: "/", enabled: true },
+    { id: 1, name: "Dashboard", icon: "fa-solid fa-house", path: "/dashboard", enabled: true },
     { id: 2, name: "Contratos", icon: "fa-solid fa-file-signature", path: "/contracts", enabled: true },
     { id: 3, name: "Wallet", icon: "fa-solid fa-wallet", path: "/wallet", enabled: true },
     { id: 4, name: "Ordens de Venda", icon: "fa-solid fa-arrow-trend-up", path: "/sell-orders", enabled: true },
     { id: 5, name: "Ordens de Compra", icon: "fa-solid fa-arrow-trend-down", path: "/buy-orders", enabled: true },
-    { id: 6, name: "Ecommerce", icon: "fa-solid fa-store", path: "/ecommerce", enabled: true },
+    { id: 6, name: "Ecommerce", icon: "fa-solid fa-store", path: "/store", enabled: false },
 ];
 
-const ToggleSwitch = ({ label, enabled, setEnabled }) => (
-    <div className="toggle-switch-container">
-        <label className="toggle-switch">
-            <input type="checkbox" checked={enabled} onChange={() => setEnabled(!enabled)} />
-            <span className="slider"></span>
-        </label>
-        {label && <span>{label}</span>}
-    </div>
+// --- Estilos Globais para Animações ---
+const GlobalStyles = () => (
+    <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes scaleDown { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
+    `}</style>
 );
+
+// --- Componente Reutilizável de Toggle ---
+const ToggleSwitch = ({ label, enabled, setEnabled }) => {
+    const sliderStyle = { ...styles.slider, ...{ '::before': styles.sliderBefore } };
+    if (enabled) {
+        sliderStyle.backgroundColor = '#3b82f6';
+        sliderStyle['::before'] = { ...sliderStyle['::before'], transform: 'translateX(22px)' };
+    }
+
+    return (
+        <div style={styles.toggleSwitchContainer}>
+            <label style={styles.toggleSwitch}>
+                <input type="checkbox" checked={enabled} onChange={() => setEnabled(!enabled)} style={styles.toggleSwitchInput} />
+                <span style={sliderStyle}></span>
+            </label>
+            {label && <span style={styles.toggleSwitchContainerSpan}>{label}</span>}
+        </div>
+    );
+};
 
 // --- Componente do Modal de Regras (Criar/Editar) ---
 const RuleModal = ({ rule, onClose, isClosing }) => {
     const isEditing = !!rule;
     const [gemOption, setGemOption] = useState(isEditing ? rule.gemOption : true);
-    return (
-        <div className={`modal-backdrop-ctrl ${isClosing ? 'closing' : ''}`} onClick={onClose}>
-            <div className={`modal-content-ctrl ${isClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
-                <div className="modal-header-ctrl"><h3>{isEditing ? 'Editar Regra' : 'Criar Nova Regra'}</h3></div>
-                <div className="create-rule-form">
-                    <div className="form-group-ctrl"><label>Nome da Regra</label><input type="text" placeholder="Ex: Plano Ouro 24m" defaultValue={isEditing ? rule.name : ''} /></div>
-                    <div className="form-group-ctrl"><label>Quantidade de Meses</label><input type="number" placeholder="Ex: 12" defaultValue={isEditing ? rule.months : ''} /></div>
-                    <div className="form-group-ctrl"><label>Valorização Mensal (%)</label><input type="number" placeholder="Ex: 5.5" defaultValue={isEditing ? rule.valuation : ''} /></div>
-                    <div className="form-group-ctrl centered">
+    
+    return ReactDOM.createPortal(
+        <div style={{...styles.modalBackdrop, animation: isClosing ? 'fadeOut 0.3s ease forwards' : 'fadeIn 0.3s ease'}}>
+            <GlobalStyles />
+            <div style={{...styles.modalContent, animation: isClosing ? 'scaleDown 0.3s ease forwards' : 'scaleUp 0.3s ease'}} onClick={e => e.stopPropagation()}>
+                <div style={styles.modalHeaderCtrl}><h3 style={styles.modalHeaderCtrlH3}>{isEditing ? 'Editar Regra' : 'Criar Nova Regra'}</h3></div>
+                <div style={styles.createRuleForm}>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Nome da Regra</label><input type="text" placeholder="Ex: Plano Ouro 24m" defaultValue={isEditing ? rule.name : ''} style={styles.formInput} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Quantidade de Meses</label><input type="number" placeholder="Ex: 12" defaultValue={isEditing ? rule.months : ''} style={styles.formInput} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Valorização Mensal (%)</label><input type="number" placeholder="Ex: 5.5" defaultValue={isEditing ? rule.valuation : ''} style={styles.formInput} /></div>
+                    <div style={{...styles.formGroup, ...styles.formGroupCentered}}>
                         <ToggleSwitch label={gemOption ? "Com Gema para Casa" : "Sem Gema para Casa"} enabled={gemOption} setEnabled={setGemOption} />
                     </div>
                 </div>
-                <div className="modal-footer-ctrl">
-                    <button className="cancel-btn-ctrl" onClick={onClose}>Cancelar</button>
-                    <button className="save-card-button">Salvar Regra</button>
+                <div style={styles.modalFooterCtrl}>
+                    <button style={styles.cancelBtnCtrl} onClick={onClose}>Cancelar</button>
+                    <button style={styles.saveCardButton}>Salvar Regra</button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
 // --- Componente do Modal de Botão (Criar/Editar) ---
 const PageModal = ({ page, onClose, isClosing }) => {
     const isEditing = !!page;
-    return (
-        <div className={`modal-backdrop-ctrl ${isClosing ? 'closing' : ''}`} onClick={onClose}>
-            <div className={`modal-content-ctrl ${isClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
-                <div className="modal-header-ctrl"><h3>{isEditing ? 'Editar Botão' : 'Criar Novo Botão'}</h3></div>
-                <div className="create-rule-form">
-                    <div className="form-group-ctrl"><label>Nome do Botão</label><input type="text" placeholder="Ex: Minha Carteira" defaultValue={isEditing ? page.name : ''} /></div>
-                    <div className="form-group-ctrl"><label>Ícone (Font Awesome)</label><input type="text" placeholder="Ex: fa-solid fa-wallet" defaultValue={isEditing ? page.icon : ''} /></div>
-                    <div className="form-group-ctrl"><label>Caminho (URL)</label><input type="text" placeholder="Ex: /minha-carteira" defaultValue={isEditing ? page.path : ''} /></div>
+    return ReactDOM.createPortal(
+        <div style={{...styles.modalBackdrop, animation: isClosing ? 'fadeOut 0.3s ease forwards' : 'fadeIn 0.3s ease'}}>
+            <GlobalStyles />
+            <div style={{...styles.modalContent, animation: isClosing ? 'scaleDown 0.3s ease forwards' : 'scaleUp 0.3s ease'}} onClick={e => e.stopPropagation()}>
+                <div style={styles.modalHeaderCtrl}><h3 style={styles.modalHeaderCtrlH3}>{isEditing ? 'Editar Botão' : 'Criar Novo Botão'}</h3></div>
+                <div style={styles.createRuleForm}>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Nome do Botão</label><input type="text" placeholder="Ex: Minha Carteira" defaultValue={isEditing ? page.name : ''} style={styles.formInput} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Ícone (Font Awesome)</label><input type="text" placeholder="Ex: fa-solid fa-wallet" defaultValue={isEditing ? page.icon : ''} style={styles.formInput} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Caminho (URL)</label><input type="text" placeholder="Ex: /minha-carteira" defaultValue={isEditing ? page.path : ''} style={styles.formInput} /></div>
                 </div>
-                <div className="modal-footer-ctrl">
-                    <button className="cancel-btn-ctrl" onClick={onClose}>Cancelar</button>
-                    <button className="save-card-button">Salvar</button>
+                <div style={styles.modalFooterCtrl}>
+                    <button style={styles.cancelBtnCtrl} onClick={onClose}>Cancelar</button>
+                    <button style={styles.saveCardButton}>Salvar</button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
-
 
 // --- Componente Principal da Página ---
 function ControllerPage() {
@@ -105,107 +130,107 @@ function ControllerPage() {
     const totalRulePages = Math.ceil(filteredRules.length / 3);
 
     return (
-        <div className="controller-page-container">
-            <header className="controller-page-header">
-                <h1>Controlador</h1>
-                <p>Gerencie as regras de negócio e a visibilidade de páginas para seus clientes.</p>
+        <div style={styles.controllerPageContainer}>
+            <header style={styles.controllerPageHeader}>
+                <h1 style={styles.headerH1}>Controlador</h1>
+                <p style={styles.headerP}>Gerencie as regras de negócio e a visibilidade de páginas para seus clientes.</p>
             </header>
 
-            <div className="controller-layout-final">
+            <div style={styles.layoutFinal}>
                 {/* Card de Saque */}
-                <div className="controller-card">
-                    <div className="card-header-ctrl"><i className="fa-solid fa-money-bill-transfer"></i><h3>Saque</h3></div>
-                    <div className="card-body-ctrl">
-                        <div className="form-group-ctrl"><label>Valor Mínimo (R$)</label><input type="number" defaultValue="500" /></div>
-                        <div className="form-group-ctrl"><label>Taxa de Saque (%)</label><input type="number" defaultValue="5" /></div>
-                        <div className="form-group-ctrl"><label>Dia do Mês para Saque</label><input type="number" min="1" max="31" defaultValue="10" /></div>
-                        <div className="form-group-row-ctrl">
-                            <div className="form-group-ctrl"><label>Horário de Início</label><input type="time" defaultValue="06:00" /></div>
-                            <div className="form-group-ctrl"><label>Horário de Fim</label><input type="time" defaultValue="18:00" /></div>
+                <div style={styles.controllerCard}>
+                    <div style={styles.cardHeader}><i className="fa-solid fa-money-bill-transfer" style={styles.cardHeaderIcon}></i><h3 style={styles.cardHeaderH3}>Saque</h3></div>
+                    <div style={styles.cardBody}>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Valor Mínimo (R$)</label><input type="number" defaultValue="500" style={styles.formInput} /></div>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Taxa de Saque (%)</label><input type="number" defaultValue="5" style={styles.formInput} /></div>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Dia do Mês para Saque</label><input type="number" min="1" max="31" defaultValue="10" style={styles.formInput} /></div>
+                        <div style={styles.formGroupRow}>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Horário de Início</label><input type="time" defaultValue="06:00" style={styles.formInput} /></div>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Horário de Fim</label><input type="time" defaultValue="18:00" style={styles.formInput} /></div>
                         </div>
-                        <div className="toggle-wrapper">
+                        <div style={styles.toggleWrapper}>
                             <ToggleSwitch label={withdrawalSettings.is_active ? 'Saques Ativados' : 'Saques Desativados'} enabled={withdrawalSettings.is_active} setEnabled={(val) => setWithdrawalSettings(p => ({...p, is_active: val}))} />
                         </div>
                     </div>
-                    <div className="card-footer-ctrl"><button className="save-card-button"><i className="fa-solid fa-save"></i> Salvar</button></div>
+                    <div style={styles.cardFooter}><button style={styles.saveCardButton}><i className="fa-solid fa-save"></i> Salvar</button></div>
                 </div>
 
                 {/* Card de Contrato */}
-                <div className="controller-card">
-                    <div className="card-header-ctrl"><i className="fa-solid fa-file-signature"></i><h3>Contrato</h3></div>
-                    <div className="card-body-ctrl">
-                        <div className="form-group-row-ctrl">
-                            <div className="form-group-ctrl"><label>Valor Mínimo (R$)</label><input type="number" defaultValue="5000" /></div>
-                            <div className="form-group-ctrl"><label>Valor de Intervalo (R$)</label><input type="number" defaultValue="500" /></div>
+                <div style={styles.controllerCard}>
+                    <div style={styles.cardHeader}><i className="fa-solid fa-file-signature" style={styles.cardHeaderIcon}></i><h3 style={styles.cardHeaderH3}>Contrato</h3></div>
+                    <div style={styles.cardBody}>
+                        <div style={styles.formGroupRow}>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Valor Mínimo (R$)</label><input type="number" defaultValue="5000" style={styles.formInput} /></div>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Valor de Intervalo (R$)</label><input type="number" defaultValue="500" style={styles.formInput} /></div>
                         </div>
-                        <div className="toggle-wrapper-separated">
+                        <div style={styles.toggleWrapperSeparated}>
                             <ToggleSwitch label="Valorização Ativada" enabled={valuationEnabled} setEnabled={setValuationEnabled} />
                             <ToggleSwitch label="Reinvestimento Ativado" enabled={reinvestmentEnabled} setEnabled={setReinvestmentEnabled} />
                         </div>
-                        <div className="rules-management-section">
-                            <button className={`rules-btn view ${showRules ? 'active' : ''}`} onClick={() => setShowRules(!showRules)}><i className="fa-solid fa-eye"></i> Ver Regras</button>
-                            <button className="rules-btn create" onClick={() => handleOpenModal('create_rule')}><i className="fa-solid fa-plus"></i> Criar Nova Regra</button>
+                        <div style={styles.rulesManagementSection}>
+                            <button style={{...styles.rulesBtn, ...styles.rulesBtnView, ...(showRules && styles.rulesBtnViewActive)}} onClick={() => setShowRules(!showRules)}><i className="fa-solid fa-eye"></i> Ver Regras</button>
+                            <button style={{...styles.rulesBtn, ...styles.rulesBtnCreate}} onClick={() => handleOpenModal('create_rule')}><i className="fa-solid fa-plus"></i> Criar Nova Regra</button>
                         </div>
-                        <div className={`rules-list-wrapper ${showRules ? 'open' : ''}`}>
-                            <div className="rules-list">
-                                <h4>Regras Salvas</h4>
-                                <input type="text" className="rules-search" placeholder="Buscar regra por nome..." onChange={e => setRuleSearch(e.target.value)} />
-                                <ul>
+                        <div style={{...styles.rulesListWrapper, ...(showRules && styles.rulesListWrapperOpen)}}>
+                            <div style={styles.rulesList}>
+                                <h4 style={styles.rulesListH4}>Regras Salvas</h4>
+                                <input type="text" style={styles.rulesSearch} placeholder="Buscar regra por nome..." onChange={e => setRuleSearch(e.target.value)} />
+                                <ul style={styles.rulesListUl}>
                                     {paginatedRules.map(rule => (
-                                        <li key={rule.id}>
-                                            <span className="rule-name">{rule.name}</span>
-                                            <div className="rule-details"><span>{rule.months}m</span><span>{rule.valuation}%</span><span>{rule.gemOption ? "C/ Gema" : "S/ Gema"}</span></div>
-                                            <div className="rule-actions"><button onClick={() => handleOpenModal('edit_rule', rule)}><i className="fa-solid fa-pencil"></i></button><button className="danger"><i className="fa-solid fa-trash-can"></i></button></div>
+                                        <li key={rule.id} style={styles.rulesListItem}>
+                                            <span style={styles.ruleName}>{rule.name}</span>
+                                            <div style={styles.ruleDetails}><span>{rule.months}m</span><span>{rule.valuation}%</span><span>{rule.gemOption ? "C/ Gema" : "S/ Gema"}</span></div>
+                                            <div style={styles.ruleActions}><button style={styles.ruleActionButton} onClick={() => handleOpenModal('edit_rule', rule)}><i className="fa-solid fa-pencil"></i></button><button style={{...styles.ruleActionButton, ...styles.ruleActionButtonDanger}}><i className="fa-solid fa-trash-can"></i></button></div>
                                         </li>
                                     ))}
                                 </ul>
-                                <div className="pagination-container-rules">
-                                    <button onClick={() => setRulePage(p => Math.max(p - 1, 1))} disabled={rulePage === 1}>&lt;</button>
-                                    <span>{rulePage} de {totalRulePages}</span>
-                                    <button onClick={() => setRulePage(p => Math.min(p + 1, totalRulePages))} disabled={rulePage === totalRulePages}>&gt;</button>
+                                <div style={styles.paginationContainerRules}>
+                                    <button onClick={() => setRulePage(p => Math.max(p - 1, 1))} disabled={rulePage === 1} style={styles.paginationRulesButton}>&lt;</button>
+                                    <span style={styles.paginationRulesSpan}>{rulePage} de {totalRulePages}</span>
+                                    <button onClick={() => setRulePage(p => Math.min(p + 1, totalRulePages))} disabled={rulePage === totalRulePages} style={styles.paginationRulesButton}>&gt;</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="card-footer-ctrl"><button className="save-card-button"><i className="fa-solid fa-save"></i> Salvar</button></div>
+                    <div style={styles.cardFooter}><button style={styles.saveCardButton}><i className="fa-solid fa-save"></i> Salvar</button></div>
                 </div>
 
                 {/* Card de Indicação */}
-                <div className="controller-card">
-                    <div className="card-header-ctrl"><i className="fa-solid fa-share-nodes"></i><h3>Indicação</h3></div>
-                    <div className="card-body-ctrl">
-                        <div className="form-group-ctrl">
-                            <label>Percentual de Comissão (%)</label>
-                            <input type="number" defaultValue="10" />
+                <div style={styles.controllerCard}>
+                    <div style={styles.cardHeader}><i className="fa-solid fa-share-nodes" style={styles.cardHeaderIcon}></i><h3 style={styles.cardHeaderH3}>Indicação</h3></div>
+                    <div style={styles.cardBody}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Percentual de Comissão (%)</label>
+                            <input type="number" defaultValue="10" style={styles.formInput} />
                         </div>
-                        <div className="toggle-wrapper">
+                        <div style={styles.toggleWrapper}>
                             <ToggleSwitch label="Indicações Ativadas" enabled={referralEnabled} setEnabled={setReferralEnabled} />
                         </div>
                     </div>
-                    <div className="card-footer-ctrl"><button className="save-card-button"><i className="fa-solid fa-save"></i> Salvar</button></div>
+                    <div style={styles.cardFooter}><button style={styles.saveCardButton}><i className="fa-solid fa-save"></i> Salvar</button></div>
                 </div>
 
                 {/* Card de Páginas Visíveis */}
-                <div className="controller-card">
-                    <div className="card-header-ctrl">
-                        <i className="fa-solid fa-eye"></i>
-                        <h3>Páginas Visíveis</h3>
-                        <button className="create-page-btn" onClick={() => handleOpenModal('create_page')}><i className="fa-solid fa-plus"></i></button>
+                <div style={styles.controllerCard}>
+                    <div style={styles.cardHeader}>
+                        <i className="fa-solid fa-eye" style={styles.cardHeaderIcon}></i>
+                        <h3 style={styles.cardHeaderH3}>Páginas Visíveis</h3>
+                        <button style={styles.createPageBtn} onClick={() => handleOpenModal('create_page')}><i className="fa-solid fa-plus"></i></button>
                     </div>
-                    <div className="card-body-ctrl">
-                        <ul className="visible-pages-list">
+                    <div style={styles.cardBody}>
+                        <ul style={styles.visiblePagesList}>
                             {visiblePages.map(page => (
-                                <li key={page.id}>
-                                    <div className="page-info"><i className={page.icon}></i><span>{page.name}</span></div>
-                                    <div className="page-actions">
-                                        <button onClick={() => handleOpenModal('edit_page', page)}><i className="fa-solid fa-pencil"></i></button>
+                                <li key={page.id} style={styles.visiblePagesListItem}>
+                                    <div style={styles.pageInfo}><i className={page.icon} style={styles.pageInfoIcon}></i><span style={styles.pageInfoSpan}>{page.name}</span></div>
+                                    <div style={styles.pageActions}>
+                                        <button style={styles.pageActionButton} onClick={() => handleOpenModal('edit_page', page)}><i className="fa-solid fa-pencil"></i></button>
                                         <ToggleSwitch enabled={page.enabled} setEnabled={() => handlePageToggle(page.id)} />
                                     </div>
                                 </li>
                             ))}
                         </ul>
                     </div>
-                    <div className="card-footer-ctrl"><button className="save-card-button"><i className="fa-solid fa-save"></i> Salvar</button></div>
+                    <div style={styles.cardFooter}><button style={styles.saveCardButton}><i className="fa-solid fa-save"></i> Salvar</button></div>
                 </div>
             </div>
 

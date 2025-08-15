@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import './ReferralsPage.css';
+import styles from './ReferralsPage.styles.js';
 
 // --- Dados Estáticos ---
 const staticClients = [
@@ -10,6 +10,26 @@ const staticClients = [
     { id: 5, name: 'Luciano da Rocha Berto', cpf: '000.075.916-47' },
     { id: 6, name: 'Priscila Lopes', cpf: '022.482.190-32' },
 ];
+
+// --- Componente de Item da Lista (para controlar hover) ---
+const ClientListItem = ({ client, onClick }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const itemStyle = {
+        ...styles.clientResultItem,
+        ...(isHovered && styles.clientResultItemHover)
+    };
+    return (
+        <li 
+            style={itemStyle} 
+            onClick={() => onClick(client)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <span style={styles.clientName}>{client.name}</span>
+            <span style={styles.clientCpf}>{client.cpf}</span>
+        </li>
+    );
+};
 
 // --- Componente Principal da Página ---
 function ReferralsPage() {
@@ -27,53 +47,49 @@ function ReferralsPage() {
 
     const handleSelectClient = (client) => {
         setSelectedClient(client);
-        setSearchTerm(''); // Limpa a busca após selecionar
+        setSearchTerm('');
     };
 
     const handleConfirm = () => {
-        // Lógica para adicionar o valor da indicação
         alert(`Indicação de R$ ${referralValue} adicionada para ${selectedClient.name}`);
-        // Resetar o estado
         setSelectedClient(null);
         setReferralValue('');
     };
 
     return (
-        <div className="referrals-page-container">
-            <header className="referrals-page-header">
-                <h1>Indicação</h1>
-                <p>Adicione um valor de indicação para um cliente específico.</p>
+        <div style={styles.referralsPageContainer}>
+            <header style={styles.referralsPageHeader}>
+                <h1 style={styles.headerH1}>Indicação</h1>
+                <p style={styles.headerP}>Adicione um valor de indicação para um cliente específico.</p>
             </header>
 
-            <div className="referral-card">
+            <div style={styles.referralCard}>
                 {!selectedClient ? (
                     // Passo 1: Pesquisar Cliente
-                    <div className="search-step">
-                        <div className="card-header-ref">
-                            <i className="fa-solid fa-user-plus"></i>
-                            <h3>Selecionar Cliente</h3>
+                    <div>
+                        <div style={styles.cardHeader}>
+                            <i className="fa-solid fa-user-plus" style={styles.cardHeaderIcon}></i>
+                            <h3 style={styles.cardHeaderH3}>Selecionar Cliente</h3>
                         </div>
-                        <div className="card-body-ref">
-                            <div className="search-box-ref">
-                                <i className="fa-solid fa-magnifying-glass"></i>
+                        <div style={styles.cardBody}>
+                            <div style={styles.searchBox}>
+                                <i className="fa-solid fa-magnifying-glass" style={styles.searchBoxIcon}></i>
                                 <input
                                     type="text"
                                     placeholder="Pesquisar cliente por nome ou CPF..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
+                                    style={styles.searchInput}
                                 />
                             </div>
                             {searchTerm && (
-                                <ul className="client-results-list">
+                                <ul style={styles.clientResultsList}>
                                     {filteredClients.length > 0 ? (
                                         filteredClients.map(client => (
-                                            <li key={client.id} onClick={() => handleSelectClient(client)}>
-                                                <span className="client-name">{client.name}</span>
-                                                <span className="client-cpf">{client.cpf}</span>
-                                            </li>
+                                            <ClientListItem key={client.id} client={client} onClick={handleSelectClient} />
                                         ))
                                     ) : (
-                                        <li className="no-results">Nenhum cliente encontrado.</li>
+                                        <li style={styles.noResults}>Nenhum cliente encontrado.</li>
                                     )}
                                 </ul>
                             )}
@@ -81,31 +97,36 @@ function ReferralsPage() {
                     </div>
                 ) : (
                     // Passo 2: Adicionar Valor
-                    <div className="value-step">
-                        <div className="card-header-ref">
-                            <i className="fa-solid fa-dollar-sign"></i>
-                            <h3>Adicionar Valor</h3>
+                    <div>
+                        <div style={styles.cardHeader}>
+                            <i className="fa-solid fa-dollar-sign" style={styles.cardHeaderIcon}></i>
+                            <h3 style={styles.cardHeaderH3}>Adicionar Valor</h3>
                         </div>
-                        <div className="card-body-ref">
-                            <div className="selected-client-info">
-                                <div className="client-info-text">
-                                    <p>Cliente Selecionado:</p>
-                                    <h4>{selectedClient.name}</h4>
+                        <div style={styles.cardBody}>
+                            <div style={styles.selectedClientInfo}>
+                                <div>
+                                    <p style={styles.clientInfoTextP}>Cliente Selecionado:</p>
+                                    <h4 style={styles.clientInfoTextH4}>{selectedClient.name}</h4>
                                 </div>
-                                <button onClick={() => setSelectedClient(null)}>Trocar Cliente</button>
+                                <button style={styles.changeClientButton} onClick={() => setSelectedClient(null)}>Trocar Cliente</button>
                             </div>
-                            <div className="form-group-ref">
-                                <label>Valor da Indicação (R$)</label>
+                            <div style={styles.formGroup}>
+                                <label style={styles.formLabel}>Valor da Indicação (R$)</label>
                                 <input
                                     type="number"
                                     placeholder="0,00"
                                     value={referralValue}
                                     onChange={e => setReferralValue(e.target.value)}
+                                    style={styles.formInput}
                                 />
                             </div>
                         </div>
-                        <div className="card-footer-ref">
-                            <button className="confirm-button-ref" onClick={handleConfirm} disabled={!referralValue}>
+                        <div style={styles.cardFooter}>
+                            <button 
+                                style={{...styles.confirmButton, ...(!referralValue && styles.confirmButtonDisabled)}} 
+                                onClick={handleConfirm} 
+                                disabled={!referralValue}
+                            >
                                 <i className="fa-solid fa-check"></i>
                                 Confirmar Adição
                             </button>
