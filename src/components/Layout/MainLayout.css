@@ -1,0 +1,22 @@
+.main-layout {
+  display: flex;
+}
+
+.content-area {
+  flex-grow: 1;
+  margin-left: 260px; /* Largura padrão da sidebar */
+  padding: 32px;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease;
+
+  /* NOVO FUNDO PARA O EFEITO DE PROFUNDIDADE */
+  background-color: #f0f2f5;
+  background-image: radial-gradient(circle at top left, #ffffff, #f0f2f5 70%);
+}
+
+/* Quando a sidebar estiver recolhida, ajusta a margem */
+.main-layout.sidebar-collapsed .content-area {
+  margin-left: 88px; /* Largura da sidebar recolhida */
+}

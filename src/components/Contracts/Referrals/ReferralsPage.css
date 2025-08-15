@@ -1,0 +1,157 @@
+.referrals-page-container { font-family: 'Poppins', sans-serif; }
+.referrals-page-header { margin-bottom: 32px; }
+.referrals-page-header h1 { font-size: 2.25rem; font-weight: 700; color: #1a202c; }
+.referrals-page-header p { color: #718096; margin-top: 4px; }
+
+.referral-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+    max-width: 600px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.card-header-ref {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+}
+.card-header-ref i { font-size: 1.2rem; color: #3b82f6; }
+.card-header-ref h3 { margin: 0; font-size: 1.25rem; font-weight: 600; color: #1a202c; }
+
+.card-body-ref {
+    padding: 24px;
+}
+
+/* Passo 1: Pesquisa */
+.search-box-ref {
+    position: relative;
+}
+.search-box-ref i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+.search-box-ref input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background-color: #fff;
+}
+
+.client-results-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0 0;
+    max-height: 250px; /* Altura aumentada */
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+.client-results-list li {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex; /* Adicionado para alinhar nome e CPF */
+    justify-content: space-between; /* Adicionado para alinhar nome e CPF */
+    align-items: center; /* Adicionado para alinhar nome e CPF */
+}
+.client-results-list li:last-child {
+    border-bottom: none;
+}
+.client-results-list li:hover {
+    background-color: #f3f4f6;
+}
+.client-results-list li.no-results {
+    color: #9ca3af;
+    cursor: default;
+    text-align: center;
+    display: block; /* Reseta o flex para o item "sem resultados" */
+}
+.client-name {
+    font-weight: 500;
+    color: #2d3748;
+}
+.client-cpf {
+    font-size: 0.85rem;
+    color: #6b7280;
+    background-color: #e5e7eb;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+
+/* Passo 2: Valor */
+.selected-client-info {
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.client-info-text p { margin: 0; color: #6b7280; }
+.client-info-text h4 { margin: 0; font-size: 1.1rem; color: #1a202c; }
+.selected-client-info button {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.form-group-ref { display: flex; flex-direction: column; }
+.form-group-ref label { font-size: 0.85rem; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
+.form-group-ref input {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    text-align: center;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background-color: #fff;
+}
+
+.card-footer-ref {
+    padding: 16px 24px;
+    background-color: #f9fafb;
+    border-top: 1px solid rgba(229, 231, 235, 0.8);
+    display: flex;
+    justify-content: flex-end;
+}
+.confirm-button-ref {
+    background-color: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+.confirm-button-ref:hover:not(:disabled) {
+    background-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+.confirm-button-ref:disabled {
+    background-color: #d1d5db;
+    cursor: not-allowed;
+}
