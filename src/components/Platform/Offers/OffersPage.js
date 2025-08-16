@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import styles from './OffersPage.styles.js';
+import styles from './OffersPageStyle';
 
 // --- Dados Estáticos ---
 const staticOffers = [

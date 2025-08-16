@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import styles from './ControllerPage.styles.js';
+import styles from './ControllerPageStyle';
 
 // --- Dados Estáticos ---
 const savedRulesData = [
@@ -19,7 +19,6 @@ const initialClientPages = [
     { id: 6, name: "Ecommerce", icon: "fa-solid fa-store", path: "/store", enabled: false },
 ];
 
-// --- Estilos Globais para Animações ---
 const GlobalStyles = () => (
     <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

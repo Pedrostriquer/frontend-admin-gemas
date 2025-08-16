@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import styles from './Sidebar.styles.js';
+import styles from './SidebarStyle';
 
-// --- Componentes de Item de Menu Reutilizáveis ---
 const ContextButton = ({ isActive, isCollapsed, onClick, icon, children }) => {
     const [isHovered, setIsHovered] = useState(false);
     const style = {
@@ -44,20 +43,20 @@ const NavItem = ({ isActive, isCollapsed, onClick, icon, children }) => {
     );
 };
 
-// --- Componente Principal da Sidebar ---
 function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle, activePath, onLinkClick }) {
     const [isToggleHovered, setIsToggleHovered] = useState(false);
+    const [isUserHovered, setIsUserHovered] = useState(false);
 
     const contractsMenu = [
-        { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/contracts/dashboard' },
-        { name: 'Clientes', icon: 'fa-solid fa-users', path: '/contracts/clients' },
-        { name: 'Contratos', icon: 'fa-solid fa-file-signature', path: '/contracts/list' },
-        { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/contracts/withdrawals' },
-        { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/contracts/controller' },
-        { name: 'Indicação', icon: 'fa-solid fa-share-nodes', path: '/contracts/referrals' },
-        { name: 'Ofertas', icon: 'fa-solid fa-bullhorn', path: '/contracts/offers' },
-        { name: 'Mensagens', icon: 'fa-solid fa-envelope', path: '/contracts/messages' },
-        { name: 'Relatórios', icon: 'fa-solid fa-chart-line', path: '/contracts/reports' },
+        { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/platform/dashboard' },
+        { name: 'Clientes', icon: 'fa-solid fa-users', path: '/platform/clients' },
+        { name: 'Contratos', icon: 'fa-solid fa-file-signature', path: '/platform/contracts' },
+        { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/platform/withdraws' },
+        { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/platform/controller' },
+        { name: 'Indicação', icon: 'fa-solid fa-share-nodes', path: '/platform/indication' },
+        { name: 'Ofertas', icon: 'fa-solid fa-bullhorn', path: '/platform/offers' },
+        { name: 'Mensagens', icon: 'fa-solid fa-envelope', path: '/platform/messages' },
+        // { name: 'Relatórios', icon: 'fa-solid fa-chart-line', path: '/platform/reports' },
     ];
     const ecommerceMenu = [
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/ecommerce/dashboard' },
@@ -67,7 +66,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Categorias', icon: 'fa-solid fa-sitemap', path: '/ecommerce/categories' },
     ];
 
-    const menuToShow = activeContext === 'contracts' ? contractsMenu : ecommerceMenu;
+    const menuToShow = activeContext === 'platform' ? contractsMenu : ecommerceMenu;
 
     const navStyle = {
         ...styles.sidebar,
@@ -79,63 +78,84 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         ...(isToggleHovered && styles.toggleButtonHover),
         ...(isSidebarCollapsed && styles.toggleButtonCollapsed),
     };
+    
+    const userProfileStyle = {
+        ...styles.userProfile,
+        ...(isUserHovered && styles.userProfileHover),
+        ...(isSidebarCollapsed && styles.userProfileCollapsed),
+    };
 
     return (
         <nav style={navStyle}>
-            <div style={styles.header}>
+            <header style={styles.header}>
                 <i className="fa-solid fa-gem" style={styles.logoIcon}></i>
                 <h1 style={{...styles.headerH1, ...(isSidebarCollapsed && styles.headerH1Collapsed)}}>Gemas brilhantes</h1>
-            </div>
+            </header>
 
-            <div style={styles.contextSwitcher}>
-                <ContextButton
-                    isActive={activeContext === 'contracts'}
-                    isCollapsed={isSidebarCollapsed}
-                    onClick={() => onContextChange('contracts')}
-                    icon="fa-solid fa-briefcase"
-                >
-                    Plataforma
-                </ContextButton>
-                <ContextButton
-                    isActive={activeContext === 'ecommerce'}
-                    isCollapsed={isSidebarCollapsed}
-                    onClick={() => onContextChange('ecommerce')}
-                    icon="fa-solid fa-store"
-                >
-                    E-commerce
-                </ContextButton>
+            <div style={styles.mainNav}>
+                <div style={styles.contextSwitcher}>
+                    <ContextButton
+                        isActive={activeContext === 'platform'}
+                        isCollapsed={isSidebarCollapsed}
+                        onClick={() => onContextChange('platform')}
+                        icon="fa-solid fa-briefcase"
+                    >
+                        Plataforma
+                    </ContextButton>
+                    <ContextButton
+                        isActive={activeContext === 'ecommerce'}
+                        isCollapsed={isSidebarCollapsed}
+                        onClick={() => onContextChange('ecommerce')}
+                        icon="fa-solid fa-store"
+                    >
+                        E-commerce
+                    </ContextButton>
+                </div>
+                
+                <div style={styles.menuContainer}>
+                    <div style={styles.menuDivider}></div>
+                    <ul style={styles.globalMenu}>
+                        <NavItem
+                            isActive={activePath === '/users'}
+                            isCollapsed={isSidebarCollapsed}
+                            onClick={() => onLinkClick('/users')}
+                            icon="fa-solid fa-user-shield"
+                        >
+                            Usuários
+                        </NavItem>
+                    </ul>
+                    <div style={styles.menuDivider}></div>
+
+                    <ul style={styles.contextMenu}>
+                        {menuToShow.map(item => (
+                            <NavItem
+                                key={item.path}
+                                isActive={activePath === item.path}
+                                isCollapsed={isSidebarCollapsed}
+                                onClick={() => onLinkClick(item.path)}
+                                icon={item.icon}
+                            >
+                                {item.name}
+                            </NavItem>
+                        ))}
+                    </ul>
+                </div>
             </div>
             
-            <div style={styles.globalMenuSection}>
-                <div style={styles.menuDivider}></div>
-                <ul style={styles.globalMenu}>
-                    <NavItem
-                        isActive={activePath === '/users'}
-                        isCollapsed={isSidebarCollapsed}
-                        onClick={() => onLinkClick('/users')}
-                        icon="fa-solid fa-user-shield"
-                    >
-                        Usuários
-                    </NavItem>
-                </ul>
-                <div style={styles.menuDivider}></div>
-            </div>
+            <footer style={styles.footer}>
+                <div 
+                    style={userProfileStyle}
+                    onClick={() => onLinkClick('/profile')}
+                    onMouseEnter={() => setIsUserHovered(true)}
+                    onMouseLeave={() => setIsUserHovered(false)}
+                >
+                    <div style={styles.userAvatar}>MU</div>
+                    <div style={{...styles.userInfo, ...(isSidebarCollapsed && styles.userInfoCollapsed)}}>
+                        <span style={styles.userNameText}>Manual</span>
+                        <span style={styles.userRoleText}>Admin</span>
+                    </div>
+                </div>
 
-            <ul style={styles.contextMenu}>
-                {menuToShow.map(item => (
-                    <NavItem
-                        key={item.path}
-                        isActive={activePath === item.path}
-                        isCollapsed={isSidebarCollapsed}
-                        onClick={() => onLinkClick(item.path)}
-                        icon={item.icon}
-                    >
-                        {item.name}
-                    </NavItem>
-                ))}
-            </ul>
-            
-            <div style={styles.footer}>
                 <button 
                     style={toggleButtonStyle} 
                     onClick={onToggle}
@@ -145,7 +165,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                     <i className={`fa-solid ${isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
                     <span style={{...styles.toggleButtonSpan, ...(isSidebarCollapsed && styles.toggleButtonSpanCollapsed)}}>Recolher</span>
                 </button>
-            </div>
+            </footer>
         </nav>
     );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import styles from './MessagesPage.styles.js';
+import styles from './MessagesPageStyle';
 
 // --- Dados Estáticos ---
 const staticMessages = [

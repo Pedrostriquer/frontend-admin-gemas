@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import styles from './WithdrawalsPage.styles.js';
+import styles from './WithdrawalsPageStyle';
 
 // --- Dados Estáticos ---
 const staticWithdrawals = [

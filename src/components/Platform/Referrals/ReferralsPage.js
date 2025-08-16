@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import styles from './ReferralsPage.styles.js';
+import styles from './ReferralsPageStyle';
 
 // --- Dados Estáticos ---
 const staticClients = [

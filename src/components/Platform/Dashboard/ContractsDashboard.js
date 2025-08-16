@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import styles from './ContractsDashboard.styles.js';
+import styles from './ContractsDashboardStyle.js';
 
-// --- Componente Customizado para Barras Arredondadas ---
 const RoundedBar = (props) => {
   const { x, y, width, height, fill } = props;
   const radius = 8;
   return <path d={`M${x},${y + radius} A${radius},${radius} 0 0 1 ${x + radius},${y} L${x + width - radius},${y} A${radius},${radius} 0 0 1 ${x + width},${y + radius} L${x + width},${y + height} L${x},${y + height} Z`} fill={fill} />;
 };
 
-// --- Dados para Simulação ---
 const kpiData = [
   { title: "Faturamento Mensal", value: "R$ 152.3k", change: "+8.1%", data: [{v:30},{v:40},{v:20},{v:50},{v:45},{v:60},{v:70}] },
   { title: "Contratos Ativos", value: "1.250", change: "+12%", data: [{v:10},{v:20},{v:15},{v:30},{v:25},{v:40},{v:35}] },

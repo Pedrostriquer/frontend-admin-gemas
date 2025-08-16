@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
-import styles from './UsersPage.styles.js';
+import styles from './UsersPageStyle';
 
 // --- Dados Estáticos ---
 const staticUsers = [

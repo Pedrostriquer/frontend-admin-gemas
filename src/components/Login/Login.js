@@ -1,18 +1,21 @@
+// src/components/Login/Login.js
 import React, { useState } from 'react';
-import styles from './Login.styles.js';
+import { useAuth } from "../../Context/AuthContext"
+import styles from './LoginStyle';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isToggleHovered, setIsToggleHovered] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const { login } = useAuth();
 
   const handleLogin = (e) => {
     e.preventDefault();
-    console.log('Tentando login com:', { email, password });
-    alert('Login efetuado (simulação)! Verifique o console.');
+    login(email, password, rememberMe);
   };
 
   const togglePasswordVisibility = () => {
@@ -77,6 +80,17 @@ function Login() {
               onMouseEnter={() => setIsToggleHovered(true)}
               onMouseLeave={() => setIsToggleHovered(false)}
             ></i>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+            <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ marginRight: '8px' }}
+            />
+            <label htmlFor="rememberMe" style={{ color: '#555', fontSize: '0.9rem' }}>Lembrar de mim</label>
           </div>
           
           <button 

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import styles from './ContractsPage.styles.js';
+import styles from './ContractsPageStyle';
 
 // --- Dados Estáticos ---
 const staticContracts = [

@@ -1,3 +1,4 @@
+// src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     sessionStorage.removeItem("authTokenAdmin");
     sessionStorage.removeItem("refreshTokenAdmin");
-    localStorage.removeItem("authTokenAsmin");
+    localStorage.removeItem("authTokenAdmin");
     localStorage.removeItem("refreshTokenAdmin");
     delete axios.defaults.headers.common["Authorization"];
     navigate("/login");
@@ -34,8 +35,8 @@ export const AuthProvider = ({ children }) => {
         try {
           const response = await axios.get(`${API_URL}admin/me`);
           setUser(response.data);
+          console.log(response.data)
         } catch (error) {
-          console.error("Token inválido ou expirado na inicialização.");
           logout();
         }
       }
@@ -68,9 +69,7 @@ export const AuthProvider = ({ children }) => {
               response.data;
 
             setToken(newAccessToken);
-            axios.defaults.headers.common[
-              "Authorization"
-            ] = `Bearer ${newAccessToken}`;
+            axios.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
             originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
             if (localStorage.getItem("refreshTokenAdmin")) {
@@ -83,7 +82,6 @@ export const AuthProvider = ({ children }) => {
 
             return axios(originalRequest);
           } catch (refreshError) {
-            console.error("Não foi possível renovar o token:", refreshError);
             logout();
             return Promise.reject(refreshError);
           }
@@ -115,7 +113,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("refreshTokenAdmin", refreshToken);
         sessionStorage.removeItem("authTokenAdmin");
         sessionStorage.removeItem("refreshTokenAdmin");
-        console.log(response)
       } else {
         sessionStorage.setItem("authTokenAdmin", newToken);
         sessionStorage.setItem("refreshTokenAdmin", refreshToken);
@@ -125,10 +122,9 @@ export const AuthProvider = ({ children }) => {
 
       const userResponse = await axios.get(`${API_URL}admin/me`);
       setUser(userResponse.data);
-      navigate("/dashboard");
+      navigate("/platform/dashboard");
     } catch (error) {
-      console.error("Falha no login:", error);
-      alert("Email ou senha inválidos!");
+      throw error;
     } finally {
       stopLoading();
     }
