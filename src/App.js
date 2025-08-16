@@ -9,10 +9,10 @@ import MainLayout from "./Components/Layout/MainLayout";
 import UserProfile from "./Components/UserProfile/UserProfile";
 import ContractsDashboard from "./Components/Platform/Dashboard/ContractsDashboard";
 import ClientsPage from "./Components/Platform/Clients/ClientsPage";
-import ContractsPage from "./Components/Platform/ContractsList/ContractsPage"
-import WithdrawalsPage from "./Components/Platform/Withdrawals/WithdrawalsPage"
+import ContractsPage from "./Components/Platform/Contracts/ContractsPage"
+import WithdrawalsPage from "./Components/Platform/Withdraws/WithdrawalsPage"
 import ControllerPage from "./Components/Platform/Controller/ControllerPage";
-import ReferralsPage from "./Components/Platform/Referrals/ReferralsPage";
+import ReferralsPage from "./Components/Platform/Indication/ReferralsPage";
 import OffersPage from "./Components/Platform/Offers/OffersPage";
 import Messages from "./Components/Platform/Messages/MessagesPage";
 import Report from "./Components/Platform/Messages/MessagesPage";

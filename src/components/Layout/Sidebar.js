@@ -22,12 +22,12 @@ const ContextButton = ({ isActive, isCollapsed, onClick, icon, children }) => {
     );
 };
 
-const NavItem = ({ isActive, isCollapsed, onClick, icon, children }) => {
+const NavItem = ({ isActive, isCollapsed, onClick, icon, children, hoverStyle }) => {
     const [isHovered, setIsHovered] = useState(false);
     const style = {
         ...styles.navItem,
         ...(isActive && styles.navItemActive),
-        ...(isHovered && !isActive && styles.navItemHover),
+        ...(isHovered && !isActive && (hoverStyle || styles.navItemHover)),
         ...(isCollapsed && styles.navItemCollapsed),
     };
     return (
@@ -56,7 +56,6 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Indicação', icon: 'fa-solid fa-share-nodes', path: '/platform/indication' },
         { name: 'Ofertas', icon: 'fa-solid fa-bullhorn', path: '/platform/offers' },
         { name: 'Mensagens', icon: 'fa-solid fa-envelope', path: '/platform/messages' },
-        // { name: 'Relatórios', icon: 'fa-solid fa-chart-line', path: '/platform/reports' },
     ];
     const ecommerceMenu = [
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/ecommerce/dashboard' },
@@ -67,6 +66,12 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
     ];
 
     const menuToShow = activeContext === 'platform' ? contractsMenu : ecommerceMenu;
+
+    const handleLogout = () => {
+        console.log("Logout acionado!");
+        alert("Usuário deslogado com sucesso! (Simulação)");
+        // onLinkClick('/login'); 
+    };
 
     const navStyle = {
         ...styles.sidebar,
@@ -113,7 +118,19 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                 </div>
                 
                 <div style={styles.menuContainer}>
+                    <ul style={styles.globalMenu}> {/* O botão de logout vai aqui */}
+                        <NavItem
+                            isCollapsed={isSidebarCollapsed}
+                            onClick={handleLogout}
+                            icon="fa-solid fa-right-from-bracket"
+                            hoverStyle={styles.navItemLogoutHover}
+                        >
+                            Sair
+                        </NavItem>
+                    </ul>
+
                     <div style={styles.menuDivider}></div>
+                    
                     <ul style={styles.globalMenu}>
                         <NavItem
                             isActive={activePath === '/users'}
@@ -124,6 +141,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                             Usuários
                         </NavItem>
                     </ul>
+                    
                     <div style={styles.menuDivider}></div>
 
                     <ul style={styles.contextMenu}>

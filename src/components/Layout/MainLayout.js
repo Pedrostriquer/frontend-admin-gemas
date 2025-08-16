@@ -3,6 +3,16 @@ import React, { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
+const layoutStyles = {
+  mainContent: {
+    padding: '24px',
+    transition: 'margin-left 0.3s ease',
+    marginLeft: '260px', 
+  },
+  mainContentCollapsed: {
+    marginLeft: '88px',
+  }
+};
 
 export default function MainLayout() {
   const location = useLocation();
@@ -12,7 +22,6 @@ export default function MainLayout() {
 
   const currentPath = location.pathname;
   const activeContext = currentPath.startsWith('/ecommerce') ? 'ecommerce' : 'platform';
-
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -27,18 +36,22 @@ export default function MainLayout() {
     setSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  const contentStyle = {
+    ...layoutStyles.mainContent,
+    ...(isSidebarCollapsed && layoutStyles.mainContentCollapsed)
+  };
+
   return (
-    <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+    <div> 
       <Sidebar
-        // --- PROPS QUE FALTAVAM ---
         activeContext={activeContext}
         onContextChange={handleContextChange}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggle={toggleSidebar}
         activePath={currentPath}
-        onLinkClick={handleNavigate} // A estrela do show!
+        onLinkClick={handleNavigate}
       />
-      <main className="main-content">
+      <main style={contentStyle}>
         <Outlet />
       </main>
     </div>

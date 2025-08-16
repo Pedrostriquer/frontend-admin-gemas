@@ -5,6 +5,8 @@ const colors = {
     activeBg: '#f3f4f6',
     accent: '#3b82f6',
     border: '#e5e7eb',
+    dangerBg: '#fee2e2',
+    dangerText: '#b91c1c',
 };
 
 const styles = {
@@ -15,12 +17,11 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         borderRight: `1px solid ${colors.border}`,
-        marginRight: 20,
-        // position: 'fixed',
-        // top: 0,
-        // left: 0,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 100,
         transition: 'width 0.3s ease',
-        // zIndex: 100,
     },
     sidebarCollapsed: {
         width: '88px',
@@ -61,7 +62,7 @@ const styles = {
     contextSwitcher: {
         display: 'flex',
         flexDirection: 'column',
-        padding: '0 24px 16px 24px',
+        padding: '0 24px 0px 24px',
         gap: '8px',
     },
     contextButton: {
@@ -69,7 +70,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '10px 12px',
+        padding: '12px 12px',
         fontSize: '0.9rem',
         borderRadius: '8px',
         border: 'none',
@@ -100,9 +101,7 @@ const styles = {
         opacity: 0,
         width: 0,
     },
-    menuContainer: {
-        paddingTop: '8px',
-    },
+
     menuDivider: {
         height: '1px',
         backgroundColor: colors.border,
@@ -137,6 +136,10 @@ const styles = {
         color: '#ffffff',
         fontWeight: 500,
     },
+    navItemLogoutHover: {
+        backgroundColor: colors.dangerBg,
+        color: colors.dangerText,
+    },
     navItemCollapsed: {
         justifyContent: 'center',
         gap: 0,
@@ -157,7 +160,7 @@ const styles = {
         width: 0,
     },
     footer: {
-        padding: '24px',
+        padding: '14px',
         borderTop: `1px solid ${colors.border}`,
         overflow: 'hidden',
         flexShrink: 0,
@@ -169,7 +172,7 @@ const styles = {
         padding: '8px',
         borderRadius: '8px',
         cursor: 'pointer',
-        marginBottom: '16px',
+        marginBottom: '16px', // Espaçamento original restaurado
         transition: 'background-color 0.2s',
     },
     userProfileHover: {
