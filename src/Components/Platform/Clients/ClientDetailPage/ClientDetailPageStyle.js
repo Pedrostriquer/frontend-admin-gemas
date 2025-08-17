@@ -37,6 +37,9 @@ const styles = {
         color: '#4b5563',
         fontSize: '1rem',
     },
+    avatarContainer: {
+        position: 'relative',
+    },
     avatar: {
         width: '64px',
         height: '64px',
@@ -47,7 +50,30 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '2rem',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        overflow: 'hidden',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    },
+    removePhotoButton: {
+        position: 'absolute',
+        bottom: '-5px',
+        right: '-5px',
+        background: '#ef4444',
+        color: 'white',
+        border: '2px solid white',
+        borderRadius: '50%',
+        width: '28px',
+        height: '28px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        fontSize: '0.8rem',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
     },
     clientName: {
         fontSize: '2rem',

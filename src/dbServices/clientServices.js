@@ -197,6 +197,26 @@ const clientServices = {
       throw error.response?.data || error;
     }
   },
+
+  deleteProfilePicture: async (id, token) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_ROUTE}client/${id}/profile-picture`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Erro ao deletar a foto:",
+        error.response?.data || error.message
+      );
+      throw (
+        error.response?.data || new Error("Não foi possível deletar a foto.")
+      );
+    }
+  },
 };
 
 export default clientServices;

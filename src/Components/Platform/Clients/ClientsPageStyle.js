@@ -1,5 +1,4 @@
 const styles = {
-  // Estilos da Página Principal
   clientsPageContainer: { fontFamily: "'Poppins', sans-serif", width: "100%" },
   clientsPageHeader: { marginBottom: "24px", width: "100%"  },
   clientsPageHeaderH1: {
@@ -149,9 +148,16 @@ const styles = {
     fontSize: "0.9rem",
     color: "#2d3748",
     fontWeight: 500,
+    verticalAlign: "middle",
   },
   tableRow: { cursor: "pointer", transition: "background-color 0.2s" },
   tableRowHover: { backgroundColor: "rgba(255, 255, 255, 0.7)" },
+  tableAvatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+  },
   emailCell: {
     maxWidth: "250px",
     whiteSpace: "nowrap",
@@ -177,8 +183,6 @@ const styles = {
   },
   paginationButtonHover: { backgroundColor: "#f3f4f6", borderColor: "#d1d5db" },
   paginationButtonDisabled: { opacity: 0.5, cursor: "not-allowed" },
-
-  // Estilos do Modal
   modalBackdrop: {
     position: "fixed",
     top: 0,

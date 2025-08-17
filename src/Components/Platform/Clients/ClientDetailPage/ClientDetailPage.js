@@ -7,6 +7,7 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import AddBalanceModal from './AddBalanceModal/AddBalanceModal';
 import ChangePasswordModal from './ChangePasswordModal/ChangePasswordModal';
 import AssociateConsultantModal from './AssociateConsultantModal/AssociateConsultantModal';
+import ImageWithLoader from "../../ImageWithLoader/ImageWithLoader"
 
 const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'N/A';
@@ -92,6 +93,18 @@ function ClientDetailPage() {
         }
     };
     
+    const handleRemoveProfilePicture = async () => {
+        if (window.confirm("Tem certeza que deseja remover a foto de perfil deste cliente?")) {
+            try {
+                await clientServices.deleteProfilePicture(clientId, token);
+                alert("Foto de perfil removida com sucesso.");
+                fetchClientData();
+            } catch (error) {
+                alert("Não foi possível remover a foto de perfil.");
+            }
+        }
+    };
+
     if (isLoading) {
         return <div style={styles.loadingContainer}>Carregando perfil do cliente...</div>;
     }
@@ -99,10 +112,6 @@ function ClientDetailPage() {
     if (!client) {
         return <div style={styles.loadingContainer}>Cliente não encontrado.</div>;
     }
-
-    const fullAddress = client.address 
-        ? `${client.address.street}, ${client.address.number} - ${client.address.neighborhood}, ${client.address.city} - ${client.address.state}, ${client.address.zipcode}`
-        : 'Endereço não cadastrado';
     
     return (
         <>
@@ -110,7 +119,24 @@ function ClientDetailPage() {
                 <div style={styles.header}>
                     <div style={styles.headerInfo}>
                         <button onClick={() => navigate('/platform/clients')} style={styles.backButton}><i className="fa-solid fa-arrow-left"></i></button>
-                        <div style={styles.avatar}>{client.name.charAt(0)}</div>
+                        <div style={styles.avatarContainer}>
+                            <div style={styles.avatar}>
+                              {client.profilePictureUrl ? (
+                                <ImageWithLoader
+                                  src={client.profilePictureUrl}
+                                  alt={client.name}
+                                  style={styles.avatarImage}
+                                />
+                              ) : (
+                                client.name.charAt(0)
+                              )}
+                            </div>
+                            {client.profilePictureUrl && (
+                                <button onClick={handleRemoveProfilePicture} style={styles.removePhotoButton} title="Remover foto">
+                                    <i className="fa-solid fa-trash-can"></i>
+                                </button>
+                            )}
+                        </div>
                         <div>
                             <h1 style={styles.clientName}>{client.name}</h1>
                             <p style={styles.clientEmail}>{client.email}</p>
