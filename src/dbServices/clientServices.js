@@ -217,6 +217,24 @@ const clientServices = {
       );
     }
   },
+
+  getBankAccountByClientId: async (token, clientId) => {
+    try {
+      const response = await axios.get(
+        `${BASE_ROUTE}BankAccount/client/${clientId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Erro ao obter conta bancária do cliente:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
 };
 
 export default clientServices;
