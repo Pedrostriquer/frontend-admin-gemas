@@ -2,7 +2,60 @@ import axios from "axios";
 
 const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
 
+const normalizeSearchString = (str) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+};
+
 const clientServices = {
+  loginAsClient: async (adminToken, clientId) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}auth/login/as-client`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+            "X-Client-ID": clientId,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao tentar logar como cliente:", error);
+      throw error;
+    }
+  },
+
+  getById: async (token, id) => {
+    try {
+      const response = await axios.get(`${BASE_ROUTE}client/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
+  getClients: async (token, searchFilter, pageNumber = 1, pageSize = 10) => {
+    try {
+      const normalizedFilter = normalizeSearchString(searchFilter);
+      const response = await axios.get(
+        `${BASE_ROUTE}client/search?searchFilter=${normalizedFilter}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
   editClient: async (id, updates, token) => {
     try {
       const response = await axios.patch(`${BASE_ROUTE}client/${id}`, updates, {
@@ -45,7 +98,6 @@ const clientServices = {
       );
     }
   },
-
   requestPasswordReset: async (email) => {
     try {
       const response = await axios.post(
@@ -64,7 +116,6 @@ const clientServices = {
       );
     }
   },
-
   resetPassword: async (verificationCode, newPassword) => {
     try {
       const response = await axios.post(`${BASE_ROUTE}client/reset-password`, {
@@ -80,6 +131,40 @@ const clientServices = {
       throw (
         error.response?.data || new Error("Não foi possível redefinir a senha.")
       );
+    }
+  },
+  addExtraBalance: async (token, clientId, amount, description) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}extra`,
+        { clientId, amount, description },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Erro ao adicionar saldo extra:",
+        error.response?.data || error
+      );
+      throw error.response?.data || error;
+    }
+  },
+
+  changePasswordByAdmin: async (token, clientId, newPassword) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}client/${clientId}/change-password-admin`,
+        { newPassword },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao alterar senha:", error.response?.data || error);
+      throw error.response?.data || error;
     }
   },
 };

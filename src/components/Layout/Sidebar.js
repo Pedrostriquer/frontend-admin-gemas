@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from './SidebarStyle';
+import { useAuth } from '../../Context/AuthContext';
 
 const ContextButton = ({ isActive, isCollapsed, onClick, icon, children }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -46,6 +47,7 @@ const NavItem = ({ isActive, isCollapsed, onClick, icon, children, hoverStyle })
 function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle, activePath, onLinkClick }) {
     const [isToggleHovered, setIsToggleHovered] = useState(false);
     const [isUserHovered, setIsUserHovered] = useState(false);
+    const {logout} = useAuth()
 
     const contractsMenu = [
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/platform/dashboard' },
@@ -68,9 +70,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
     const menuToShow = activeContext === 'platform' ? contractsMenu : ecommerceMenu;
 
     const handleLogout = () => {
-        console.log("Logout acionado!");
-        alert("Usuário deslogado com sucesso! (Simulação)");
-        // onLinkClick('/login'); 
+        logout()
     };
 
     const navStyle = {

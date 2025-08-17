@@ -4,7 +4,61 @@ import axios from "axios";
 
 const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
 
+const normalizeSearchString = (str) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+};
+
 const contractServices = {
+  updateContractStatus: async (token, ids, newStatus) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}contract/update-status`,
+        { ids, newStatus },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar status do contrato:", error);
+      throw error;
+    }
+  },
+  getContracts: async (token, filters, pageNumber = 1, pageSize = 10) => {
+    try {
+      const normalizedFilter = normalizeSearchString(filters.searchTerm);
+
+      let url = `${BASE_ROUTE}contract/search?searchTerm=${normalizedFilter}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+      if (filters.status && filters.status !== "Todos") {
+        url += `&status=${filters.status}`;
+      }
+
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar contratos:", error);
+      throw error;
+    }
+  },
+  getById: async (token, id) => {
+    try {
+      const response = await axios.get(`${BASE_ROUTE}contract/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar contratos:", error);
+      throw error;
+    }
+  },
+
   obterRegras: async (token) => {
     try {
       const response = await axios.get(`${BASE_ROUTE}contract/rules`, {
@@ -130,6 +184,21 @@ const contractServices = {
     } catch (error) {
       console.error("Erro ao atualizar auto-reinvestimento:", error);
       throw error;
+    }
+  },
+  cancelContract: async (token, contractId, withdrawMoney) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}contract/cancel/${contractId}?withdrawMoney=${withdrawMoney}`,
+        null, // O corpo da requisição é vazio
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao cancelar contrato:", error);
+      throw error.response?.data || error;
     }
   },
 };

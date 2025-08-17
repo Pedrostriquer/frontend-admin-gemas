@@ -3,9 +3,9 @@ import axios from "axios";
 const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
 
 const platformServices = {
-  getSidebarConfig: async (token) => {
+  getDashboardData: async (token) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}platformconfig/sidebar`, {
+      const response = await axios.get(`${BASE_ROUTE}platformadminconfig`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;

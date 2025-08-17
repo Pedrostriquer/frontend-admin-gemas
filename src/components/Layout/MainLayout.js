@@ -1,16 +1,25 @@
-// MainLayout.js
 import React, { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
 const layoutStyles = {
+  appContainer: {
+    display: 'flex',
+    height: '100vh',
+    width: '100vw',
+    overflow: 'hidden',
+    backgroundColor: '#f8f9fa'
+  },
   mainContent: {
-    padding: '24px',
-    transition: 'margin-left 0.3s ease',
-    marginLeft: '260px', 
+    flex: 1,
+    overflowY: 'auto',
+    height: '100vh',
+    paddingLeft: '280px', 
+    paddingRight: '20px', 
+    transition: 'padding-left 0.3s ease',
   },
   mainContentCollapsed: {
-    marginLeft: '88px',
+    paddingLeft: '88px', // Padding quando a sidebar está recolhida
   }
 };
 
@@ -42,7 +51,7 @@ export default function MainLayout() {
   };
 
   return (
-    <div> 
+    <div style={layoutStyles.appContainer}>
       <Sidebar
         activeContext={activeContext}
         onContextChange={handleContextChange}
