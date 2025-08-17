@@ -1,4 +1,4 @@
-// src/dbServices/contractServices.js (Arquivo completo atualizado)
+// src/dbServices/contractServices.js
 
 import axios from "axios";
 
@@ -13,6 +13,52 @@ const normalizeSearchString = (str) => {
 };
 
 const contractServices = {
+  setReinvestmentAvailability: async (token, contractId, isAvailable) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}contract/${contractId}/reinvestment-availability`,
+        { isAvailable },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao alterar disponibilidade de reinvestimento:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // --- FUNÇÃO CORRIGIDA AQUI ---
+  atualizarAutoReinvestimentoCliente: async (
+    token,
+    contractId,
+    autoReinvestState,
+    idCliente // Este parâmetro pode não ser necessário se a validação for só pelo token
+  ) => {
+    try {
+      // O corpo da requisição agora é um objeto
+      const body = { autoReinvestState: autoReinvestState };
+      const response = await axios.patch(
+        `${BASE_ROUTE}contract/${contractId}/auto-reinvest`,
+        body, // Enviando o objeto
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            // A validação no backend que você me mostrou usa o token,
+            // então o Client-ID-Ref pode não ser estritamente necessário aqui, mas mantemos por consistência.
+            "Client-ID-Ref": idCliente, 
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar auto-reinvestimento:", error);
+      throw error;
+    }
+  },
+  
   updateContractStatus: async (token, ids, newStatus) => {
     try {
       const response = await axios.post(
@@ -162,30 +208,6 @@ const contractServices = {
     }
   },
 
-  atualizarAutoReinvestimentoCliente: async (
-    token,
-    contractId,
-    autoReinvestState,
-    idCliente
-  ) => {
-    try {
-      const response = await axios.patch(
-        `${BASE_ROUTE}contract/${contractId}/auto-reinvest`,
-        autoReinvestState,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "Client-ID-Ref": idCliente,
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Erro ao atualizar auto-reinvestimento:", error);
-      throw error;
-    }
-  },
   cancelContract: async (token, contractId, withdrawMoney) => {
     try {
       const response = await axios.post(
@@ -216,9 +238,13 @@ const contractServices = {
 
   createContractRule: async (token, ruleData) => {
     try {
-      const response = await axios.post(`${BASE_ROUTE}contractrules`, ruleData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        `${BASE_ROUTE}contractrules`,
+        ruleData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Erro ao criar regra de contrato:", error);
@@ -228,9 +254,13 @@ const contractServices = {
 
   updateContractRule: async (token, ruleId, ruleData) => {
     try {
-      const response = await axios.put(`${BASE_ROUTE}contractrules/${ruleId}`, ruleData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put(
+        `${BASE_ROUTE}contractrules/${ruleId}`,
+        ruleData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar regra de contrato:", error);
@@ -251,9 +281,13 @@ const contractServices = {
 
   updateContractSettings: async (token, settingsData) => {
     try {
-      const response = await axios.put(`${BASE_ROUTE}contractsettings`, settingsData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put(
+        `${BASE_ROUTE}contractsettings`,
+        settingsData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar configurações de contrato:", error);
@@ -263,13 +297,98 @@ const contractServices = {
 
   deleteContractRule: async (token, ruleId) => {
     try {
-      const response = await axios.delete(`${BASE_ROUTE}contractrules/${ruleId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.delete(
+        `${BASE_ROUTE}contractrules/${ruleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Erro ao deletar regra de contrato:", error);
       throw error;
+    }
+  },
+
+  uploadContractFiles: async (
+    token,
+    contractId,
+    certificateFiles,
+    mediaFiles
+  ) => {
+    const formData = new FormData();
+
+    certificateFiles.forEach((file) => {
+      formData.append("certificates", file, file.name);
+    });
+
+    mediaFiles.forEach((file) => {
+      formData.append("media", file, file.name);
+    });
+
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}contract/${contractId}/files`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao fazer upload dos arquivos do contrato:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  deleteContractFile: async (token, contractId, fileUrl, fileType) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_ROUTE}contract/${contractId}/files?fileUrl=${encodeURIComponent(
+          fileUrl
+        )}&fileType=${fileType}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar arquivo do contrato:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  deleteAllContractFiles: async (token, contractId, fileType) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_ROUTE}contract/${contractId}/files/all?fileType=${fileType}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar todos os arquivos do contrato:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  addOrUpdateTracking: async (token, contractId, trackingData) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}contract/${contractId}/tracking`,
+        trackingData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao salvar dados de rastreio:", error);
+      throw error.response?.data || error;
     }
   },
 };

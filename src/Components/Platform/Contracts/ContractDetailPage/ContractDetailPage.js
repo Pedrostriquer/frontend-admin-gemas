@@ -1,9 +1,14 @@
-import React, { useState, useEffect, useCallback } from "react";
+// src/pages/Admin/ContractDetailPage/ContractDetailPage.js
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styles from "./ContractDetailPageStyle";
 import contractServices from "../../../../dbServices/contractServices";
 import { useAuth } from "../../../../Context/AuthContext";
 import CancelContractModal from "./CancelContractModal/CancelContractModal";
+import { toPng } from "html-to-image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const formatCurrency = (v) =>
   (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -28,6 +33,249 @@ const statusStyleMap = {
   4: "statusFinalizado",
 };
 
+const dataURLtoFile = (dataurl, filename) => {
+  const arr = dataurl.split(","),
+    mime = arr[0].match(/:(.*?);/)[1],
+    bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+
+const LoadingOverlay = ({ text }) => (
+  <div style={styles.loadingOverlay}>
+    <div style={styles.loadingSpinner}></div>
+    <p style={styles.loadingText}>{text}</p>
+  </div>
+);
+
+const CertificateModal = ({ isOpen, onClose, onGenerate }) => {
+  const [stoneName, setStoneName] = useState("");
+  const [stoneCode, setStoneCode] = useState("");
+  const [certificateCode, setCertificateCode] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const certificateRef = useRef(null);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stoneName || !stoneCode || !certificateCode) {
+      alert("Preencha todos os campos do certificado.");
+      return;
+    }
+    if (certificateRef.current === null) return;
+
+    setIsGenerating(true);
+    try {
+      const dataUrl = await toPng(certificateRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const file = dataURLtoFile(dataUrl, `certificado_${certificateCode}.png`);
+      onGenerate(file);
+
+      setStoneName("");
+      setStoneCode("");
+      setCertificateCode("");
+      onClose();
+    } catch (err) {
+      console.error("Oops, algo deu errado!", err);
+      alert("Não foi possível gerar a imagem do certificado.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div ref={certificateRef} style={styles.certificatePreview}>
+          <div style={styles.certHeader}>
+            <i className="fa-solid fa-gem" style={styles.certIcon}></i>
+            <h2 style={styles.certTitle}>Certificado de Autenticidade</h2>
+            <p style={styles.certSubtitle}>Gemas Brilhantes Co.</p>
+          </div>
+          <div style={styles.certBody}>
+            <p>
+              Certificamos que a gema descrita abaixo é autêntica e de alta
+              qualidade.
+            </p>
+            <div style={styles.certDetail}>
+              <span>Nome da Gema:</span>{" "}
+              <strong>{stoneName || "Ex: Diamante Negro"}</strong>
+            </div>
+            <div style={styles.certDetail}>
+              <span>Código da Gema:</span>{" "}
+              <strong>{stoneCode || "Ex: DN-12345"}</strong>
+            </div>
+            <div style={styles.certDetail}>
+              <span>Código do Certificado:</span>{" "}
+              <strong>{certificateCode || "Ex: GBC-CERT-XYZ"}</strong>
+            </div>
+          </div>
+          <div style={styles.certFooter}>
+            <p>Emitido em: {new Date().toLocaleDateString("pt-BR")}</p>
+            <div style={styles.certSeal}>AUTÊNTICO</div>
+          </div>
+        </div>
+        <form onSubmit={handleSubmit} style={styles.certForm}>
+          <input
+            type="text"
+            placeholder="Nome da Pedra"
+            value={stoneName}
+            onChange={(e) => setStoneName(e.target.value)}
+            style={styles.actionCardInput}
+            disabled={isGenerating}
+          />
+          <input
+            type="text"
+            placeholder="Código da Pedra"
+            value={stoneCode}
+            onChange={(e) => setStoneCode(e.target.value)}
+            style={styles.actionCardInput}
+            disabled={isGenerating}
+          />
+          <input
+            type="text"
+            placeholder="Código do Certificado"
+            value={certificateCode}
+            onChange={(e) => setCertificateCode(e.target.value)}
+            style={styles.actionCardInput}
+            disabled={isGenerating}
+          />
+          <div style={styles.certFormActions}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ ...styles.actionCardButton, ...styles.buttonSecondary }}
+              disabled={isGenerating}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              style={{ ...styles.actionCardButton, ...styles.buttonPrimary }}
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Gerando..." : "Gerar Certificado"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const TrackingModal = ({ isOpen, onClose, onSubmit, existingTracking }) => {
+  const [companyName, setCompanyName] = useState("");
+  const [trackingCode, setTrackingCode] = useState("");
+  const [hasLink, setHasLink] = useState("nao");
+  const [trackingLink, setTrackingLink] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (existingTracking) {
+      setCompanyName(existingTracking.companyName || "");
+      setTrackingCode(existingTracking.trackingCode || "");
+      if (existingTracking.trackingLink) {
+        setHasLink("sim");
+        setTrackingLink(existingTracking.trackingLink);
+      } else {
+        setHasLink("nao");
+        setTrackingLink("");
+      }
+    } else {
+      setCompanyName("");
+      setTrackingCode("");
+      setHasLink("nao");
+      setTrackingLink("");
+    }
+  }, [isOpen, existingTracking]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const data = {
+      companyName,
+      trackingCode,
+      trackingLink: hasLink === "sim" ? trackingLink : null,
+    };
+    await onSubmit(data);
+    setIsSubmitting(false);
+    onClose();
+  };
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <h3 style={styles.modalTitle}>Informações de Rastreio</h3>
+        <form onSubmit={handleSubmit} style={styles.modalForm}>
+          <input
+            type="text"
+            placeholder="Nome da Transportadora"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            style={styles.actionCardInput}
+            required
+          />
+          <input
+            type="text"
+            placeholder="Código de Rastreio"
+            value={trackingCode}
+            onChange={(e) => setTrackingCode(e.target.value)}
+            style={styles.actionCardInput}
+            required
+          />
+          <div style={styles.modalSelectGroup}>
+            <label>Possui link de rastreamento?</label>
+            <select
+              value={hasLink}
+              onChange={(e) => setHasLink(e.target.value)}
+              style={styles.modalSelect}
+            >
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+          {hasLink === "sim" && (
+            <input
+              type="text"
+              placeholder="Link de Rastreamento (URL completa)"
+              value={trackingLink}
+              onChange={(e) => setTrackingLink(e.target.value)}
+              style={styles.actionCardInput}
+              required
+            />
+          )}
+          <div style={styles.modalActions}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ ...styles.actionCardButton, ...styles.buttonSecondary }}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              style={{ ...styles.actionCardButton, ...styles.buttonPrimary }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Salvando..." : "Salvar"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 function ContractDetailPage() {
   const { contractId } = useParams();
   const navigate = useNavigate();
@@ -35,13 +283,30 @@ function ContractDetailPage() {
 
   const [contract, setContract] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
+
+  const [media, setMedia] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [newMediaFiles, setNewMediaFiles] = useState([]);
+  const [newCertificateFiles, setNewCertificateFiles] = useState([]);
 
   const [addMonths, setAddMonths] = useState(1);
   const [reinvestAmount, setReinvestAmount] = useState("");
-  const [isAutoReinvest, setIsAutoReinvest] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [showCertOptions, setShowCertOptions] = useState(false);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+
+  const [isTogglingReinvestment, setIsTogglingReinvestment] = useState(false);
+  const [isTogglingAutoReinvest, setIsTogglingAutoReinvest] = useState(false);
+
+  const mediaInputRef = useRef(null);
+  const certImageInputRef = useRef(null);
+
+  const hasPendingChanges =
+    newMediaFiles.length > 0 || newCertificateFiles.length > 0;
 
   const fetchContract = useCallback(async () => {
     if (!token || !contractId) return;
@@ -50,13 +315,22 @@ function ContractDetailPage() {
     try {
       const data = await contractServices.getById(token, contractId);
       setContract(data);
-      if (data && typeof data.autoReinvest !== "undefined") {
-        setIsAutoReinvest(data.autoReinvest);
-      }
+      setMedia(
+        data.rockData?.map((url) => ({
+          type: url.includes(".mp4") ? "video" : "image",
+          url,
+          isNew: false,
+        })) || []
+      );
+      setCertificates(
+        data.certificados?.map((url) => ({
+          type: "image",
+          url,
+          isNew: false,
+        })) || []
+      );
     } catch (err) {
-      console.error("Erro ao buscar detalhes do contrato:", err);
       setError("Não foi possível carregar o contrato.");
-      setContract(null);
     } finally {
       setIsLoading(false);
     }
@@ -66,68 +340,192 @@ function ContractDetailPage() {
     fetchContract();
   }, [fetchContract]);
 
-  const handleReinvest = async () => {
-    if (isSubmitting) return;
-    const amount = parseFloat(
-      reinvestAmount.replace(/\./g, "").replace(",", ".")
-    );
-    if (isNaN(amount) || amount <= 0) {
-      alert("Por favor, insira um valor válido para reinvestir.");
-      return;
-    }
-    if (amount > contract.currentIncome) {
-      alert("O valor de reinvestimento não pode ser maior que o lucro atual.");
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const data = { contractId: contract.id, amount };
-      await contractServices.reinvestirLucroCliente(
-        token,
-        data,
-        contract.clientId
-      );
-      alert("Reinvestimento realizado com sucesso!");
-      setReinvestAmount("");
-      fetchContract();
-    } catch (err) {
-      console.error("Erro ao reinvestir:", err);
-      alert("Ocorreu um erro ao tentar reinvestir. Tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const handleReinvest = async () => {};
 
   const handleToggleAutoReinvest = async () => {
-    const newAutoReinvestState = !isAutoReinvest;
-    setIsAutoReinvest(newAutoReinvestState);
+    if (isTogglingAutoReinvest) return;
+
+    setIsTogglingAutoReinvest(true);
     try {
-      const data = { autoReinvest: newAutoReinvestState };
+      const newState = !contract.autoReinvest;
       await contractServices.atualizarAutoReinvestimentoCliente(
         token,
-        contract.id,
-        data,
+        contractId,
+        newState,
         contract.clientId
       );
+      setContract((prev) => ({ ...prev, autoReinvest: newState }));
     } catch (err) {
-      console.error("Erro ao atualizar o reinvestimento automático:", err);
-      alert(
-        "Não foi possível salvar a sua preferência. Por favor, tente novamente."
-      );
-      setIsAutoReinvest(!newAutoReinvestState);
+      alert("Erro ao alterar o reinvestimento automático.");
+    } finally {
+      setIsTogglingAutoReinvest(false);
     }
   };
 
   const handleExtendContract = () =>
     alert(`Funcionalidade de extensão ainda não implementada.`);
+  const handleOpenCancelModal = () => setIsCancelModalOpen(true);
 
-  const handleOpenCancelModal = () => {
-    setIsCancelModalOpen(true);
+  const handleToggleReinvestmentAvailability = async () => {
+    if (isTogglingReinvestment) return;
+    setIsTogglingReinvestment(true);
+    try {
+      const newState = !contract.reivestmentAvaliable;
+      const updatedContract =
+        await contractServices.setReinvestmentAvailability(
+          token,
+          contractId,
+          newState
+        );
+      setContract(updatedContract);
+    } catch (err) {
+      alert("Erro ao alterar a permissão de reinvestimento.");
+    } finally {
+      setIsTogglingReinvestment(false);
+    }
   };
 
-  if (isLoading)
+  const handleMediaFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewMediaFiles((prev) => [...prev, file]);
+      const url = URL.createObjectURL(file);
+      const type = file.type.startsWith("video") ? "video" : "image";
+      setMedia((prev) => [
+        ...prev,
+        { url, type, name: file.name, isNew: true, fileRef: file },
+      ]);
+      e.target.value = null;
+    }
+  };
+
+  const handleCertificateImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewCertificateFiles((prev) => [...prev, file]);
+      const url = URL.createObjectURL(file);
+      setCertificates((prev) => [
+        ...prev,
+        { type: "image", url, name: file.name, isNew: true, fileRef: file },
+      ]);
+      setShowCertOptions(false);
+      e.target.value = null;
+    }
+  };
+
+  const handleGenerateCertificate = (file) => {
+    setNewCertificateFiles((prev) => [...prev, file]);
+    const url = URL.createObjectURL(file);
+    setCertificates((prev) => [
+      ...prev,
+      { type: "image", url, name: file.name, isNew: true, fileRef: file },
+    ]);
+  };
+
+  const handleSaveFiles = async () => {
+    if (!hasPendingChanges || isSaving) return;
+    setIsSaving(true);
+    try {
+      await contractServices.uploadContractFiles(
+        token,
+        contractId,
+        newCertificateFiles,
+        newMediaFiles
+      );
+      setNewCertificateFiles([]);
+      setNewMediaFiles([]);
+      await fetchContract();
+      alert("Arquivos salvos com sucesso!");
+    } catch (err) {
+      alert("Ocorreu um erro ao salvar os arquivos. Tente novamente.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveStagedItem = (itemToRemove, type) => {
+    if (isSaving) return;
+    if (type === "media") {
+      setMedia((prev) => prev.filter((item) => item !== itemToRemove));
+      setNewMediaFiles((prev) =>
+        prev.filter((file) => file !== itemToRemove.fileRef)
+      );
+    } else {
+      setCertificates((prev) => prev.filter((item) => item !== itemToRemove));
+      setNewCertificateFiles((prev) =>
+        prev.filter((file) => file !== itemToRemove.fileRef)
+      );
+    }
+  };
+
+  const handleRemoveFile = async (fileUrl, fileType) => {
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir este arquivo? A ação não pode ser desfeita.`
+      )
+    )
+      return;
+    setIsDeleting(true);
+    try {
+      await contractServices.deleteContractFile(
+        token,
+        contractId,
+        fileUrl,
+        fileType
+      );
+      await fetchContract();
+    } catch (err) {
+      alert("Erro ao excluir o arquivo.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRemoveAllFiles = async (fileType) => {
+    const typeName = fileType === "media" ? "mídias" : "certificados";
+    if (
+      !window.confirm(
+        `ATENÇÃO! Tem certeza que deseja excluir TODAS as ${typeName} deste contrato? A ação não pode ser desfeita.`
+      )
+    )
+      return;
+    setIsDeleting(true);
+    try {
+      await contractServices.deleteAllContractFiles(
+        token,
+        contractId,
+        fileType
+      );
+      await fetchContract();
+    } catch (err) {
+      alert(`Erro ao excluir todas as ${typeName}.`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSaveTracking = async (trackingData) => {
+    setIsSaving(true);
+    try {
+      await contractServices.addOrUpdateTracking(
+        token,
+        contractId,
+        trackingData
+      );
+      await fetchContract();
+      alert("Informações de rastreio salvas com sucesso!");
+    } catch (err) {
+      alert("Erro ao salvar as informações de rastreio.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading || isDeleting)
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>Carregando...</div>
+      <LoadingOverlay
+        text={isDeleting ? "Excluindo arquivos..." : "Carregando contrato..."}
+      />
     );
   if (error)
     return (
@@ -147,6 +545,22 @@ function ContractDetailPage() {
 
   return (
     <>
+      {isSaving && <LoadingOverlay text="Salvando alterações..." />}
+      <input
+        type="file"
+        ref={mediaInputRef}
+        style={{ display: "none" }}
+        accept="image/*,video/*"
+        onChange={handleMediaFileChange}
+      />
+      <input
+        type="file"
+        ref={certImageInputRef}
+        style={{ display: "none" }}
+        accept="image/*"
+        onChange={handleCertificateImageChange}
+      />
+
       <div style={styles.detailPageContainer}>
         <header style={styles.detailHeader}>
           <div style={styles.headerLeft}>
@@ -162,8 +576,25 @@ function ContractDetailPage() {
             </h1>
           </div>
           <div style={styles.headerActions}>
+            {hasPendingChanges && (
+              <button
+                onClick={handleSaveFiles}
+                style={{
+                  ...styles.actionCardButton,
+                  ...styles.saveChangesButton,
+                }}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <div style={styles.buttonSpinner}></div>
+                ) : (
+                  <i className="fa-solid fa-save"></i>
+                )}
+                {isSaving ? "Salvando..." : "Salvar Alterações"}
+              </button>
+            )}
             <Link
-              to={`/clients/${contract?.clientId}`}
+              to={`/admin/clients/${contract?.clientId}`}
               style={{ textDecoration: "none" }}
             >
               <button style={styles.goToClientButton}>
@@ -229,8 +660,204 @@ function ContractDetailPage() {
                 <span>{progressPercentage.toFixed(1)}%</span>
               </div>
             </div>
+            <div style={styles.infoCard}>
+              <div style={styles.cardHeaderAction}>
+                <h3 style={styles.infoCardTitle}>
+                  <i className="fa-solid fa-photo-film"></i> Imagens e Vídeos
+                </h3>
+                {media.filter((m) => !m.isNew).length > 0 && (
+                  <button
+                    style={styles.deleteAllButton}
+                    onClick={() => handleRemoveAllFiles("media")}
+                  >
+                    <FontAwesomeIcon icon={faTrash} /> Excluir Todas
+                  </button>
+                )}
+              </div>
+              <div style={styles.mediaGrid}>
+                {media.map((item, index) => (
+                  <div key={index} style={styles.mediaItem}>
+                    {item.isNew ? (
+                      <button
+                        style={styles.removeItemButton}
+                        onClick={() => handleRemoveStagedItem(item, "media")}
+                      >
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
+                    ) : (
+                      <button
+                        style={styles.removeItemButton}
+                        onClick={() => handleRemoveFile(item.url, "media")}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    )}
+                    {item.type === "image" ? (
+                      <img
+                        src={item.url}
+                        alt={item.name}
+                        style={styles.mediaContent}
+                      />
+                    ) : (
+                      <video
+                        src={item.url}
+                        style={styles.mediaContent}
+                        controls
+                      />
+                    )}
+                  </div>
+                ))}
+                <button
+                  style={styles.addMediaButton}
+                  onClick={() => mediaInputRef.current.click()}
+                >
+                  <i className="fa-solid fa-plus"></i> Adicionar Mídia
+                </button>
+              </div>
+            </div>
+            <div style={styles.infoCard}>
+              <div style={styles.cardHeaderAction}>
+                <h3 style={styles.infoCardTitle}>
+                  <i className="fa-solid fa-award"></i> Certificados
+                </h3>
+                {certificates.filter((c) => !c.isNew).length > 0 && (
+                  <button
+                    style={styles.deleteAllButton}
+                    onClick={() => handleRemoveAllFiles("certificate")}
+                  >
+                    <FontAwesomeIcon icon={faTrash} /> Excluir Todas
+                  </button>
+                )}
+              </div>
+              <div style={styles.certificateList}>
+                {certificates.map((cert, index) => (
+                  <div key={index} style={styles.certificateItem}>
+                    {cert.isNew ? (
+                      <button
+                        style={styles.removeItemButton}
+                        onClick={() =>
+                          handleRemoveStagedItem(cert, "certificate")
+                        }
+                      >
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
+                    ) : (
+                      <button
+                        style={styles.removeItemButton}
+                        onClick={() =>
+                          handleRemoveFile(cert.url, "certificate")
+                        }
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    )}
+                    <img
+                      src={cert.url}
+                      alt={cert.name || "Certificado"}
+                      style={styles.certificateImage}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div style={styles.certActionsContainer}>
+                {!showCertOptions ? (
+                  <button
+                    onClick={() => setShowCertOptions(true)}
+                    style={{
+                      ...styles.actionCardButton,
+                      ...styles.buttonPrimary,
+                      width: "auto",
+                    }}
+                  >
+                    <i
+                      className="fa-solid fa-plus"
+                      style={{ marginRight: "8px" }}
+                    ></i>{" "}
+                    Adicionar Certificado
+                  </button>
+                ) : (
+                  <div style={styles.certOptionButtons}>
+                    <button
+                      onClick={() => certImageInputRef.current.click()}
+                      style={{
+                        ...styles.actionCardButton,
+                        ...styles.buttonSecondary,
+                      }}
+                    >
+                      <i
+                        className="fa-solid fa-image"
+                        style={{ marginRight: "8px" }}
+                      ></i>{" "}
+                      Adicionar Imagem
+                    </button>
+                    <button
+                      onClick={() => setIsCertModalOpen(true)}
+                      style={{
+                        ...styles.actionCardButton,
+                        ...styles.buttonPrimary,
+                      }}
+                    >
+                      <i
+                        className="fa-solid fa-scroll"
+                        style={{ marginRight: "8px" }}
+                      ></i>{" "}
+                      Gerar Certificado Digital
+                    </button>
+                    <button
+                      onClick={() => setShowCertOptions(false)}
+                      style={styles.certCancelButton}
+                    >
+                      <i className="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <aside style={styles.actionPanel}>
+            <div style={styles.actionCard}>
+              <h3 style={styles.actionCardTitle}>
+                <i className="fa-solid fa-truck-fast"></i> Rastreio da Pedra
+              </h3>
+              {contract.tracking ? (
+                <div style={styles.trackingInfo}>
+                  <span>
+                    <strong>Transportadora:</strong>{" "}
+                    {contract.tracking.companyName}
+                  </span>
+                  <span>
+                    <strong>Código:</strong> {contract.tracking.trackingCode}
+                  </span>
+                  {contract.tracking.trackingLink && (
+                    <a
+                      href={contract.tracking.trackingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Rastrear Envio
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setIsTrackingModalOpen(true)}
+                    style={styles.editTrackingButton}
+                  >
+                    Editar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsTrackingModalOpen(true)}
+                  style={{
+                    ...styles.actionCardButton,
+                    ...styles.buttonPrimary,
+                    width: "100%",
+                  }}
+                >
+                  <i className="fa-solid fa-plus"></i> Inserir Código de
+                  Rastreio
+                </button>
+              )}
+            </div>
             <div style={styles.actionCard}>
               <h3 style={styles.actionCardTitle}>
                 <i className="fa-solid fa-calendar-plus"></i> Estender Contrato
@@ -266,7 +893,6 @@ function ContractDetailPage() {
                   onChange={(e) => setReinvestAmount(e.target.value)}
                   style={styles.actionCardInput}
                   placeholder="R$ 0,00"
-                  disabled={isSubmitting}
                 />
                 <button
                   onClick={handleReinvest}
@@ -274,38 +900,94 @@ function ContractDetailPage() {
                     ...styles.actionCardButton,
                     ...styles.buttonPrimary,
                   }}
-                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Enviando..." : "Reinvestir"}
+                  Reinvestir
                 </button>
               </div>
-              <div style={styles.toggleSwitchContainer}>
-                <span style={styles.toggleLabel}>Reinvest. automático</span>
+              <div
+                style={{
+                  ...styles.toggleSwitchContainer,
+                  marginBottom: "12px",
+                }}
+              >
+                <span style={styles.toggleLabel}>Permitir Reinvestimento</span>
                 <label style={styles.toggleSwitch}>
                   <input
                     type="checkbox"
-                    checked={isAutoReinvest}
-                    onChange={handleToggleAutoReinvest}
+                    checked={contract.reivestmentAvaliable || false}
+                    onChange={handleToggleReinvestmentAvailability}
+                    disabled={isTogglingReinvestment}
                     style={styles.toggleSwitchInput}
                   />
                   <span
                     style={{
                       ...styles.toggleSlider,
-                      ...(isAutoReinvest && styles.toggleSwitchInputChecked),
+                      ...(contract.reivestmentAvaliable &&
+                        styles.toggleSwitchInputChecked),
                     }}
                   >
-                    <span
-                      style={{
-                        ...styles.toggleSliderBefore,
-                        ...(isAutoReinvest &&
-                          styles.toggleSwitchInputCheckedBefore),
-                      }}
-                    ></span>
+                    {/* --- ALTERAÇÃO AQUI: SPINNER DE LOADING --- */}
+                    {isTogglingReinvestment ? (
+                      <div style={styles.toggleSpinner} />
+                    ) : (
+                      <span
+                        style={{
+                          ...styles.toggleSliderBefore,
+                          ...(contract.reivestmentAvaliable &&
+                            styles.toggleSwitchInputCheckedBefore),
+                        }}
+                      ></span>
+                    )}
+                  </span>
+                </label>
+              </div>
+              <div style={styles.toggleSwitchContainer}>
+                <span
+                  style={{
+                    ...styles.toggleLabel,
+                    color: !contract.reivestmentAvaliable
+                      ? "#9ca3af"
+                      : "#334155",
+                  }}
+                >
+                  Reinvest. automático
+                </span>
+                <label style={styles.toggleSwitch}>
+                  <input
+                    type="checkbox"
+                    checked={contract.autoReinvest || false}
+                    onChange={handleToggleAutoReinvest}
+                    disabled={
+                      !contract.reivestmentAvaliable || isTogglingAutoReinvest
+                    }
+                    style={styles.toggleSwitchInput}
+                  />
+                  <span
+                    style={{
+                      ...styles.toggleSlider,
+                      ...(contract.autoReinvest &&
+                        contract.reivestmentAvaliable &&
+                        styles.toggleSwitchInputChecked),
+                    }}
+                  >
+                    {/* --- ALTERAÇÃO AQUI: SPINNER DE LOADING --- */}
+                    {isTogglingAutoReinvest ? (
+                      <div style={styles.toggleSpinner} />
+                    ) : (
+                      <span
+                        style={{
+                          ...styles.toggleSliderBefore,
+                          ...(contract.autoReinvest &&
+                            contract.reivestmentAvaliable &&
+                            styles.toggleSwitchInputCheckedBefore),
+                        }}
+                      ></span>
+                    )}
                   </span>
                 </label>
               </div>
             </div>
-            {contract.status != 3 && contract.status != 4 && (
+            {contract.status !== 3 && contract.status !== 4 && (
               <div style={styles.actionCard}>
                 <h3 style={styles.actionCardTitle}>
                   <i className="fa-solid fa-triangle-exclamation"></i> Zona de
@@ -326,6 +1008,17 @@ function ContractDetailPage() {
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         contract={contract}
+      />
+      <CertificateModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        onGenerate={handleGenerateCertificate}
+      />
+      <TrackingModal
+        isOpen={isTrackingModalOpen}
+        onClose={() => setIsTrackingModalOpen(false)}
+        onSubmit={handleSaveTracking}
+        existingTracking={contract?.tracking}
       />
     </>
   );

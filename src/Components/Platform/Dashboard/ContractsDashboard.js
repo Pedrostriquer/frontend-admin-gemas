@@ -14,6 +14,7 @@ import styles from "./ContractsDashboardStyle.js";
 import platformServices from "../../../dbServices/platformServices.js";
 import { useAuth } from "../../../Context/AuthContext.js";
 import ImageWithLoader from "../ImageWithLoader/ImageWithLoader.js";
+import { useNavigate } from "react-router-dom";
 
 const RoundedBar = (props) => {
   const { x, y, width, height, fill } = props;
@@ -55,6 +56,7 @@ function ContractsDashboard() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,6 +139,12 @@ function ContractsDashboard() {
     .reverse();
 
   const topClientGoal = data.bestClients?.[0]?.amount || 1;
+
+  // http://localhost:3000/platform/clients/1
+
+  const goToClient = (id) => {
+    navigate(`/platform/clients/${id}`);
+  }
 
   return (
     <div style={styles.dashboardContainer}>
@@ -251,7 +259,7 @@ function ContractsDashboard() {
           <h3 style={styles.cardTitle}>Melhores Clientes</h3>
           <ul style={styles.sellersList}>
             {data.bestClients?.map((client, index) => (
-              <li key={index} style={styles.sellerItem}>
+              <li onClick={() => goToClient(client.id)} key={index} style={styles.sellerItem}>
                 <ImageWithLoader
                   src={
                     client.profilePictureUrl ||

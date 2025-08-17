@@ -22,6 +22,7 @@ import ReferralsPage from "./Components/Platform/Indication/ReferralsPage";
 import OffersPage from "./Components/Platform/Offers/OffersPage";
 import Messages from "./Components/Platform/Messages/MessagesPage";
 import CreateClientPage from "./Components/Platform/Clients/CreateClientPage/CreateClientPage";
+import UsersPage from "./Components/Users/UsersPage";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
                 <Route index element={<Navigate to="/platform/dashboard" />} />
+                <Route path="users" element={<UsersPage />} />
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="platform/dashboard" element={<ContractsDashboard />} />
                 <Route path="platform/clients" element={<ClientsPage />} />

@@ -57,8 +57,8 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/platform/withdraws' },
         { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/platform/controller' },
         { name: 'Indicação', icon: 'fa-solid fa-share-nodes', path: '/platform/indication' },
-        { name: 'Ofertas', icon: 'fa-solid fa-bullhorn', path: '/platform/offers' },
-        { name: 'Mensagens', icon: 'fa-solid fa-envelope', path: '/platform/messages' },
+        // { name: 'Ofertas', icon: 'fa-solid fa-bullhorn', path: '/platform/offers' },
+        // { name: 'Mensagens', icon: 'fa-solid fa-envelope', path: '/platform/messages' },
     ];
     const ecommerceMenu = [
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/ecommerce/dashboard' },
