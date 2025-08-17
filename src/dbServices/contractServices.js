@@ -201,6 +201,77 @@ const contractServices = {
       throw error.response?.data || error;
     }
   },
+
+  getContractRules: async (token) => {
+    try {
+      const response = await axios.get(`${BASE_ROUTE}contractrules`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao obter regras de contrato:", error);
+      throw error;
+    }
+  },
+
+  createContractRule: async (token, ruleData) => {
+    try {
+      const response = await axios.post(`${BASE_ROUTE}contractrules`, ruleData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar regra de contrato:", error);
+      throw error;
+    }
+  },
+
+  updateContractRule: async (token, ruleId, ruleData) => {
+    try {
+      const response = await axios.put(`${BASE_ROUTE}contractrules/${ruleId}`, ruleData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar regra de contrato:", error);
+      throw error;
+    }
+  },
+  getContractSettings: async (token) => {
+    try {
+      const response = await axios.get(`${BASE_ROUTE}contractsettings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao obter configurações de contrato:", error);
+      throw error;
+    }
+  },
+
+  updateContractSettings: async (token, settingsData) => {
+    try {
+      const response = await axios.put(`${BASE_ROUTE}contractsettings`, settingsData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar configurações de contrato:", error);
+      throw error;
+    }
+  },
+
+  deleteContractRule: async (token, ruleId) => {
+    try {
+      const response = await axios.delete(`${BASE_ROUTE}contractrules/${ruleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao deletar regra de contrato:", error);
+      throw error;
+    }
+  },
 };
 
 export default contractServices;

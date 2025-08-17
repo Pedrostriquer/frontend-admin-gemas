@@ -75,7 +75,7 @@ function ClientsPage() {
               <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>Carregando...</td></tr>
             ) : clients.length > 0 ? (
                 clients.map(client => (
-                <tr key={client.id} onClick={() => navigate(`/clients/${client.id}`)} onMouseEnter={() => setHoveredRow(client.id)} onMouseLeave={() => setHoveredRow(null)} style={{...styles.tableRow, ...(hoveredRow === client.id && styles.tableRowHover)}}>
+                <tr key={client.id} onClick={() => navigate(`/platform/clients/${client.id}`)} onMouseEnter={() => setHoveredRow(client.id)} onMouseLeave={() => setHoveredRow(null)} style={{...styles.tableRow, ...(hoveredRow === client.id && styles.tableRowHover)}}>
                     <td style={styles.tableCell}>{client.name}</td>
                     <td style={styles.tableCell}>{client.cpfCnpj}</td>
                     <td style={styles.tableCell}><div style={styles.emailCell}>{client.email}</div></td>

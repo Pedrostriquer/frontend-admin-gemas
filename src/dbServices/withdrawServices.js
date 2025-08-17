@@ -1,5 +1,3 @@
-// src/dbServices/contractServices.js (Arquivo completo atualizado)
-
 import axios from "axios";
 
 const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
@@ -20,14 +18,13 @@ const withdrawServices = {
       });
       return response.data;
     } catch (error) {
-      console.error("Erro ao buscar saques:", error);
+      console.error("Erro ao buscar saque:", error);
       throw error;
     }
   },
   getBankAccountByClientId: async (token, clientId) => {
     try {
       const response = await axios.get(
-        // Esta URL bate exatamente com o seu backend!
         `${BASE_ROUTE}bank-account/client/${clientId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -36,7 +33,7 @@ const withdrawServices = {
       return response.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        return null; // Perfeito para tratar cliente sem conta
+        return null;
       }
       console.error("Erro ao buscar conta bancária:", error);
       throw error;
@@ -45,13 +42,10 @@ const withdrawServices = {
   getWithdrawals: async (token, filters, pageNumber = 1, pageSize = 10) => {
     try {
       const normalizedFilter = normalizeSearchString(filters.searchTerm);
-
       let url = `${BASE_ROUTE}withdraw/search?searchTerm=${normalizedFilter}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
-
       if (filters.status && filters.status !== "Todos") {
         url += `&status=${filters.status}`;
       }
-
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -67,9 +61,7 @@ const withdrawServices = {
         `${BASE_ROUTE}withdraw/admin-create`,
         data,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       return response.data;
@@ -78,7 +70,34 @@ const withdrawServices = {
       throw error;
     }
   },
-  obterSaquesCliente: async (token, data, idCliente) => {
+  getRules: async (token) => {
+    try {
+      const response = await axios.get(`${BASE_ROUTE}withdrawrule/current`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao obter regras de saque:", error);
+      throw error;
+    }
+  },
+  updateRules: async (token, rulesData) => {
+    try {
+      // Mude de .post para .put para combinar com o [HttpPut] do seu controller
+      const response = await axios.put(
+        `${BASE_ROUTE}withdrawrule/update`,
+        rulesData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao atualizar regras de saque:", error);
+      throw error;
+    }
+  },
+  obterSaquesCliente: async (token, idCliente) => {
     try {
       const response = await axios.get(`${BASE_ROUTE}withdraw/my-withdraws`, {
         headers: {
@@ -88,7 +107,7 @@ const withdrawServices = {
       });
       return response.data;
     } catch (error) {
-      console.error("Erro ao criar saque:", error);
+      console.error("Erro ao buscar saques do cliente:", error);
       throw error;
     }
   },

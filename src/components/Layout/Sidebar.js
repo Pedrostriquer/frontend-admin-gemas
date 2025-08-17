@@ -52,6 +52,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
     const contractsMenu = [
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/platform/dashboard' },
         { name: 'Clientes', icon: 'fa-solid fa-users', path: '/platform/clients' },
+        { name: 'Consultores', icon: 'fa-solid fa-users', path: '/platform/consultants' },
         { name: 'Contratos', icon: 'fa-solid fa-file-signature', path: '/platform/contracts' },
         { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/platform/withdraws' },
         { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/platform/controller' },

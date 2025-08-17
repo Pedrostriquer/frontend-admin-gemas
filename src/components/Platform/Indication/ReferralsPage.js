@@ -1,59 +1,82 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './ReferralsPageStyle';
+import { useAuth } from '../../../Context/AuthContext';
+import clientServices from '../../../dbServices/clientServices';
 
-// --- Dados Estáticos ---
-const staticClients = [
-    { id: 1, name: 'Andrei Ferreira', cpf: '090.068.089-05' },
-    { id: 2, name: 'Eduardo Lopes Cardoso', cpf: '046.690.486-00' },
-    { id: 3, name: 'Golden Treinamento', cpf: '612.096.820-55' },
-    { id: 4, name: 'Samara Mahmud', cpf: '045.486.083-83' },
-    { id: 5, name: 'Luciano da Rocha Berto', cpf: '000.075.916-47' },
-    { id: 6, name: 'Priscila Lopes', cpf: '022.482.190-32' },
-];
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+};
 
-// --- Componente de Item da Lista (para controlar hover) ---
 const ClientListItem = ({ client, onClick }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const itemStyle = {
-        ...styles.clientResultItem,
-        ...(isHovered && styles.clientResultItemHover)
-    };
+    const itemStyle = { ...styles.clientResultItem, ...(isHovered && styles.clientResultItemHover) };
     return (
-        <li 
-            style={itemStyle} 
-            onClick={() => onClick(client)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
+        <li style={itemStyle} onClick={() => onClick(client)} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
             <span style={styles.clientName}>{client.name}</span>
-            <span style={styles.clientCpf}>{client.cpf}</span>
+            <span style={styles.clientCpf}>{client.cpfCnpj}</span>
         </li>
     );
 };
 
-// --- Componente Principal da Página ---
 function ReferralsPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [clientResults, setClientResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
     const [selectedClient, setSelectedClient] = useState(null);
     const [referralValue, setReferralValue] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const filteredClients = useMemo(() => {
-        if (!searchTerm) return [];
-        return staticClients.filter(client =>
-            client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            client.cpf.includes(searchTerm)
-        );
-    }, [searchTerm]);
+    const { token } = useAuth();
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+    useEffect(() => {
+        if (debouncedSearchTerm.length > 2) {
+            const fetchClients = async () => {
+                setIsSearching(true);
+                try {
+                    const response = await clientServices.getClients(token, debouncedSearchTerm, 1, 10);
+                    setClientResults(response.items || []);
+                } catch (error) {
+                    console.error("Erro ao buscar clientes:", error);
+                    setClientResults([]);
+                } finally {
+                    setIsSearching(false);
+                }
+            };
+            fetchClients();
+        } else {
+            setClientResults([]);
+        }
+    }, [debouncedSearchTerm, token]);
 
     const handleSelectClient = (client) => {
         setSelectedClient(client);
         setSearchTerm('');
+        setClientResults([]);
     };
 
-    const handleConfirm = () => {
-        alert(`Indicação de R$ ${referralValue} adicionada para ${selectedClient.name}`);
-        setSelectedClient(null);
-        setReferralValue('');
+    const handleConfirm = async () => {
+        if (!referralValue || !selectedClient) return;
+
+        setIsSubmitting(true);
+        try {
+            const amount = parseFloat(referralValue);
+            await clientServices.addExtraBalance(token, selectedClient.id, amount, "Bônus de Indicação");
+            alert(`Indicação de ${amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} adicionada para ${selectedClient.name} com sucesso!`);
+            setSelectedClient(null);
+            setReferralValue('');
+        } catch (error) {
+            alert("Ocorreu um erro ao adicionar a indicação. Tente novamente.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -65,7 +88,6 @@ function ReferralsPage() {
 
             <div style={styles.referralCard}>
                 {!selectedClient ? (
-                    // Passo 1: Pesquisar Cliente
                     <div>
                         <div style={styles.cardHeader}>
                             <i className="fa-solid fa-user-plus" style={styles.cardHeaderIcon}></i>
@@ -82,21 +104,22 @@ function ReferralsPage() {
                                     style={styles.searchInput}
                                 />
                             </div>
-                            {searchTerm && (
+                            {searchTerm.length > 0 && (
                                 <ul style={styles.clientResultsList}>
-                                    {filteredClients.length > 0 ? (
-                                        filteredClients.map(client => (
+                                    {isSearching ? (
+                                        <li style={styles.noResults}>Buscando...</li>
+                                    ) : clientResults.length > 0 ? (
+                                        clientResults.map(client => (
                                             <ClientListItem key={client.id} client={client} onClick={handleSelectClient} />
                                         ))
-                                    ) : (
+                                    ) : debouncedSearchTerm.length > 2 ? (
                                         <li style={styles.noResults}>Nenhum cliente encontrado.</li>
-                                    )}
+                                    ) : null}
                                 </ul>
                             )}
                         </div>
                     </div>
                 ) : (
-                    // Passo 2: Adicionar Valor
                     <div>
                         <div style={styles.cardHeader}>
                             <i className="fa-solid fa-dollar-sign" style={styles.cardHeaderIcon}></i>
@@ -123,12 +146,12 @@ function ReferralsPage() {
                         </div>
                         <div style={styles.cardFooter}>
                             <button 
-                                style={{...styles.confirmButton, ...(!referralValue && styles.confirmButtonDisabled)}} 
+                                style={{...styles.confirmButton, ...((!referralValue || isSubmitting) && styles.confirmButtonDisabled)}} 
                                 onClick={handleConfirm} 
-                                disabled={!referralValue}
+                                disabled={!referralValue || isSubmitting}
                             >
                                 <i className="fa-solid fa-check"></i>
-                                Confirmar Adição
+                                {isSubmitting ? 'Confirmando...' : 'Confirmar Adição'}
                             </button>
                         </div>
                     </div>

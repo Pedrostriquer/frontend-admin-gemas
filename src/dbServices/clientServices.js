@@ -167,6 +167,36 @@ const clientServices = {
       throw error.response?.data || error;
     }
   },
+  associateConsultant: async (token, clientId, consultantId) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}client/${clientId}/associate-consultant/${consultantId}`,
+        null,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao associar consultor:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  removeConsultant: async (token, clientId) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_ROUTE}client/${clientId}/remove-consultant`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao remover consultor:", error);
+      throw error.response?.data || error;
+    }
+  },
 };
 
 export default clientServices;

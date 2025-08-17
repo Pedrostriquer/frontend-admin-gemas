@@ -115,6 +115,27 @@ const formatServices = {
 
     return parseFloat(numericString) || 0;
   },
+  formatPhone: (value) => {
+    if (!value) return "";
+    const cleaned = value.replace(/\D/g, "");
+    const length = cleaned.length;
+
+    if (length < 3) {
+      return `(${cleaned}`;
+    }
+    if (length < 8) {
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
+    }
+    if (length < 11) {
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(
+        6
+      )}`;
+    }
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(
+      7,
+      11
+    )}`;
+  },
 };
 
 export default formatServices;

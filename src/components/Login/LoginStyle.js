@@ -1,18 +1,4 @@
 const styles = {
-    // Cores
-    colors: {
-        primaryBg: '#1a1d24',
-        secondaryBg: '#ffffff',
-        formBg: '#ffffff',
-        primaryText: '#ffffff',
-        secondaryText: '#555',
-        accentColor: '#007bff',
-        accentHover: '#0056b3',
-        inputBorder: '#ccc',
-        inputFocusBorder: '#007bff',
-    },
-
-    // Estilos da Página
     loginContainer: {
         display: 'flex',
         width: '100vw',
@@ -55,6 +41,7 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         padding: '40px',
+        position: 'relative', // Essencial para o overlay
     },
     loginForm: {
         width: '100%',
@@ -63,6 +50,7 @@ const styles = {
         background: '#ffffff',
         borderRadius: '12px',
         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+        transition: 'filter 0.3s ease-in-out',
     },
     loginFormH2: {
         color: '#333',
@@ -111,10 +99,6 @@ const styles = {
         transform: 'translateY(-50%)',
         color: '#ccc',
         cursor: 'pointer',
-        transition: 'color 0.3s ease',
-    },
-    passwordToggleIconHover: {
-        color: '#007bff',
     },
     loginButton: {
         width: '100%',
@@ -126,14 +110,53 @@ const styles = {
         fontSize: '1.1rem',
         fontWeight: 600,
         cursor: 'pointer',
-        transition: 'background-color 0.3s ease, transform 0.1s ease',
+        transition: 'background-color 0.3s ease',
         marginTop: '24px',
     },
     loginButtonHover: {
         backgroundColor: '#0056b3',
     },
-    loginButtonActive: {
-        transform: 'scale(0.98)',
+    errorMessage: {
+        color: '#d93025',
+        background: '#fbe9e7',
+        textAlign: 'center',
+        padding: '10px',
+        borderRadius: '8px',
+        marginBottom: '16px',
+        fontSize: '0.9rem',
+    },
+
+    // --- ESTILOS DO LOADING FANTÁSTICO ---
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(5px)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+        borderRadius: '12px', // Para cobrir a área do formulário
+    },
+    loadingIcon: {
+        fontSize: '60px',
+        color: '#007bff',
+        animation: 'pulse 1.5s infinite ease-in-out',
+    },
+    loadingText: {
+        marginTop: '20px',
+        color: '#0056b3',
+        fontSize: '1.1rem',
+        fontWeight: 500,
+    },
+    '@keyframes pulse': {
+        '0%': { transform: 'scale(1)', opacity: 1 },
+        '50%': { transform: 'scale(1.2)', opacity: 0.7 },
+        '100%': { transform: 'scale(1)', opacity: 1 },
     },
 };
 

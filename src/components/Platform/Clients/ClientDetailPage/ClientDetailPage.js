@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from './ClientDetailPageStyle';
 import { useAuth } from '../../../../Context/AuthContext';
@@ -6,6 +6,7 @@ import clientServices from '../../../../dbServices/clientServices';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import AddBalanceModal from './AddBalanceModal/AddBalanceModal';
 import ChangePasswordModal from './ChangePasswordModal/ChangePasswordModal';
+import AssociateConsultantModal from './AssociateConsultantModal/AssociateConsultantModal';
 
 const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'N/A';
@@ -19,8 +20,9 @@ function ClientDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [isAssociateModalOpen, setIsAssociateModalOpen] = useState(false);
 
-    const fetchClientData = async () => {
+    const fetchClientData = useCallback(async () => {
         if (!token || !clientId) return;
         setIsLoading(true);
         try {
@@ -31,17 +33,16 @@ function ClientDetailPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [token, clientId]);
 
     useEffect(() => {
         fetchClientData();
-    }, [clientId, token]);
+    }, [fetchClientData]);
 
     const handleLoginAsClient = async () => {
         try {
             const authResponse = await clientServices.loginAsClient(token, clientId);
             const clientToken = authResponse.token;
-            // const clientPlatformUrl = `http://localhost:3001/login?token=${clientToken}`; 
             const clientPlatformUrl = `http://gemas.demelloagent.app/login?token=${clientToken}`; 
             window.open(clientPlatformUrl, '_blank');
         } catch (error) {
@@ -69,6 +70,27 @@ function ClientDetailPage() {
             alert(`Erro: ${error.message || 'Não foi possível alterar a senha.'}`);
         }
     };
+
+    const handleAssociateConsultant = async (consultantId) => {
+        try {
+            await clientServices.associateConsultant(token, clientId, consultantId);
+            setIsAssociateModalOpen(false);
+            await fetchClientData();
+        } catch (error) {
+            alert('Falha ao associar consultor.');
+        }
+    };
+
+    const handleRemoveConsultant = async () => {
+        if (window.confirm(`Tem certeza que deseja remover o consultor ${client.consultantName} deste cliente?`)) {
+            try {
+                await clientServices.removeConsultant(token, clientId);
+                await fetchClientData();
+            } catch (error) {
+                alert('Falha ao remover consultor.');
+            }
+        }
+    };
     
     if (isLoading) {
         return <div style={styles.loadingContainer}>Carregando perfil do cliente...</div>;
@@ -87,7 +109,7 @@ function ClientDetailPage() {
             <div style={styles.pageContainer}>
                 <div style={styles.header}>
                     <div style={styles.headerInfo}>
-                        <button onClick={() => navigate('/clients')} style={styles.backButton}><i className="fa-solid fa-arrow-left"></i></button>
+                        <button onClick={() => navigate('/platform/clients')} style={styles.backButton}><i className="fa-solid fa-arrow-left"></i></button>
                         <div style={styles.avatar}>{client.name.charAt(0)}</div>
                         <div>
                             <h1 style={styles.clientName}>{client.name}</h1>
@@ -144,8 +166,18 @@ function ClientDetailPage() {
                         </div>
                     </div>
                     <div style={styles.card}>
-                        <h3 style={styles.cardTitle}>Endereço</h3>
-                        <p style={styles.addressValue}>{fullAddress}</p>
+                        <h3 style={styles.cardTitle}>Consultor Associado</h3>
+                        {client.consultantId ? (
+                            <div style={{...styles.infoGrid, gridTemplateColumns: '1fr auto', alignItems: 'center'}}>
+                                <div><span style={styles.infoLabel}>Nome</span><p style={styles.infoValue}>{client.consultantName}</p></div>
+                                <button onClick={handleRemoveConsultant} style={{...styles.actionButton, backgroundColor: '#fee2e2', color: '#ef4444'}}>Remover</button>
+                            </div>
+                        ) : (
+                             <div style={{...styles.infoGrid, gridTemplateColumns: '1fr auto', alignItems: 'center'}}>
+                                <div><span style={styles.infoLabel}>Status</span><p style={styles.infoValue}>Nenhum consultor associado</p></div>
+                                <button onClick={() => setIsAssociateModalOpen(true)} style={{...styles.actionButton, backgroundColor: '#dbeafe', color: '#3b82f6'}}>Associar</button>
+                            </div>
+                        )}
                     </div>
                     <div style={{...styles.card, gridColumn: '1 / -1'}}>
                         <h3 style={styles.cardTitle}>Contratos Recentes</h3>
@@ -153,21 +185,9 @@ function ClientDetailPage() {
                 </div>
             </div>
 
-            {isBalanceModalOpen && (
-                <AddBalanceModal 
-                    client={client} 
-                    onClose={() => setIsBalanceModalOpen(false)} 
-                    onSave={handleAddBalance} 
-                />
-            )}
-
-            {isPasswordModalOpen && (
-                <ChangePasswordModal 
-                    client={client} 
-                    onClose={() => setIsPasswordModalOpen(false)} 
-                    onSave={handleChangePassword} 
-                />
-            )}
+            {isBalanceModalOpen && <AddBalanceModal client={client} onClose={() => setIsBalanceModalOpen(false)} onSave={handleAddBalance} />}
+            {isPasswordModalOpen && <ChangePasswordModal client={client} onClose={() => setIsPasswordModalOpen(false)} onSave={handleChangePassword} />}
+            <AssociateConsultantModal isOpen={isAssociateModalOpen} onClose={() => setIsAssociateModalOpen(false)} onAssociate={handleAssociateConsultant} />
         </>
     );
 }

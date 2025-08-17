@@ -1,6 +1,5 @@
-// src/components/Login/Login.js
 import React, { useState } from 'react';
-import { useAuth } from "../../Context/AuthContext"
+import { useAuth } from "../../Context/AuthContext";
 import styles from './LoginStyle';
 
 function Login() {
@@ -8,33 +7,36 @@ function Login() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
-  const [isToggleHovered, setIsToggleHovered] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [error, setError] = useState('');
   const { login } = useAuth();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login(email, password, rememberMe);
+    setError('');
+    setIsLoggingIn(true);
+    try {
+      await login(email, password, rememberMe);
+    } catch (err) {
+      setError('Email ou senha inválidos. Tente novamente.');
+      setIsLoggingIn(false);
+    }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const loginButtonStyle = {
-    ...styles.loginButton,
-    ...(isButtonHovered && styles.loginButtonHover),
-  };
-
-  const passwordToggleStyle = {
-    ...styles.passwordToggleIcon,
-    ...(isToggleHovered && styles.passwordToggleIconHover),
-    ...(focusedInput === 'password' && styles.inputIconFocus),
-  };
-
   return (
     <div style={styles.loginContainer}>
+      <style>{`
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
       <div style={styles.loginBranding}>
         <div style={styles.brandingContent}>
           <i className="fa-solid fa-gem" style={styles.brandingIcon}></i>
@@ -43,9 +45,17 @@ function Login() {
         </div>
       </div>
       <div style={styles.loginFormArea}>
+        {isLoggingIn && (
+          <div style={styles.loadingOverlay}>
+            <i className="fa-solid fa-gem" style={styles.loadingIcon}></i>
+            <p style={styles.loadingText}>Verificando credenciais...</p>
+          </div>
+        )}
         <form style={styles.loginForm} onSubmit={handleLogin}>
           <h2 style={styles.loginFormH2}>Bem-vindo de volta!</h2>
           <p style={styles.formSubtitle}>Faça login para acessar o painel.</p>
+
+          {error && <p style={styles.errorMessage}>{error}</p>}
           
           <div style={styles.inputGroup}>
             <i className="fa-solid fa-envelope" style={{...styles.inputIcon, ...(focusedInput === 'email' && styles.inputIconFocus)}}></i>
@@ -75,10 +85,8 @@ function Login() {
             />
             <i 
               className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}
-              style={passwordToggleStyle}
+              style={{...styles.passwordToggleIcon, ...(focusedInput === 'password' && styles.inputIconFocus)}}
               onClick={togglePasswordVisibility}
-              onMouseEnter={() => setIsToggleHovered(true)}
-              onMouseLeave={() => setIsToggleHovered(false)}
             ></i>
           </div>
 
@@ -93,15 +101,9 @@ function Login() {
             <label htmlFor="rememberMe" style={{ color: '#555', fontSize: '0.9rem' }}>Lembrar de mim</label>
           </div>
           
-          <button 
-            type="submit" 
-            style={loginButtonStyle}
-            onMouseEnter={() => setIsButtonHovered(true)}
-            onMouseLeave={() => setIsButtonHovered(false)}
-          >
-            Entrar
+          <button type="submit" style={styles.loginButton} disabled={isLoggingIn}>
+            {isLoggingIn ? 'Entrando...' : 'Entrar'}
           </button>
-          
         </form>
       </div>
     </div>
