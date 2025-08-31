@@ -113,12 +113,15 @@ const styles = {
     gridTemplateColumns: "repeat(2, 1fr)",
     gap: "16px",
   },
-  infoGroup: {},
+  infoGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px"
+  },
   infoLabel: {
     display: "block",
     fontSize: "0.8rem",
     color: "#6b7280",
-    marginBottom: "4px",
     textTransform: "uppercase",
     fontWeight: 500,
   },

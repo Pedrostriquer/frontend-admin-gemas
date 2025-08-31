@@ -1,286 +1,565 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import ReactDOM from 'react-dom';
-import styles from './OffersPageStyle';
+import React, { useState, useEffect, useContext } from "react";
+import MyOffers from "./MyOffers/MyOffers";
+import styles from "./OffersPageStyle";
+import offerService from "../../../dbServices/offerService";
+import offerCategoryService from "../../../dbServices/offerCategoryService";
+import { useAuth } from "../../../Context/AuthContext";
 
-// --- Dados Estáticos ---
-const staticOffers = [
-    { id: 1, name: 'Oferta Especial de Verão', imageUrl: 'https://placehold.co/600x300/3b82f6/ffffff?text=Oferta+Especial', redirectUrl: 'https://gemasbrilhantes.com/promo1', assignedClients: [1, 3, 5] },
-    { id: 2, name: 'Campanha de Investimento', imageUrl: 'https://placehold.co/600x300/10b981/ffffff?text=Invista+Agora', redirectUrl: 'https://gemasbrilhantes.com/invest', assignedClients: [2, 4] },
-    { id: 3, name: 'Bônus por Indicação', imageUrl: 'https://placehold.co/600x300/f59e0b/ffffff?text=Bônus+de+Indicação', redirectUrl: 'https://gemasbrilhantes.com/referral', assignedClients: [] },
-    { id: 4, name: 'Oportunidade Única', imageUrl: 'https://placehold.co/600x300/ef4444/ffffff?text=Oportunidade', redirectUrl: 'https://gemasbrilhantes.com/oportunidade', assignedClients: [1, 2, 3, 4, 5, 6] },
-];
-const staticClients = [
-    { id: 1, name: 'Andrei Ferreira', avatar: 'https://i.pravatar.cc/40?u=1' }, { id: 2, name: 'Eduardo Lopes Cardoso', avatar: 'https://i.pravatar.cc/40?u=2' },
-    { id: 3, name: 'Golden Treinamento', avatar: 'https://i.pravatar.cc/40?u=3' }, { id: 4, name: 'Samara Mahmud', avatar: 'https://i.pravatar.cc/40?u=4' },
-    { id: 5, name: 'Luciano da Rocha Berto', avatar: 'https://i.pravatar.cc/40?u=5' }, { id: 6, name: 'Priscila Lopes', avatar: 'https://i.pravatar.cc/40?u=6' },
-    { id: 7, name: 'Fabiano Baldasso', avatar: 'https://i.pravatar.cc/40?u=7' }, { id: 8, name: 'Juliana Paes', avatar: 'https://i.pravatar.cc/40?u=8' },
-];
-const sentHistory = [
-    { offerName: 'Oferta Especial de Verão', date: '10/08/2025', recipients: 1500 },
-    { offerName: 'Campanha de Investimento', date: '05/08/2025', recipients: 1250 },
-    { offerName: 'Bônus por Indicação', date: '01/08/2025', recipients: 980 },
-    { offerName: 'Dia das Mães 2024', date: '12/05/2024', recipients: 2200 },
-    { offerName: 'Natal Iluminado', date: '25/12/2024', recipients: 3100 },
-];
-
-const ITEMS_PER_PAGE = 3;
-const CLIENTS_PER_MODAL_PAGE = 4;
-
-// --- Estilos Globais para Animações ---
-const GlobalStyles = () => (
-    <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes scaleDown { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
+const GlobalStyle = () => (
+  <style>{`
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     `}</style>
 );
 
-// --- Componente Reutilizável de Seleção de Cliente ---
-const ClientSelector = ({ initialSelection = [], onSelectionChange }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [selectedClients, setSelectedClients] = useState(new Set(initialSelection));
-
-    const handleSelect = (clientId) => {
-        const newSelection = new Set(selectedClients);
-        newSelection.has(clientId) ? newSelection.delete(clientId) : newSelection.add(clientId);
-        setSelectedClients(newSelection);
-        onSelectionChange(newSelection);
-    };
-    
-    const handleSelectAllPage = () => {
-        const newSelection = new Set(selectedClients);
-        paginatedClients.forEach(client => newSelection.add(client.id));
-        setSelectedClients(newSelection);
-        onSelectionChange(newSelection);
-    };
-
-    const filteredClients = staticClients.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const totalPages = Math.ceil(filteredClients.length / CLIENTS_PER_MODAL_PAGE);
-    const paginatedClients = filteredClients.slice((currentPage - 1) * CLIENTS_PER_MODAL_PAGE, currentPage * CLIENTS_PER_MODAL_PAGE);
-
-    return (
-        <div style={styles.clientSelectorContainer}>
-            <div style={styles.clientSelectorControls}>
-                <input type="text" placeholder="Buscar cliente..." onChange={e => setSearchTerm(e.target.value)} style={styles.clientSelectorControlsInput} />
-                <button onClick={handleSelectAllPage} style={styles.clientSelectorControlsButton}>Selecionar Todos da Página</button>
-            </div>
-            <ul style={styles.clientSelectorList}>
-                {paginatedClients.map(client => (
-                    <li key={client.id}>
-                        <label style={styles.clientSelectorListItemLabel}>
-                            <input type="checkbox" checked={selectedClients.has(client.id)} onChange={() => handleSelect(client.id)} />
-                            {client.name}
-                        </label>
-                    </li>
-                ))}
-            </ul>
-            <div style={styles.paginationContainerModal}>
-                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} style={styles.paginationModalButton}>&lt;</button>
-                <span style={styles.paginationModalSpan}>{currentPage} de {totalPages}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} style={styles.paginationModalButton}>&gt;</button>
-            </div>
-        </div>
-    );
-};
-
-
-// --- Componentes dos Modais ---
-const ConfirmationModal = ({ offer, onClose, isClosing }) => ( 
-    ReactDOM.createPortal(
-        <div style={{...styles.modalBackdrop, ...(isClosing && styles.modalBackdropClosing)}} onClick={onClose}>
-            <GlobalStyles />
-            <div style={{...styles.modalContent, ...styles.modalContentSmall, ...(isClosing && styles.modalContentClosing)}} onClick={e => e.stopPropagation()}>
-                <div style={styles.modalHeader}><h3 style={styles.modalHeaderH3}>Confirmar Exclusão</h3></div>
-                <p style={styles.confirmationText}>Você tem certeza que deseja excluir a oferta "<strong>{offer.name}</strong>"?</p>
-                <div style={{...styles.modalFooter, ...styles.modalFooterConfirmation}}>
-                    <button style={styles.closeBtn} onClick={onClose}>Cancelar</button>
-                    <button style={{...styles.saveOfferButton, ...styles.saveOfferButtonDanger}}><i className="fa-solid fa-trash-can"></i> Confirmar</button>
-                </div>
-            </div>
-        </div>, document.body
-    )
+const LoadingOverlay = () => (
+  <div style={styles.loadingOverlay}>
+    <div style={styles.spinner}></div>
+  </div>
 );
-const EditOfferModal = ({ offer, onClose, isClosing }) => {
-    const [selectedClients, setSelectedClients] = useState(new Set(offer.assignedClients));
-    return ReactDOM.createPortal(
-        <div style={{...styles.modalBackdrop, ...(isClosing && styles.modalBackdropClosing)}} onClick={onClose}>
-            <GlobalStyles />
-            <div style={{...styles.modalContent, ...styles.modalContentLargeV2, ...(isClosing && styles.modalContentClosing)}} onClick={e => e.stopPropagation()}>
-                <div style={styles.modalHeader}><h3 style={styles.modalHeaderH3}>Editar Oferta</h3></div>
-                <div style={styles.editOfferGrid}>
-                    <div style={styles.formColumn}>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Nome da Oferta</label><input type="text" defaultValue={offer.name} style={styles.formInput} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Link da Imagem</label><input type="text" defaultValue={offer.imageUrl} style={styles.formInput} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Link de Redirecionamento</label><input type="text" defaultValue={offer.redirectUrl} style={styles.formInput} /></div>
-                    </div>
-                    <div style={styles.clientColumn}>
-                        <label style={styles.clientColumnLabel}>Clientes Selecionados</label>
-                        <ClientSelector initialSelection={offer.assignedClients} onSelectionChange={setSelectedClients} />
-                    </div>
-                </div>
-                <div style={styles.modalFooter}>
-                    <div style={styles.stackedCardsInfoFooter}>
-                        <div style={styles.stackedCardsFooter}>{Array.from(selectedClients).slice(0, 3).map((id, index) => (<img key={id} src={staticClients.find(c=>c.id === id)?.avatar} alt="avatar" style={{...styles.stackedCardsFooterImg, zIndex: 3 - index, transform: `translateX(${index * 15}px)` }} />))}</div>
-                        <span style={styles.stackedCardsInfoFooterSpan}>{selectedClients.size} cliente(s) selecionado(s)</span>
-                    </div>
-                    <div>
-                        <button style={styles.closeBtn} onClick={onClose}>Cancelar</button>
-                        <button style={styles.saveOfferButton}><i className="fa-solid fa-save"></i> Salvar</button>
-                    </div>
-                </div>
-            </div>
-        </div>, document.body
-    );
-};
-const SendOfferModal = ({ offer, onClose, isClosing }) => {
-    const [selectedClients, setSelectedClients] = useState(new Set());
-    return ReactDOM.createPortal(
-        <div style={{...styles.modalBackdrop, ...(isClosing && styles.modalBackdropClosing)}} onClick={onClose}>
-            <GlobalStyles />
-            <div style={{...styles.modalContent, ...styles.modalContentLargeV2, ...(isClosing && styles.modalContentClosing)}} onClick={e => e.stopPropagation()}>
-                <div style={styles.modalHeader}><h3 style={styles.modalHeaderH3}>Enviar Oferta: {offer.name}</h3></div>
-                <div style={styles.editOfferGrid}>
-                    <div style={styles.formColumn}>
-                        <label style={styles.formLabel}>Preview da Oferta</label>
-                        <img src={offer.imageUrl} alt={offer.name} style={styles.sendPreviewImg} />
-                    </div>
-                    <div style={styles.clientColumn}>
-                        <label style={styles.clientColumnLabel}>Selecionar Destinatários</label>
-                        <ClientSelector onSelectionChange={setSelectedClients} />
-                    </div>
-                </div>
-                <div style={styles.modalFooter}>
-                    <div style={styles.stackedCardsInfoFooter}>
-                        <div style={styles.stackedCardsFooter}>{Array.from(selectedClients).slice(0, 3).map((id, index) => (<img key={id} src={staticClients.find(c=>c.id === id)?.avatar} alt="avatar" style={{...styles.stackedCardsFooterImg, zIndex: 3 - index, transform: `translateX(${index * 15}px)` }} />))}</div>
-                        <span style={styles.stackedCardsInfoFooterSpan}>{selectedClients.size} cliente(s) selecionado(s)</span>
-                    </div>
-                    <div>
-                        <button style={styles.closeBtn} onClick={onClose}>Cancelar</button>
-                        <button style={styles.saveOfferButton}><i className="fa-solid fa-paper-plane"></i> Enviar</button>
-                    </div>
-                </div>
-            </div>
-        </div>, document.body
-    );
-};
 
-// --- Componente Principal da Página ---
-function OffersPage() {
-    const [modal, setModal] = useState({ type: null, data: null });
-    const [isClosing, setIsClosing] = useState(false);
-    const [name, setName] = useState('');
-    const [imageUrl, setImageUrl] = useState('');
-    const [redirectUrl, setRedirectUrl] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [historySearchTerm, setHistorySearchTerm] = useState('');
-    const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
-    
-    const handleOpenModal = (type, data = null) => { setModal({ type, data }); };
-    const handleCloseModal = () => { setIsClosing(true); setTimeout(() => { setModal({ type: null, data: null }); setIsClosing(false); }, 300); };
-    
-    const handleCreateOffer = () => {
-        if (!name || !imageUrl || !redirectUrl) {
-            alert('Por favor, preencha todos os campos.');
-            return;
-        }
-        alert(`Oferta "${name}" criada!`);
-        setName(''); setImageUrl(''); setRedirectUrl('');
-    };
-
-    const filteredOffers = useMemo(() => staticOffers.filter(offer => offer.name.toLowerCase().includes(searchTerm.toLowerCase())), [searchTerm]);
-    const totalPages = Math.ceil(filteredOffers.length / ITEMS_PER_PAGE);
-    const paginatedOffers = filteredOffers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-    const filteredHistory = useMemo(() => sentHistory.filter(item => item.offerName.toLowerCase().includes(historySearchTerm.toLowerCase())), [historySearchTerm]);
-    const totalHistoryPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
-    const paginatedHistory = filteredHistory.slice((historyCurrentPage - 1) * ITEMS_PER_PAGE, historyCurrentPage * ITEMS_PER_PAGE);
-
-    return (
-        <div style={styles.offersPageContainer}>
-            <header style={styles.offersPageHeader}>
-                <h1 style={styles.headerH1}>Ofertas</h1>
-                <p style={styles.headerP}>Crie e gerencie banners de ofertas para seus clientes.</p>
-            </header>
-            <div style={styles.offerCreationCard}>
-                <div style={styles.creationCardGrid}>
-                    <div style={styles.offerFormSection}>
-                        <div style={{...styles.cardHeader, ...styles.cardHeaderNoBorder}}><i className="fa-solid fa-upload" style={styles.cardHeaderIcon}></i><h3 style={styles.cardHeaderH3}>Upload de Oferta</h3></div>
-                        <div style={styles.cardBody}>
-                            <div style={styles.formGroup}><label style={styles.formLabel}>Nome da Oferta</label><input type="text" placeholder="Ex: Campanha de Inverno" value={name} onChange={e => setName(e.target.value)} style={styles.formInput} /></div>
-                            <div style={styles.formGroup}><label style={styles.formLabel}>Link da Imagem</label><input type="text" placeholder="https://exemplo.com/imagem.png" value={imageUrl} onChange={e => setImageUrl(e.target.value)} style={styles.formInput} /></div>
-                            <div style={styles.formGroup}><label style={styles.formLabel}>Link de Redirecionamento</label><input type="text" placeholder="https://gemasbrilhantes.com/sua-pagina" value={redirectUrl} onChange={e => setRedirectUrl(e.target.value)} style={styles.formInput} /></div>
-                        </div>
-                        <div style={styles.cardFooter}><button style={styles.saveOfferButton} onClick={handleCreateOffer}><i className="fa-solid fa-save"></i> Salvar Oferta</button></div>
-                    </div>
-                    <div style={styles.offerPreviewSection}>
-                        <div style={styles.previewArea}>{imageUrl ? <img src={imageUrl} alt="Preview da Oferta" style={styles.previewImage} onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/600x300/e0e0e0/a0a0a0?text=Imagem+Inválida'; }} /> : <div style={styles.placeholderPreview}><i className="fa-solid fa-image" style={styles.placeholderPreviewIcon}></i><p>A pré-visualização da imagem aparecerá aqui.</p></div>}</div>
-                    </div>
-                </div>
-            </div>
-            <div style={styles.existingOffersCard}>
-                <div style={styles.cardHeader}>
-                    <i className="fa-solid fa-list-check" style={styles.cardHeaderIcon}></i>
-                    <h3 style={styles.cardHeaderH3}>Ofertas Existentes</h3>
-                    <div style={styles.searchBox}><i className="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar por nome..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} style={styles.searchInput} /></div>
-                </div>
-                <table style={styles.offersTable}>
-                    <thead><tr><th style={styles.tableHeaderCell}>Nome</th><th style={styles.tableHeaderCell}>Preview</th><th style={styles.tableHeaderCell}>Link de Redirecionamento</th><th style={styles.tableHeaderCell}>Ações</th></tr></thead>
-                    <tbody>
-                        {paginatedOffers.map(offer => (
-                            <tr key={offer.id}>
-                                <td style={{...styles.tableCell, ...styles.offerNameCell}}>{offer.name}</td>
-                                <td style={styles.tableCell}><img src={offer.imageUrl} alt={offer.name} style={styles.tableImgPreview} /></td>
-                                <td style={styles.tableCell}><a href={offer.redirectUrl} target="_blank" rel="noopener noreferrer" style={styles.tableCellLink}>{offer.redirectUrl}</a></td>
-                                <td style={styles.tableCell}>
-                                    <div style={styles.actionButtons}>
-                                        <button style={{...styles.actionButton, ...styles.sendBtn}} onClick={() => handleOpenModal('send', offer)}><i className="fa-solid fa-paper-plane"></i></button>
-                                        <button style={{...styles.actionButton, ...styles.editBtn}} onClick={() => handleOpenModal('edit', offer)}><i className="fa-solid fa-pencil"></i></button>
-                                        <button style={{...styles.actionButton, ...styles.deleteBtn}} onClick={() => handleOpenModal('delete', offer)}><i className="fa-solid fa-trash-can"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                 <div style={styles.paginationContainer}>
-                    <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} style={styles.paginationButton}>Anterior</button>
-                    <span style={styles.paginationSpan}>Página {currentPage} de {totalPages}</span>
-                    <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} style={styles.paginationButton}>Próxima</button>
-                </div>
-            </div>
-            <div style={styles.existingOffersCard}>
-                <div style={styles.cardHeader}>
-                    <i className="fa-solid fa-history" style={styles.cardHeaderIcon}></i>
-                    <h3 style={styles.cardHeaderH3}>Histórico de Ofertas</h3>
-                    <div style={styles.searchBox}><i className="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Buscar por nome..." value={historySearchTerm} onChange={e => { setHistorySearchTerm(e.target.value); setHistoryCurrentPage(1); }} style={styles.searchInput} /></div>
-                </div>
-                <table style={styles.offersTable}>
-                    <thead><tr><th style={styles.tableHeaderCell}>Nome da Oferta</th><th style={styles.tableHeaderCell}>Data do Disparo</th><th style={styles.tableHeaderCell}>Destinatários</th></tr></thead>
-                    <tbody>
-                        {paginatedHistory.map((item, index) => (
-                            <tr key={index}>
-                                <td style={styles.tableCell}>{item.offerName}</td>
-                                <td style={styles.tableCell}>{item.date}</td>
-                                <td style={styles.tableCell}>{item.recipients}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                 <div style={styles.paginationContainer}>
-                    <button onClick={() => setHistoryCurrentPage(p => Math.max(p - 1, 1))} disabled={historyCurrentPage === 1} style={styles.paginationButton}>Anterior</button>
-                    <span style={styles.paginationSpan}>Página {historyCurrentPage} de {totalHistoryPages}</span>
-                    <button onClick={() => setHistoryCurrentPage(p => Math.min(p + 1, totalHistoryPages))} disabled={historyCurrentPage === totalHistoryPages} style={styles.paginationButton}>Próxima</button>
-                </div>
-            </div>
-
-            {modal.type === 'edit' && <EditOfferModal offer={modal.data} onClose={handleCloseModal} isClosing={isClosing} />}
-            {modal.type === 'delete' && <ConfirmationModal offer={modal.data} onClose={handleCloseModal} isClosing={isClosing} />}
-            {modal.type === 'send' && <SendOfferModal offer={modal.data} onClose={handleCloseModal} isClosing={isClosing} />}
+const OfferPreview = ({ offerData }) => {
+  const { mideaUrl, mideaType, title, description } = offerData;
+  const renderMedia = () => {
+    if (!mideaUrl) {
+      return (
+        <div style={styles.placeholderPreview}>
+          <i
+            className="fa-solid fa-photo-film"
+            style={styles.placeholderPreviewIcon}
+          ></i>
+          <p>Sua mídia aparecerá aqui</p>
         </div>
+      );
+    }
+    if (mideaType === 2) {
+      return (
+        <video
+          src={mideaUrl}
+          style={styles.previewMedia}
+          controls
+          autoPlay
+          muted
+          loop
+        />
+      );
+    }
+    return <img src={mideaUrl} alt="Preview" style={styles.previewMedia} />;
+  };
+  return (
+    <div style={styles.previewCard}>
+      {renderMedia()}
+      <div style={styles.previewTextOverlay}>
+        <h4 style={styles.previewTitle}>{title || "Seu Título Aqui"}</h4>
+        <p style={styles.previewDescription}>
+          {description || "A descrição aparecerá aqui."}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+function OffersPage() {
+  const [view, setView] = useState("list");
+  const [offers, setOffers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [editingOffer, setEditingOffer] = useState(null);
+  const { token } = useAuth();
+  const [newOffer, setNewOffer] = useState({
+    title: "",
+    description: "",
+    mideaType: 1,
+    mideaSource: 1,
+    mideaUrl: "",
+    redirectUrl: "",
+    categoryName: "",
+    panelSide: 1,
+    status: 2,
+  });
+  const [loading, setLoading] = useState({
+    page: true,
+    form: false,
+    upload: false,
+  });
+
+  const fetchInitialData = async () => {
+    if (!token) return;
+    setLoading((prev) => ({ ...prev, page: true }));
+    try {
+      const offersData = await offerService.getOffers(token);
+      setOffers(offersData);
+      const categoriesData = await offerCategoryService.getCategories(token);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+      alert("Não foi possível carregar os dados da página.");
+    } finally {
+      setLoading((prev) => ({ ...prev, page: false }));
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [token]);
+
+  useEffect(() => {
+    if (view === "list" && !loading.page) {
+      fetchInitialData();
+    }
+  }, [view]);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading((prev) => ({ ...prev, upload: true }));
+    try {
+      const response = await offerService.uploadMidea(file, token);
+      setNewOffer((prev) => ({
+        ...prev,
+        mideaUrl: response.url,
+        mideaSource: 2,
+      }));
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      alert("Falha no upload da mídia.");
+    } finally {
+      setLoading((prev) => ({ ...prev, upload: false }));
+    }
+  };
+
+  const handleDeleteMidea = async () => {
+    if (!newOffer.mideaUrl) return;
+    setLoading((prev) => ({ ...prev, upload: true }));
+    try {
+      await offerService.deleteMidea(newOffer.mideaUrl, token);
+      setNewOffer((prev) => ({ ...prev, mideaUrl: "", mideaSource: 1 }));
+    } catch (error) {
+      console.error("Erro ao deletar mídia:", error);
+      alert("Falha ao deletar a mídia.");
+    } finally {
+      setLoading((prev) => ({ ...prev, upload: false }));
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "categoryName") {
+      const selectedCategory = categories.find(
+        (cat) => cat.id === parseInt(value)
+      );
+      setNewOffer((prev) => ({
+        ...prev,
+        categoryName: selectedCategory ? selectedCategory.name : "",
+      }));
+    } else {
+      const isNumeric = [
+        "mideaType",
+        "mideaSource",
+        "status",
+        "panelSide",
+      ].includes(name);
+      setNewOffer((prev) => ({
+        ...prev,
+        [name]: isNumeric ? parseInt(value) : value,
+      }));
+    }
+  };
+
+  const resetForm = () => {
+    setNewOffer({
+      title: "",
+      description: "",
+      mideaType: 1,
+      mideaSource: 1,
+      mideaUrl: "",
+      redirectUrl: "",
+      categoryName: "",
+      panelSide: 1,
+      status: 2,
+    });
+    setEditingOffer(null);
+  };
+
+  const handleCreateOrUpdateOffer = async () => {
+    if (
+      !newOffer.title ||
+      !newOffer.mideaUrl ||
+      !newOffer.redirectUrl ||
+      !newOffer.categoryName
+    ) {
+      alert("Por favor, preencha os campos obrigatórios.");
+      return;
+    }
+    setLoading((prev) => ({ ...prev, form: true }));
+    try {
+      if (editingOffer) {
+        await offerService.updateOffer(
+          editingOffer.id,
+          { ...newOffer, id: editingOffer.id },
+          token
+        );
+        alert("Anúncio atualizado com sucesso!");
+      } else {
+        await offerService.createOffer(newOffer, token);
+        alert(`Anúncio "${newOffer.title}" criado com sucesso!`);
+      }
+      resetForm();
+      setView("list");
+    } catch (error) {
+      console.error("Erro ao salvar anúncio:", error);
+      alert("Não foi possível salvar o anúncio.");
+    } finally {
+      setLoading((prev) => ({ ...prev, form: false }));
+    }
+  };
+
+  const handleDeleteOffer = async (offerId) => {
+    if (window.confirm("Tem certeza que deseja excluir este anúncio?")) {
+      setLoading((prev) => ({ ...prev, page: true }));
+      try {
+        await offerService.deleteOffer(offerId, token);
+        await fetchInitialData();
+      } catch (error) {
+        console.error("Erro ao excluir anúncio:", error);
+        alert("Não foi possível excluir o anúncio.");
+        setLoading((prev) => ({ ...prev, page: false }));
+      }
+    }
+  };
+
+  const handleEditOffer = (offer) => {
+    setEditingOffer(offer);
+    setNewOffer({ ...offer });
+    setView("creator");
+  };
+
+  const handleToggleStatus = async (offerId) => {
+    setLoading((prev) => ({ ...prev, page: true }));
+    try {
+      await offerService.toggleOfferStatus(offerId, token);
+      await fetchInitialData();
+    } catch (error) {
+      console.error("Erro ao alterar status:", error);
+      alert("Não foi possível alterar o status do anúncio.");
+      setLoading((prev) => ({ ...prev, page: false }));
+    }
+  };
+
+  const renderMideaInput = () => {
+    if (newOffer.mideaSource === 2 && newOffer.mideaUrl) {
+      return (
+        <div style={styles.imagePreviewContainer}>
+          <img
+            src={newOffer.mideaUrl}
+            alt="Preview Upload"
+            style={styles.imagePreview}
+          />
+          <button
+            onClick={handleDeleteMidea}
+            style={styles.deletePreviewButton}
+            disabled={loading.upload}
+          >
+            {loading.upload ? (
+              <div
+                style={{
+                  ...styles.spinner,
+                  width: "12px",
+                  height: "12px",
+                  border: "2px solid #fff",
+                  borderTop: "2px solid transparent",
+                }}
+              ></div>
+            ) : (
+              <i className="fa-solid fa-xmark"></i>
+            )}
+          </button>
+        </div>
+      );
+    }
+    return (
+      <>
+        <div style={styles.radioGroup}>
+          <label style={styles.radioLabel}>
+            <input
+              type="radio"
+              name="mideaSource"
+              value={1}
+              checked={newOffer.mideaSource === 1}
+              onChange={handleInputChange}
+            />{" "}
+            URL
+          </label>
+          <label style={styles.radioLabel}>
+            <input
+              type="radio"
+              name="mideaSource"
+              value={2}
+              checked={newOffer.mideaSource === 2}
+              onChange={handleInputChange}
+            />{" "}
+            Upload
+          </label>
+        </div>
+        {newOffer.mideaSource === 1 ? (
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Link da Mídia</label>
+            <input
+              type="text"
+              name="mideaUrl"
+              value={newOffer.mideaUrl}
+              onChange={handleInputChange}
+              style={styles.formInput}
+            />
+          </div>
+        ) : (
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Arquivo</label>
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+              disabled={loading.upload}
+              style={styles.formInput}
+            />
+          </div>
+        )}
+      </>
     );
+  };
+
+  const renderSaveButtonContent = () => {
+    if (loading.form) {
+      return (
+        <div
+          style={{
+            ...styles.spinner,
+            width: "20px",
+            height: "20px",
+            border: "3px solid #a5b4fc",
+            borderTop: "3px solid #fff",
+          }}
+        ></div>
+      );
+    }
+    return (
+      <>
+        <i
+          className={editingOffer ? "fa-solid fa-save" : "fa-solid fa-plus"}
+        ></i>{" "}
+        {editingOffer ? "Salvar Alterações" : "Criar Anúncio"}
+      </>
+    );
+  };
+
+  const selectedCategoryId =
+    categories.find((cat) => cat.name === newOffer.categoryName)?.id || "";
+
+  return (
+    <div style={styles.offersPageContainer}>
+      <GlobalStyle />
+      <header style={styles.offersPageHeader}>
+        <h1 style={styles.headerH1}>Gerenciador de Anúncios</h1>
+        <p style={styles.headerP}>
+          Crie, configure e gerencie os anúncios para seus clientes.
+        </p>
+      </header>
+      <div style={styles.viewToggleContainer}>
+        <button
+          style={
+            view === "creator" ? styles.toggleButtonActive : styles.toggleButton
+          }
+          onClick={() => {
+            resetForm();
+            setView("creator");
+          }}
+        >
+          <i className="fa-solid fa-plus"></i> Criar Novo
+        </button>
+        <button
+          style={
+            view === "list" ? styles.toggleButtonActive : styles.toggleButton
+          }
+          onClick={() => setView("list")}
+        >
+          <i className="fa-solid fa-list-check"></i> Meus Anúncios (
+          {offers.length})
+        </button>
+      </div>
+
+      {view === "creator" && (
+        <div style={styles.offerCreationCard}>
+          {loading.form && <LoadingOverlay />}
+          <div style={styles.creationCardGrid}>
+            <div style={styles.offerFormSection}>
+              <div style={styles.cardHeaderNoBorder}>
+                <i
+                  className="fa-solid fa-wand-magic-sparkles"
+                  style={styles.cardHeaderIcon}
+                ></i>
+                <h3 style={styles.cardHeaderH3}>
+                  {editingOffer ? "Editar Anúncio" : "Criar Novo Anúncio"}
+                </h3>
+              </div>
+              <div style={styles.cardBody}>
+                <div style={styles.formSection}>
+                  <h4 style={styles.formSectionTitle}>
+                    1. Conteúdo do Anúncio
+                  </h4>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Título</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={newOffer.title}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Descrição</label>
+                    <textarea
+                      name="description"
+                      value={newOffer.description}
+                      onChange={handleInputChange}
+                      style={{ ...styles.formInput, ...styles.formTextarea }}
+                      rows="3"
+                    ></textarea>
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Tipo de Mídia</label>
+                    <div style={styles.radioGroup}>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="mideaType"
+                          value={1}
+                          checked={newOffer.mideaType === 1}
+                          onChange={handleInputChange}
+                        />{" "}
+                        Imagem
+                      </label>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="mideaType"
+                          value={2}
+                          checked={newOffer.mideaType === 2}
+                          onChange={handleInputChange}
+                        />{" "}
+                        Vídeo
+                      </label>
+                    </div>
+                  </div>
+                  {renderMideaInput()}
+                </div>
+                <div style={styles.formSection}>
+                  <h4 style={styles.formSectionTitle}>2. Configurações</h4>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>
+                      Link de Redirecionamento
+                    </label>
+                    <input
+                      type="text"
+                      name="redirectUrl"
+                      value={newOffer.redirectUrl}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Categoria</label>
+                    <select
+                      name="categoryName"
+                      value={selectedCategoryId}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    >
+                      <option value="" disabled>
+                        Selecione uma categoria...
+                      </option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Posição no Painel</label>
+                    <div style={styles.radioGroup}>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="panelSide"
+                          value={1}
+                          checked={newOffer.panelSide === 1}
+                          onChange={handleInputChange}
+                        />{" "}
+                        Esquerda
+                      </label>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="panelSide"
+                          value={2}
+                          checked={newOffer.panelSide === 2}
+                          onChange={handleInputChange}
+                        />{" "}
+                        Direita
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={styles.cardFooter}>
+                <button
+                  style={{
+                    ...styles.saveOfferButton,
+                    ...(loading.form && styles.saveOfferButtonDisabled),
+                  }}
+                  onClick={handleCreateOrUpdateOffer}
+                  disabled={loading.form}
+                >
+                  {renderSaveButtonContent()}
+                </button>
+              </div>
+            </div>
+            <div style={styles.offerPreviewSection}>
+              <div style={styles.cardHeaderNoBorder}>
+                <i
+                  className="fa-solid fa-eye"
+                  style={{ ...styles.cardHeaderIcon, color: "#6366f1" }}
+                ></i>
+                <h3 style={styles.cardHeaderH3}>Preview</h3>
+              </div>
+              <div style={styles.previewArea}>
+                <OfferPreview offerData={newOffer} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {view === "list" && (
+        <div style={{ position: "relative" }}>
+          {loading.page && <LoadingOverlay />}
+          <MyOffers
+            offers={offers}
+            onEdit={handleEditOffer}
+            onDelete={handleDeleteOffer}
+            onToggleStatus={handleToggleStatus}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default OffersPage;

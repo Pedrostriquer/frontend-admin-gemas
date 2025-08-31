@@ -20,9 +20,9 @@ import CreateWithdrawalPage from "./Components/Platform/Withdraws/CreateWithdraw
 import ControllerPage from "./Components/Platform/Controller/ControllerPage";
 import ReferralsPage from "./Components/Platform/Indication/ReferralsPage";
 import OffersPage from "./Components/Platform/Offers/OffersPage";
-import Messages from "./Components/Platform/Messages/MessagesPage";
 import CreateClientPage from "./Components/Platform/Clients/CreateClientPage/CreateClientPage";
 import UsersPage from "./Components/Users/UsersPage";
+import MessagesPage from "./Components/Messages/MessagesPage";
 
 function App() {
   return (
@@ -50,7 +50,7 @@ function App() {
                 <Route path="platform/controller" element={<ControllerPage />} />
                 <Route path="platform/indication" element={<ReferralsPage />} />
                 <Route path="platform/offers" element={<OffersPage />} />
-                <Route path="platform/messages" element={<Messages />} />
+                <Route path="platform/messages" element={<MessagesPage />} />
                 <Route path="clients/create" element={<CreateClientPage />} />
               </Route>
             </Route>

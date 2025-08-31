@@ -1,137 +1,294 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import styles from './ConsultantDetailPageStyle';
-import { useAuth } from '../../../../Context/AuthContext';
-import consultantService from '../../../../dbServices/consultantService';
-import formatServices from '../../../../formatServices/formatServices';
-import AddBalanceModal from './AddBalanceModal/AddBalanceModal';
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import styles from "./ConsultantDetailPageStyle";
+import { useAuth } from "../../../../Context/AuthContext";
+import consultantService from "../../../../dbServices/consultantService";
+import formatServices from "../../../../formatServices/formatServices";
+import AddBalanceModal from "./AddBalanceModal/AddBalanceModal";
 
 function ConsultantDetailPage() {
-    const { consultantId } = useParams();
-    const navigate = useNavigate();
-    const { token } = useAuth();
-    const [consultant, setConsultant] = useState(null);
-    const [originalConsultant, setOriginalConsultant] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
+  const { consultantId } = useParams();
+  const navigate = useNavigate();
+  const { token } = useAuth();
+  const [consultant, setConsultant] = useState(null);
+  const [originalConsultant, setOriginalConsultant] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
 
-    const fetchConsultant = useCallback(async () => {
-        if (!token || !consultantId) return;
-        setIsLoading(true);
-        try {
-            const data = await consultantService.getConsultantById(token, consultantId);
-            setConsultant(data);
-            setOriginalConsultant(data);
-        } catch (error) {
-            navigate('/platform/consultants');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [consultantId, token, navigate]);
+  const fetchConsultant = useCallback(async () => {
+    if (!token || !consultantId) return;
+    setIsLoading(true);
+    try {
+      const data = await consultantService.getConsultantById(
+        token,
+        consultantId
+      );
+      setConsultant(data);
+      setOriginalConsultant(data);
+    } catch (error) {
+      navigate("/platform/consultants");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [consultantId, token, navigate]);
 
-    useEffect(() => {
-        fetchConsultant();
-    }, [fetchConsultant]);
+  useEffect(() => {
+    fetchConsultant();
+  }, [fetchConsultant]);
 
-    const handleEditToggle = () => {
-        if (isEditing) {
-            setConsultant(originalConsultant); 
-        }
-        setIsEditing(!isEditing);
-    };
+  const handleEditToggle = () => {
+    if (isEditing) {
+      setConsultant(originalConsultant);
+    }
+    setIsEditing(!isEditing);
+  };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setConsultant(prev => ({ ...prev, [name]: value }));
-    };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setConsultant((prev) => ({ ...prev, [name]: value }));
+  };
 
-    const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            const updatedData = { ...consultant, status: parseInt(consultant.status, 10) };
-            await consultantService.updateConsultant(token, consultantId, updatedData);
-            setOriginalConsultant(updatedData);
-            setIsEditing(false);
-            alert("Consultor atualizado com sucesso!");
-        } catch (error) {
-            alert("Falha ao atualizar o consultor.");
-        } finally {
-            setIsSaving(false);
-        }
-    };
-    
-    const handleAddBalance = async ({ amount }) => {
-        setIsSaving(true);
-        try {
-            await consultantService.addBalance(token, consultantId, amount);
-            alert('Saldo adicionado com sucesso!');
-            setIsBalanceModalOpen(false);
-            await fetchConsultant();
-        } catch (error) {
-            alert(`Erro: ${error.message || 'Não foi possível adicionar o saldo.'}`);
-        } finally {
-            setIsSaving(false);
-        }
-    };
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const updatedData = {
+        ...consultant,
+        status: parseInt(consultant.status, 10),
+        commissionPercentage: parseFloat(consultant.commissionPercentage),
+      };
+      await consultantService.updateConsultant(
+        token,
+        consultantId,
+        updatedData
+      );
+      setOriginalConsultant(updatedData);
+      setIsEditing(false);
+      alert("Consultor atualizado com sucesso!");
+    } catch (error) {
+      alert("Falha ao atualizar o consultor.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-    if (isLoading) return <div style={{ padding: '40px', textAlign: 'center' }}>Carregando...</div>;
-    if (!consultant) return <div style={{ padding: '40px', textAlign: 'center' }}>Consultor não encontrado.</div>;
-    
+  const handleAddBalance = async ({ amount }) => {
+    setIsSaving(true);
+    try {
+      await consultantService.addBalance(token, consultantId, amount);
+      alert("Saldo adicionado com sucesso!");
+      setIsBalanceModalOpen(false);
+      await fetchConsultant();
+    } catch (error) {
+      alert(`Erro: ${error.message || "Não foi possível adicionar o saldo."}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading)
     return (
-        <>
-            <div style={styles.pageContainer}>
-                <header style={styles.header}>
-                    <div style={styles.headerLeft}>
-                        <button style={styles.backButton} onClick={() => navigate(-1)} title="Voltar"><i className="fa-solid fa-arrow-left"></i></button>
-                        <h1 style={styles.headerTitle}>{originalConsultant.name}</h1>
-                    </div>
-                    <div style={styles.headerActions}>
-                        {isEditing ? (
-                            <>
-                                <button style={styles.saveButton} onClick={handleSave} disabled={isSaving}>{isSaving ? 'Salvando...' : <><i className="fa-solid fa-save"></i> Salvar</>}</button>
-                                <button style={styles.cancelButton} onClick={handleEditToggle} disabled={isSaving}>Cancelar</button>
-                            </>
-                        ) : (
-                            <>
-                                <button style={styles.actionButton} onClick={() => setIsBalanceModalOpen(true)}><i className="fa-solid fa-plus"></i> Adicionar Saldo</button>
-                                <button style={styles.editButton} onClick={handleEditToggle}><i className="fa-solid fa-pencil"></i> Editar</button>
-                            </>
-                        )}
-                    </div>
-                </header>
-
-                <div style={styles.mainGrid}>
-                    <div style={styles.leftColumn}>
-                        <div style={styles.infoCard}>
-                            <h3 style={styles.cardTitle}><i className="fa-solid fa-user"></i> Informações Pessoais</h3>
-                            <div style={styles.infoGrid}>
-                                <div style={styles.infoGroup}><label style={styles.infoLabel}>Nome Completo</label>{isEditing ? <input type="text" name="name" value={consultant.name} onChange={handleInputChange} style={styles.formInput} /> : <p style={styles.infoValue}>{consultant.name}</p>}</div>
-                                <div style={styles.infoGroup}><label style={styles.infoLabel}>Email</label>{isEditing ? <input type="email" name="email" value={consultant.email} onChange={handleInputChange} style={styles.formInput} /> : <p style={styles.infoValue}>{consultant.email}</p>}</div>
-                                <div style={styles.infoGroup}><label style={styles.infoLabel}>CPF</label>{isEditing ? <input type="text" name="cpfCnpj" value={consultant.cpfCnpj} onChange={handleInputChange} style={styles.formInput} /> : <p style={styles.infoValue}>{formatServices.formatCpfCnpj(consultant.cpfCnpj)}</p>}</div>
-                                <div style={styles.infoGroup}><label style={styles.infoLabel}>Telefone</label>{isEditing ? <input type="text" name="phoneNumber" value={consultant.phoneNumber} onChange={handleInputChange} style={styles.formInput} /> : <p style={styles.infoValue}>{consultant.phoneNumber}</p>}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style={styles.rightColumn}>
-                        <div style={styles.infoCard}>
-                            <h3 style={styles.cardTitle}><i className="fa-solid fa-wallet"></i> Saldo</h3>
-                            <p style={{...styles.infoValue, fontSize: '1.5rem', fontWeight: 700, padding: 0, background: 'none', border: 'none'}}>{formatServices.formatCurrencyBR(consultant.balance)}</p>
-                        </div>
-                        <div style={styles.infoCard}>
-                            <h3 style={styles.cardTitle}><i className="fa-solid fa-gear"></i> Configurações</h3>
-                            <div style={styles.infoGroup}>
-                                <label style={styles.infoLabel}>Status</label>
-                                {isEditing ? (<select name="status" value={consultant.status} onChange={handleInputChange} style={styles.formSelect}><option value={1}>Ativo</option><option value={0}>Inativo</option></select>) : (<p style={styles.infoValue}>{consultant.status === 1 ? 'Ativo' : 'Inativo'}</p>)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <AddBalanceModal isOpen={isBalanceModalOpen} onClose={() => setIsBalanceModalOpen(false)} onSave={handleAddBalance} />
-        </>
+      <div style={{ padding: "40px", textAlign: "center" }}>Carregando...</div>
     );
+  if (!consultant)
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        Consultor não encontrado.
+      </div>
+    );
+
+  return (
+    <>
+      <div style={styles.pageContainer}>
+        <header style={styles.header}>
+          <div style={styles.headerLeft}>
+            <button
+              style={styles.backButton}
+              onClick={() => navigate(-1)}
+              title="Voltar"
+            >
+              <i className="fa-solid fa-arrow-left"></i>
+            </button>
+            <h1 style={styles.headerTitle}>{originalConsultant.name}</h1>
+          </div>
+          <div style={styles.headerActions}>
+            {isEditing ? (
+              <>
+                <button
+                  style={styles.saveButton}
+                  onClick={handleSave}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    "Salvando..."
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-save"></i> Salvar
+                    </>
+                  )}
+                </button>
+                <button
+                  style={styles.cancelButton}
+                  onClick={handleEditToggle}
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  style={styles.actionButton}
+                  onClick={() => setIsBalanceModalOpen(true)}
+                >
+                  <i className="fa-solid fa-plus"></i> Adicionar Saldo
+                </button>
+                <button style={styles.editButton} onClick={handleEditToggle}>
+                  <i className="fa-solid fa-pencil"></i> Editar
+                </button>
+              </>
+            )}
+          </div>
+        </header>
+
+        <div style={styles.mainGrid}>
+          <div style={styles.leftColumn}>
+            <div style={styles.infoCard}>
+              <h3 style={styles.cardTitle}>
+                <i className="fa-solid fa-user"></i> Informações Pessoais
+              </h3>
+              <div style={styles.infoGrid}>
+                <div style={styles.infoGroup}>
+                  <label style={styles.infoLabel}>Nome Completo</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="name"
+                      value={consultant.name}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    />
+                  ) : (
+                    <p style={styles.infoValue}>{consultant.name}</p>
+                  )}
+                </div>
+                <div style={styles.infoGroup}>
+                  <label style={styles.infoLabel}>Email</label>
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      name="email"
+                      value={consultant.email}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    />
+                  ) : (
+                    <p style={styles.infoValue}>{consultant.email}</p>
+                  )}
+                </div>
+                <div style={styles.infoGroup}>
+                  <label style={styles.infoLabel}>CPF</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="cpfCnpj"
+                      value={consultant.cpfCnpj}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    />
+                  ) : (
+                    <p style={styles.infoValue}>
+                      {formatServices.formatCpfCnpj(consultant.cpfCnpj)}
+                    </p>
+                  )}
+                </div>
+                <div style={styles.infoGroup}>
+                  <label style={styles.infoLabel}>Telefone</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="phoneNumber"
+                      value={consultant.phoneNumber}
+                      onChange={handleInputChange}
+                      style={styles.formInput}
+                    />
+                  ) : (
+                    <p style={styles.infoValue}>{consultant.phoneNumber}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={styles.rightColumn}>
+            <div style={styles.infoCard}>
+              <h3 style={styles.cardTitle}>
+                <i className="fa-solid fa-wallet"></i> Saldo
+              </h3>
+              <p
+                style={{
+                  ...styles.infoValue,
+                  fontSize: "1.5rem",
+                  fontWeight: 700,
+                  padding: 0,
+                  background: "none",
+                  border: "none",
+                }}
+              >
+                {formatServices.formatCurrencyBR(consultant.balance)}
+              </p>
+            </div>
+            <div style={styles.infoCard}>
+              <h3 style={styles.cardTitle}>
+                <i className="fa-solid fa-gear"></i> Configurações
+              </h3>
+              <div style={styles.infoGroup}>
+                <label style={styles.infoLabel}>Status</label>
+                {isEditing ? (
+                  <select
+                    name="status"
+                    value={consultant.status}
+                    onChange={handleInputChange}
+                    style={styles.formSelect}
+                  >
+                    <option value={1}>Ativo</option>
+                    <option value={0}>Inativo</option>
+                  </select>
+                ) : (
+                  <p style={styles.infoValue}>
+                    {consultant.status === 1 ? "Ativo" : "Inativo"}
+                  </p>
+                )}
+              </div>
+              <div style={styles.infoGroup}>
+                <label style={styles.infoLabel}>Comissão (%)</label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    name="commissionPercentage"
+                    value={consultant.commissionPercentage || ""}
+                    onChange={handleInputChange}
+                    style={styles.formInput}
+                  />
+                ) : (
+                  <p style={styles.infoValue}>
+                    {consultant.commissionPercentage != null
+                      ? `${consultant.commissionPercentage}%`
+                      : "N/A"}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <AddBalanceModal
+        isOpen={isBalanceModalOpen}
+        onClose={() => setIsBalanceModalOpen(false)}
+        onSave={handleAddBalance}
+      />
+    </>
+  );
 }
 
 export default ConsultantDetailPage;

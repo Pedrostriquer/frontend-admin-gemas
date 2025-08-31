@@ -1,0 +1,146 @@
+const styles = {
+  myOffersContainer: {
+    paddingTop: "2rem",
+  },
+  noOffersContainer: {
+    textAlign: "center",
+    padding: "4rem 2rem",
+    backgroundColor: "#fff",
+    borderRadius: "16px",
+    border: "1px solid #e2e8f0",
+  },
+  noOffersIcon: {
+    fontSize: "4rem",
+    color: "#cbd5e1",
+  },
+  noOffersTitle: {
+    marginTop: "1.5rem",
+    fontSize: "1.5rem",
+    color: "#1e293b",
+  },
+  noOffersText: {
+    color: "#64748b",
+    maxWidth: "400px",
+    margin: "0.5rem auto 0",
+  },
+  offersGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+    gap: "2rem",
+  },
+  offerCard: {
+    backgroundColor: "#fff",
+    borderRadius: "16px",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    transition: "transform 0.3s, box-shadow 0.3s, opacity 0.3s",
+  },
+  offerCardPaused: {
+    opacity: 0.65,
+    boxShadow: "none",
+  },
+  mediaContainer: {
+    width: "100%",
+    paddingTop: "56.25%",
+    position: "relative",
+    backgroundColor: "#f1f5f9",
+  },
+  mediaContent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  cardContent: {
+    padding: "1.5rem",
+    flexGrow: 1,
+  },
+  cardHeaderRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "0.75rem",
+  },
+  statusBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "4px 10px",
+    borderRadius: "9999px",
+    fontSize: "0.75rem",
+    fontWeight: "600",
+  },
+  statusBadgeActive: {
+    backgroundColor: "#ecfdf5",
+    color: "#16a34a",
+  },
+  statusBadgePaused: {
+    backgroundColor: "#f8fafc",
+    color: "#64748b",
+  },
+  categoryBadge: {
+    display: "inline-block",
+    padding: "4px 12px",
+    borderRadius: "9999px",
+    backgroundColor: "#e0e7ff",
+    color: "#4338ca",
+    fontSize: "0.75rem",
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  cardTitle: {
+    margin: "0 0 0.5rem 0",
+    fontSize: "1.25rem",
+    color: "#1e293b",
+  },
+  cardDescription: {
+    margin: 0,
+    color: "#64748b",
+    fontSize: "0.9rem",
+    lineHeight: 1.6,
+  },
+  cardFooter: {
+    display: "flex",
+    borderTop: "1px solid #e2e8f0",
+    padding: "0.75rem",
+    gap: "0.75rem",
+  },
+  actionButton: {
+    flex: 1,
+    border: "none",
+    borderRadius: "8px",
+    padding: "10px",
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    transition: "background-color 0.2s, transform 0.2s",
+  },
+  editButton: {
+    backgroundColor: "#f0f9ff",
+    color: "#0284c7",
+  },
+  deleteButton: {
+    backgroundColor: "#fff1f2",
+    color: "#e11d48",
+    flex: "0 1 auto",
+  },
+  pauseButton: {
+    backgroundColor: "#fffbeb",
+    color: "#f59e0b",
+  },
+  activateButton: {
+    backgroundColor: "#f0fdf4",
+    color: "#22c55e",
+  },
+};
+
+export default styles;
