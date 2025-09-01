@@ -11,7 +11,7 @@ import ClientsPage from "./Components/Platform/Clients/ClientsPage";
 import ClientDetailPage from "./Components/Platform/Clients/ClientDetailPage/ClientDetailPage";
 import ConsultantsPage from "./Components/Platform/Consultants/ConsultantsPage";
 import ConsultantDetailPage from "./Components/Platform/Consultants/ConsultantDetailPage/ConsultantDetailPage";
-import CreateConsultantPage from "./Components/Platform/Consultants/CreateConsultantPage/CreateConsultantPage"; // Importe a nova página
+import CreateConsultantPage from "./Components/Platform/Consultants/CreateConsultantPage/CreateConsultantPage";
 import ContractsPage from "./Components/Platform/Contracts/ContractsPage";
 import ContractDetailPage from "./Components/Platform/Contracts/ContractDetailPage/ContractDetailPage";
 import WithdrawalsPage from "./Components/Platform/Withdraws/WithdrawalsPage";
@@ -23,6 +23,14 @@ import OffersPage from "./Components/Platform/Offers/OffersPage";
 import CreateClientPage from "./Components/Platform/Clients/CreateClientPage/CreateClientPage";
 import UsersPage from "./Components/Users/UsersPage";
 import MessagesPage from "./Components/Messages/MessagesPage";
+
+// NOVO: Imports para as páginas de E-commerce
+import EcommerceDashboard from "./Components/Ecommerce/Dashboard/EcommerceDashboard";
+import ProductsPage from "./Components/Ecommerce/Products/ProductsPage";
+import OrdersPage from "./Components/Ecommerce/Orders/OrdersPage";
+import PromotionsPage from "./Components/Ecommerce/Promotions/PromotionsPage";
+import CategoriesPage from "./Components/Ecommerce/Categories/CategoriesPage";
+
 
 function App() {
   return (
@@ -52,6 +60,13 @@ function App() {
                 <Route path="platform/offers" element={<OffersPage />} />
                 <Route path="platform/messages" element={<MessagesPage />} />
                 <Route path="clients/create" element={<CreateClientPage />} />
+
+                {/* NOVO: Rotas para as páginas de E-commerce */}
+                <Route path="ecommerce/dashboard" element={<EcommerceDashboard />} />
+                <Route path="ecommerce/products" element={<ProductsPage />} />
+                <Route path="ecommerce/orders" element={<OrdersPage />} />
+                <Route path="ecommerce/promotions" element={<PromotionsPage />} />
+                <Route path="ecommerce/categories" element={<CategoriesPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" />} />
