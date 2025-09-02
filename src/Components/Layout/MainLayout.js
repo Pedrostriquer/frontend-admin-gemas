@@ -19,7 +19,7 @@ const layoutStyles = {
     transition: 'padding-left 0.3s ease',
   },
   mainContentCollapsed: {
-    paddingLeft: '88px', // Padding quando a sidebar está recolhida
+    paddingLeft: '110px',
   }
 };
 
@@ -29,15 +29,22 @@ export default function MainLayout() {
 
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const currentPath = location.pathname;
-  const activeContext = currentPath.startsWith('/ecommerce') ? 'ecommerce' : 'platform';
+  const getActiveContext = (path) => {
+    if (path.startsWith('/ecommerce')) return 'ecommerce';
+    if (path.startsWith('/site')) return 'site';
+    return 'platform';
+  };
+
+  const activeContext = getActiveContext(location.pathname);
 
   const handleNavigate = (path) => {
     navigate(path);
   };
 
   const handleContextChange = (context) => {
-    const newPath = context === 'platform' ? '/platform/dashboard' : '/ecommerce/dashboard';
+    let newPath = '/platform/dashboard';
+    if (context === 'ecommerce') newPath = '/ecommerce/dashboard';
+    if (context === 'site') newPath = '/site/home';
     handleNavigate(newPath);
   };
 
@@ -57,7 +64,7 @@ export default function MainLayout() {
         onContextChange={handleContextChange}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggle={toggleSidebar}
-        activePath={currentPath}
+        activePath={location.pathname}
         onLinkClick={handleNavigate}
       />
       <main style={contentStyle}>

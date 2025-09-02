@@ -242,6 +242,19 @@ const styles = {
         opacity: 0,
         width: 0,
     },
+    firebaseModalBackdrop: {
+        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(5px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
+    },
+    firebaseModalContent: {
+        position: 'relative', background: '#fff', padding: '30px', borderRadius: '12px',
+        width: '90%', maxWidth: '350px', textAlign: 'center', boxShadow: '0 5px 20px rgba(0,0,0,0.2)',
+    },
+    firebaseModalClose: {
+        position: 'absolute', top: '10px', right: '15px', background: 'none', border: 'none',
+        fontSize: '1.5rem', color: '#aaa', cursor: 'pointer',
+    },
 };
 
 export default styles;
