@@ -14,12 +14,9 @@ const productServices = {
             if (filters.status && filters.status !== 'Todos') {
                 params.append('Status', filters.status === 'Ativo' ? 1 : 0);
             }
-            
-            // Lógica ajustada: Se UMA categoria estiver no filtro, envie-a.
-            if (filters.categories && filters.categories.length === 1) {
-                params.append('CategoryId', filters.categories[0]);
+            if (filters.categories && filters.categories.length > 0) {
+                filters.categories.forEach(catId => params.append('CategoryId', catId));
             }
-            
             params.append('PageNumber', pageNumber);
             params.append('PageSize', pageSize);
 
@@ -31,30 +28,15 @@ const productServices = {
         }
     },
     
-    searchProductsByMultipleCategories: async (filters, pageNumber = 1, pageSize = 5) => {
-        const categoryIds = filters.categories || [];
-        const uniqueProducts = new Map();
-
-        for (const catId of categoryIds) {
-            const singleCategoryFilters = { ...filters, categories: [catId] };
-            const data = await productServices.searchProducts(singleCategoryFilters, 1, 100); // Busca até 100 por categoria
-            data.items.forEach(product => {
-                if (!uniqueProducts.has(product.id)) {
-                    uniqueProducts.set(product.id, product);
-                }
-            });
+    // ✨✨✨ FUNÇÃO ADICIONADA DE VOLTA AQUI, MIGA! ✨✨✨
+    getProductById: async (id) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/Product/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Erro ao buscar produto ${id}:`, error.response?.data || error.message);
+            throw error;
         }
-        
-        const allItems = Array.from(uniqueProducts.values());
-        const totalCount = allItems.length;
-        const totalPages = Math.ceil(totalCount / pageSize);
-        const paginatedItems = allItems.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
-        
-        return {
-            items: paginatedItems,
-            totalCount,
-            totalPages,
-        };
     },
 
     getAllCategories: async () => {
