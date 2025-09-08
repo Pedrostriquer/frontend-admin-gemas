@@ -1,3 +1,5 @@
+/* src/pages/ExtractData/ExtractData.css */
+
 .extract-data-container {
     font-family: 'Poppins', sans-serif;
 }
@@ -90,22 +92,30 @@
 .data-type-btn i {
     color: #6366f1;
 }
+
 .data-type-btn.active i {
     color: #4338ca;
 }
 
-/* --- Estilos da Seção de Exibição (sem grandes mudanças) --- */
-
+/* --- Estilos da Seção de Exibição --- */
 .data-display-section {
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid #e5e7eb;
     animation: fadeIn 0.5s ease-out;
+    padding-bottom: 100px;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .filters-container {
@@ -136,6 +146,16 @@
     background: #fff;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.filter-item.search-filter {
+    flex-grow: 1;
+    /* Faz o campo de busca ocupar o espaço disponível */
+}
+
+.filter-item.search-filter input {
+    width: 100%;
 }
 
 .extract-button {
@@ -162,6 +182,28 @@
     border-radius: 12px;
     overflow-x: auto;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.extract-button-wrapper {
+    margin-left: auto; /* Empurra o botão para a direita */
+}
+
+.extract-button {
+    background-color: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.extract-button:hover {
+    background-color: #059669;
 }
 
 .data-table {
@@ -198,4 +240,40 @@
     text-align: center;
     padding: 40px 20px;
     color: #6b7280;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 0 20px;
+}
+
+.pagination-controls span {
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.pagination-controls button {
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #a5b4fc;
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

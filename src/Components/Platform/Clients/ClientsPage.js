@@ -31,10 +31,17 @@ function ClientsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
+
+  // NOVOS ESTADOS PARA ORDENAÇÃO
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDirection, setSortDirection] = useState("desc");
+
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  // FUNÇÃO DE BUSCA ATUALIZADA
   const fetchClients = useCallback(
-    async (page, search) => {
+    async (page, search, sortBy, sortDirection) => {
       if (!token) return;
       setIsLoading(true);
       try {
@@ -42,7 +49,9 @@ function ClientsPage() {
           token,
           search,
           page,
-          ITEMS_PER_PAGE
+          ITEMS_PER_PAGE,
+          sortBy, // Novo parâmetro
+          sortDirection // Novo parâmetro
         );
         setClients(data.items || []);
         setTotalPages(Math.ceil(data.totalCount / ITEMS_PER_PAGE));
@@ -54,16 +63,17 @@ function ClientsPage() {
         setIsLoading(false);
       }
     },
-    [token]
+    [token] // A dependência do token é a principal aqui
   );
 
+  // USEEFFECT ATUALIZADO PARA REAGIR ÀS MUDANÇAS DE ORDENAÇÃO
   useEffect(() => {
-    fetchClients(currentPage, debouncedSearchTerm);
-  }, [debouncedSearchTerm, currentPage, fetchClients]);
+    fetchClients(currentPage, debouncedSearchTerm, sortBy, sortDirection);
+  }, [debouncedSearchTerm, currentPage, sortBy, sortDirection, fetchClients]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, sortBy, sortDirection]);
 
   return (
     <div style={styles.clientsPageContainer}>
@@ -72,34 +82,68 @@ function ClientsPage() {
       </header>
 
       <div style={styles.tableControlsHeader}>
-        <div style={styles.searchBox}>
-          <i
-            className="fa-solid fa-magnifying-glass"
-            style={styles.searchBoxIcon}
-          ></i>
-          <input
-            type="text"
-            placeholder="Buscar por nome, CPF ou telefone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
+        <div style={styles.leftControls}>
+          <div style={styles.searchBox}>
+            <i
+              className="fa-solid fa-magnifying-glass"
+              style={styles.searchBoxIcon}
+            ></i>
+            <input
+              type="text"
+              placeholder="Buscar por nome, CPF ou telefone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
+
+          <div style={styles.sortContainer}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={styles.sortSelect}
+            >
+              <option value="id">Ordenar por ID</option>
+              <option value="name">Ordenar por Nome</option>
+              <option value="balance">Ordenar por Saldo</option>
+            </select>
+            <button
+              onClick={() =>
+                setSortDirection((d) => (d === "asc" ? "desc" : "asc"))
+              }
+              style={styles.sortDirectionButton}
+              title={`Mudar para ${
+                sortDirection === "asc" ? "Decrescente" : "Crescente"
+              }`}
+            >
+              {sortDirection === "asc" ? (
+                <i className="fa-solid fa-arrow-up-a-z"></i>
+              ) : (
+                <i className="fa-solid fa-arrow-down-z-a"></i>
+              )}
+            </button>
+          </div>
         </div>
-        <div style={styles.actionsGroup}>
-          <button
-            onClick={() => navigate("/clients/create")}
-            style={styles.addClientButton}
-          >
-            <i className="fa-solid fa-plus"></i> Adicionar Cliente
-          </button>
-        </div>
+
+        <button
+          onClick={() => navigate("/clients/create")}
+          style={{
+            ...styles.addClientButton,
+            ...(isButtonHovered ? styles.addClientButtonHover : {}),
+          }}
+          onMouseEnter={() => setIsButtonHovered(true)}
+          onMouseLeave={() => setIsButtonHovered(false)}
+        >
+          <i className="fa-solid fa-plus"></i>
+          <span>Adicionar Cliente</span>
+        </button>
       </div>
 
       <div style={styles.clientsTableCard}>
         <table style={styles.clientsTable}>
           <thead>
             <tr>
-              <th style={{ ...styles.tableCell, width: '60px' }}></th>
+              <th style={{ ...styles.tableCell, width: "60px" }}></th>
               <th style={styles.tableCell}>Id</th>
               <th style={styles.tableCell}>Nome</th>
               <th style={styles.tableCell}>CPF/CNPJ</th>
@@ -127,12 +171,15 @@ function ClientsPage() {
                   onMouseLeave={() => setHoveredRow(null)}
                   style={{
                     ...styles.tableRow,
-                    ...(hoveredRow === client.id && styles.tableRowHover),
+                    ...(hoveredRow === client.id ? styles.tableRowHover : {}),
                   }}
                 >
                   <td style={styles.tableCell}>
                     <ImageWithLoader
-                      src={client.profilePictureUrl || 'https://i.ibb.co/tZ1b1b1/default-profile.png'}
+                      src={
+                        client.profilePictureUrl ||
+                        "https://i.ibb.co/tZ1b1b1/default-profile.png"
+                      }
                       alt={client.name}
                       style={styles.tableAvatar}
                     />
@@ -167,7 +214,7 @@ function ClientsPage() {
             disabled={currentPage === 1}
             style={{
               ...styles.paginationButton,
-              ...(currentPage === 1 && styles.paginationButtonDisabled),
+              ...(currentPage === 1 ? styles.paginationButtonDisabled : {}),
             }}
           >
             Anterior
@@ -180,8 +227,9 @@ function ClientsPage() {
             disabled={currentPage === totalPages || totalPages === 0}
             style={{
               ...styles.paginationButton,
-              ...(currentPage === totalPages &&
-                styles.paginationButtonDisabled),
+              ...(currentPage === totalPages || totalPages === 0
+                ? styles.paginationButtonDisabled
+                : {}),
             }}
           >
             Próxima
