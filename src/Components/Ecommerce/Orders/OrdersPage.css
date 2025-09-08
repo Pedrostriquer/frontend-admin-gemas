@@ -3,32 +3,21 @@
 .orders-page-header h1 { font-size: 2.25rem; font-weight: 700; color: #1a202c; }
 .orders-page-header p { color: #718096; margin-top: 4px; }
 
-/* --- Novo Card KPI --- */
-.order-kpi-card {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 32px;
-}
+/* --- Card KPI --- */
+.order-kpi-card { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); padding: 24px; display: flex; align-items: center; gap: 24px; margin-bottom: 32px; }
 .kpi-total { text-align: center; }
 .kpi-total p { margin: 0 0 8px 0; font-size: 1rem; color: #4a5568; font-weight: 500; }
 .kpi-total span { font-size: 2.5rem; font-weight: 700; color: #1a202c; }
 .kpi-divider { width: 1px; background-color: #e5e7eb; align-self: stretch; }
-.kpi-status-breakdown { display: flex; flex-grow: 1; justify-content: space-around; }
+.kpi-status-breakdown { display: flex; flex-grow: 1; justify-content: space-around; flex-wrap: wrap; }
 .status-item { text-align: center; }
 .status-item span { font-size: 1.5rem; font-weight: 600; color: #2d3748; }
 .status-item p { margin: 4px 0 0 0; font-size: 0.8rem; color: #718096; }
 
-.table-controls-header-ord { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; /* Adicionado gap */ }
+.table-controls-header-ord { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; }
 .search-box-ord { flex-grow: 1; display: flex; align-items: center; background: #fff; border-radius: 12px; padding: 0 16px; border: 1px solid #e5e7eb; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); }
 .search-box-ord i { color: #9ca3af; }
-.search-box-ord input { flex-grow: 1; border: none; outline: none; padding: 12px 8px; background: transparent; font-family: 'Poppins', sans-serif; font-size: 0.9rem; }
+.search-box-ord input { flex-grow: 1; border: none; outline: none; padding: 12px 8px; background: transparent; font-size: 0.9rem; }
 .filters-ord { display: flex; gap: 12px; }
 
 /* Dropdown Customizado */
@@ -47,13 +36,15 @@
 .orders-table td { font-size: 0.9rem; color: #2d3748; font-weight: 500; }
 .orders-table tbody tr { cursor: pointer; transition: background-color 0.2s; }
 .orders-table tbody tr:hover { background-color: rgba(255, 255, 255, 0.7); }
+.loading-cell, .no-results-cell { text-align: center; padding: 40px; color: #6b7280; }
 
-.status-badge-ord { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-.status-processando { background-color: #dbeafe; color: #1e40af; }
-.status-pagamento-aprovado { background-color: #cce7ff; color: #004085; }
-.status-enviado { background-color: #fef3c7; color: #92400e; }
-.status-entregue { background-color: #def7ec; color: #03543f; }
-.status-cancelado { background-color: #fee2e2; color: #991b1b; }
+.status-badge-ord { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
+.status-pendingpayment { background-color: #fef3c7; color: #92400e; }
+.status-processing { background-color: #dbeafe; color: #1e40af; }
+.status-shipped { background-color: #e0e7ff; color: #3730a3; }
+.status-delivered { background-color: #def7ec; color: #03543f; }
+.status-cancelled { background-color: #fee2e2; color: #991b1b; }
+.status-refunded { background-color: #e5e7eb; color: #4b5563; }
 
 .pagination-container-ord { display: flex; justify-content: center; align-items: center; padding: 24px 0 8px 0; gap: 16px; }
 .pagination-container-ord span { font-size: 0.9rem; color: #6b7280; }
@@ -61,16 +52,17 @@
 .pagination-container-ord button:hover:not(:disabled) { background-color: #f3f4f6; border-color: #d1d5db; }
 .pagination-container-ord button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* --- Estilos do Modal --- */
+/* --- Estilos do Modal (ATUALIZADO) --- */
 .modal-backdrop-ord { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.2); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s ease; }
-.modal-content-ord { background: rgba(249, 250, 251, 0.9); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 28px; position: relative; animation: scaleUp 0.3s ease; width: 90%; max-width: 800px; }
+.modal-content-ord { background: #f9fafb; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 28px; position: relative; animation: scaleUp 0.3s ease; width: 90%; max-width: 800px; }
 .modal-backdrop-ord.closing { animation: fadeOut 0.3s ease forwards; }
 .modal-content-ord.closing { animation: scaleDown 0.3s ease forwards; }
 .modal-header-ord { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
 .modal-header-ord h3 { font-size: 1.5rem; color: #1a202c; margin: 0; }
 .modal-header-ord button { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #9ca3af; }
 .order-details-body { display: flex; flex-direction: column; gap: 24px; }
-.detail-section h4 { font-size: 1rem; font-weight: 600; color: #4a5568; margin: 0 0 12px 0; }
+.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; }
+.detail-section h4 { font-size: 1rem; font-weight: 600; color: #4a5568; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; }
 .detail-section p { margin: 4px 0; color: #2d3748; }
 .detail-section p strong { font-weight: 500; color: #6b7280; }
 .product-list-ord { list-style: none; padding: 0; margin: 0; }
@@ -84,6 +76,10 @@
 .status-select-ord { width: 100%; box-sizing: border-box; font-size: 0.9rem; background: #fff; padding: 10px 12px; border-radius: 8px; border: 1px solid #d1d5db; margin-bottom: 12px; }
 .update-status-btn { width: 100%; background-color: #3b82f6; color: #fff; border: none; border-radius: 12px; padding: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
 .update-status-btn:hover { background-color: #2563eb; }
+.modal-footer-ord { padding-top: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; margin-top: 24px;}
+.whatsapp-btn-ord { background-color: #25D366; color: #fff; border: none; border-radius: 50px; padding: 10px 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; text-decoration: none; transition: background-color 0.2s; }
+.whatsapp-btn-ord i { font-size: 1.2rem; }
+.whatsapp-btn-ord:hover { background-color: #128C7E; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
