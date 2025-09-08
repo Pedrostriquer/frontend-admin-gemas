@@ -1,5 +1,3 @@
-// src/pages/Admin/ContractDetailPage/ContractDetailPage.js
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styles from "./ContractDetailPageStyle";
@@ -284,6 +282,7 @@ function ContractDetailPage() {
   const [contract, setContract] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -339,6 +338,29 @@ function ContractDetailPage() {
   useEffect(() => {
     fetchContract();
   }, [fetchContract]);
+
+  const handleUpdateStatus = async (newStatus) => {
+    const action = newStatus === 2 ? "ativar" : "cancelar";
+    if (!window.confirm(`Tem certeza que deseja ${action} este contrato?`))
+      return;
+
+    setIsUpdatingStatus(true);
+    try {
+      await contractServices.updateContractStatus(
+        token,
+        [contractId],
+        newStatus
+      );
+      await fetchContract();
+      alert(
+        `Contrato ${action === "ativar" ? "ativado" : "cancelado"} com sucesso!`
+      );
+    } catch (err) {
+      alert(`Ocorreu um erro ao ${action} o contrato.`);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   const handleReinvest = async () => {};
 
@@ -521,10 +543,16 @@ function ContractDetailPage() {
     }
   };
 
-  if (isLoading || isDeleting)
+  if (isLoading || isDeleting || isUpdatingStatus)
     return (
       <LoadingOverlay
-        text={isDeleting ? "Excluindo arquivos..." : "Carregando contrato..."}
+        text={
+          isDeleting
+            ? "Excluindo arquivos..."
+            : isUpdatingStatus
+            ? "Atualizando status..."
+            : "Carregando contrato..."
+        }
       />
     );
   if (error)
@@ -594,13 +622,33 @@ function ContractDetailPage() {
               </button>
             )}
             <Link
-              to={`/admin/clients/${contract?.clientId}`}
+              to={`/platform/clients/${contract?.clientId}`}
               style={{ textDecoration: "none" }}
             >
               <button style={styles.goToClientButton}>
                 <i className="fa-solid fa-user"></i> Ir para Cliente
               </button>
             </Link>
+
+            {contract.status === 1 && (
+              <div style={styles.pendingActions}>
+                <button
+                  onClick={() => handleUpdateStatus(3)}
+                  style={{ ...styles.actionButton, ...styles.denyBtn }}
+                  disabled={isUpdatingStatus}
+                >
+                  <i className="fa-solid fa-xmark"></i> Cancelar
+                </button>
+                <button
+                  onClick={() => handleUpdateStatus(2)}
+                  style={{ ...styles.actionButton, ...styles.approveBtn }}
+                  disabled={isUpdatingStatus}
+                >
+                  <i className="fa-solid fa-check"></i> Ativar Contrato
+                </button>
+              </div>
+            )}
+
             <span
               style={{
                 ...styles.statusBadge,
@@ -926,7 +974,6 @@ function ContractDetailPage() {
                         styles.toggleSwitchInputChecked),
                     }}
                   >
-                    {/* --- ALTERAÇÃO AQUI: SPINNER DE LOADING --- */}
                     {isTogglingReinvestment ? (
                       <div style={styles.toggleSpinner} />
                     ) : (
@@ -970,7 +1017,6 @@ function ContractDetailPage() {
                         styles.toggleSwitchInputChecked),
                     }}
                   >
-                    {/* --- ALTERAÇÃO AQUI: SPINNER DE LOADING --- */}
                     {isTogglingAutoReinvest ? (
                       <div style={styles.toggleSpinner} />
                     ) : (

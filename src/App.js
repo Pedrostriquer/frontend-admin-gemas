@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import { LoadProvider } from "./Context/LoadContext";
 import { AuthProvider } from "./Context/AuthContext";
+import { NotificationProvider } from "./Context/NotificationContext";
 
 // Layouts e Rotas Protegidas
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
@@ -49,61 +50,113 @@ import GemCashManager from "./Components/SiteConfig/GemCash/GemCashManager";
 const SiteHomePage = () => <div>Página de Configuração - Home</div>;
 const SiteGemCashPage = () => <div>Página de Configuração - GemCash</div>;
 
-
 function App() {
   return (
     <BrowserRouter>
       <LoadProvider>
         <AuthProvider>
-          <Routes>
-            {/* Rota de Login da Plataforma */}
-            <Route path="/login" element={<Login />} />
+          <NotificationProvider>
+            <Routes>
+              {/* Rota de Login da Plataforma */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Rotas Protegidas do Painel de Administração */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
-                <Route index element={<Navigate to="/platform/dashboard" />} />
-                <Route path="users" element={<UsersPage />} />
-                <Route path="profile" element={<UserProfile />} />
-                
-                {/* A rota em si já estava correta */}
-                <Route path="extract-data" element={<ExtractData />} />
-                
-                {/* Rotas da Plataforma */}
-                <Route path="platform/dashboard" element={<ContractsDashboard />} />
-                <Route path="platform/clients" element={<ClientsPage />} />
-                <Route path="platform/clients/:clientId" element={<ClientDetailPage />} />
-                <Route path="platform/consultants" element={<ConsultantsPage />} />
-                <Route path="platform/consultants/create" element={<CreateConsultantPage />} />
-                <Route path="platform/consultants/:consultantId" element={<ConsultantDetailPage />} />
-                <Route path="platform/contracts" element={<ContractsPage />} />
-                <Route path="platform/contracts/:contractId" element={<ContractDetailPage />} />
-                <Route path="platform/withdraws" element={<WithdrawalsPage />} />
-                <Route path="platform/withdraws/create" element={<CreateWithdrawalPage />} />
-                <Route path="platform/withdraws/:withdrawalId" element={<WithdrawDetailPage />} />
-                <Route path="platform/controller" element={<ControllerPage />} />
-                <Route path="platform/indication" element={<ReferralsPage />} />
-                <Route path="platform/offers" element={<OffersPage />} />
-                <Route path="platform/messages" element={<MessagesPage />} />
-                <Route path="clients/create" element={<CreateClientPage />} />
+              {/* Rotas Protegidas do Painel de Administração */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<MainLayout />}>
+                  <Route
+                    index
+                    element={<Navigate to="/platform/dashboard" />}
+                  />
+                  <Route path="users" element={<UsersPage />} />
+                  <Route path="profile" element={<UserProfile />} />
 
-                {/* Rotas do E-commerce Admin */}
-                <Route path="ecommerce/dashboard" element={<EcommerceDashboard />} />
-                <Route path="ecommerce/products" element={<ProductsPage />} />
-                <Route path="ecommerce/orders" element={<OrdersPage />} />
-                <Route path="ecommerce/promotions" element={<PromotionsPage />} />
-                <Route path="ecommerce/categories" element={<CategoriesPage />} />
-                <Route path="ecommerce/forms" element={<FormsPage />} /> 
+                  {/* A rota em si já estava correta */}
+                  <Route path="extract-data" element={<ExtractData />} />
 
-                {/* Rotas de Configuração do Site Admin */}
-                <Route path="site/home" element={<HomeManager />} />
-                <Route path="site/gemcash" element={<GemCashManager />} />
-                <Route path="site/personalizadas" element={<PersonalizadasManager />} />
+                  {/* Rotas da Plataforma */}
+                  <Route
+                    path="platform/dashboard"
+                    element={<ContractsDashboard />}
+                  />
+                  <Route path="platform/clients" element={<ClientsPage />} />
+                  <Route
+                    path="platform/clients/:clientId"
+                    element={<ClientDetailPage />}
+                  />
+                  <Route
+                    path="platform/consultants"
+                    element={<ConsultantsPage />}
+                  />
+                  <Route
+                    path="platform/consultants/create"
+                    element={<CreateConsultantPage />}
+                  />
+                  <Route
+                    path="platform/consultants/:consultantId"
+                    element={<ConsultantDetailPage />}
+                  />
+                  <Route
+                    path="platform/contracts"
+                    element={<ContractsPage />}
+                  />
+                  <Route
+                    path="platform/contracts/:contractId"
+                    element={<ContractDetailPage />}
+                  />
+                  <Route
+                    path="platform/withdraws"
+                    element={<WithdrawalsPage />}
+                  />
+                  <Route
+                    path="platform/withdraws/create"
+                    element={<CreateWithdrawalPage />}
+                  />
+                  <Route
+                    path="platform/withdraws/:withdrawalId"
+                    element={<WithdrawDetailPage />}
+                  />
+                  <Route
+                    path="platform/controller"
+                    element={<ControllerPage />}
+                  />
+                  <Route
+                    path="platform/indication"
+                    element={<ReferralsPage />}
+                  />
+                  <Route path="platform/offers" element={<OffersPage />} />
+                  <Route path="platform/messages" element={<MessagesPage />} />
+                  <Route path="clients/create" element={<CreateClientPage />} />
+
+                  {/* Rotas do E-commerce Admin */}
+                  <Route
+                    path="ecommerce/dashboard"
+                    element={<EcommerceDashboard />}
+                  />
+                  <Route path="ecommerce/products" element={<ProductsPage />} />
+                  <Route path="ecommerce/orders" element={<OrdersPage />} />
+                  <Route
+                    path="ecommerce/promotions"
+                    element={<PromotionsPage />}
+                  />
+                  <Route
+                    path="ecommerce/categories"
+                    element={<CategoriesPage />}
+                  />
+                  <Route path="ecommerce/forms" element={<FormsPage />} />
+
+                  {/* Rotas de Configuração do Site Admin */}
+                  <Route path="site/home" element={<HomeManager />} />
+                  <Route path="site/gemcash" element={<GemCashManager />} />
+                  <Route
+                    path="site/personalizadas"
+                    element={<PersonalizadasManager />}
+                  />
+                </Route>
               </Route>
-            </Route>
-            
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </NotificationProvider>
         </AuthProvider>
       </LoadProvider>
     </BrowserRouter>

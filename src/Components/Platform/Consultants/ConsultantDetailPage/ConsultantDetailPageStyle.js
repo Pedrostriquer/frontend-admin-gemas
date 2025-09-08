@@ -1,5 +1,8 @@
 const styles = {
-  pageContainer: { fontFamily: "'Poppins', sans-serif" },
+  pageContainer: {
+    fontFamily: "'Poppins', sans-serif",
+    padding: "0 2rem 2rem 2rem",
+  },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -31,18 +34,18 @@ const styles = {
     color: "#1e293b",
   },
   headerActions: { display: "flex", gap: "12px" },
-    actionButton: {
-    background: '#fff',
-    border: '1px solid #d1d5db',
-    color: '#374151',
-    borderRadius: '12px',
-    padding: '10px 16px',
+  actionButton: {
+    background: "#fff",
+    border: "1px solid #d1d5db",
+    color: "#374151",
+    borderRadius: "12px",
+    padding: "10px 16px",
     fontWeight: 500,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    transition: 'all 0.2s',
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "all 0.2s",
   },
   editButton: {
     backgroundColor: "#3b82f6",
@@ -75,6 +78,7 @@ const styles = {
     borderRadius: "12px",
     padding: "10px 18px",
     fontWeight: 600,
+    cursor: "pointer",
   },
 
   mainGrid: {
@@ -116,7 +120,7 @@ const styles = {
   infoGroup: {
     display: "flex",
     flexDirection: "column",
-    gap: "4px"
+    gap: "4px",
   },
   infoLabel: {
     display: "block",
@@ -162,5 +166,99 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #e5e7eb",
   },
+  // --- NOVOS ESTILOS PARA A LISTA DE CLIENTES ---
+  cardTitleContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: "16px", // Espaço abaixo do título/paginação
+  },
+  clientsList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  clientItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "12px",
+    borderRadius: "12px",
+    border: "1px solid #e2e8f0",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  clientAvatar: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "50%",
+    backgroundColor: "#3b82f6",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+    fontSize: "1.2rem",
+    flexShrink: 0,
+    overflow: "hidden",
+  },
+  clientAvatarImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  clientInfo: {
+    flexGrow: 1,
+  },
+  clientName: {
+    margin: 0,
+    fontWeight: 600,
+    color: "#1e293b",
+  },
+  clientEmail: {
+    margin: 0,
+    fontSize: "0.85rem",
+    color: "#64748b",
+  },
+  loadingText: {
+    textAlign: "center",
+    color: "#64748b",
+    padding: "20px 0",
+  },
+  paginationControls: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  pageInfo: {
+    fontSize: "0.9rem",
+    color: "#6b7280",
+    fontWeight: 500,
+  },
+  paginationButton: {
+    background: "#fff",
+    border: "1px solid #d1d5db",
+    color: "#4b5563",
+    width: "32px",
+    height: "32px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
 };
+// Adicionando :hover e :disabled de forma segura
+styles.clientItem[":hover"] = {
+  borderColor: "#3b82f6",
+  boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+};
+styles.paginationButton[":disabled"] = {
+  opacity: 0.5,
+  cursor: "not-allowed",
+};
+
 export default styles;

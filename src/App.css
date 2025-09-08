@@ -26,3 +26,14 @@ body {
 .app-layout.sidebar-collapsed .content-area {
   margin-left: 88px; 
 }
+
+@keyframes slideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

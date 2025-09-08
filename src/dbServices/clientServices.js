@@ -68,6 +68,25 @@ const clientServices = {
       throw error;
     }
   },
+
+  // NOVA FUNÇÃO PARA ATUALIZAÇÃO PARCIAL - MAIS EFICIENTE!
+  updateClientPartial: async (id, updates, token) => {
+    // A 'updates' já deve ser um array de objetos como:
+    // [{ FieldName: 'Name', FieldNewValue: 'Novo Nome' }, ...]
+    try {
+      const response = await axios.patch(`${BASE_ROUTE}client/${id}`, updates, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Erro ao atualizar parcialmente o cliente:",
+        error.response?.data || error
+      );
+      throw error.response?.data || error;
+    }
+  },
+
   informacoesCarteiraCliente: async (token, id) => {
     try {
       const response = await axios.get(

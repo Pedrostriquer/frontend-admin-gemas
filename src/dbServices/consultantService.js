@@ -38,8 +38,27 @@ const consultantService = {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
-    } catch (error) {
+    } catch (error)
+    {
       console.error("Erro ao buscar consultor por ID:", error);
+      throw error;
+    }
+  },
+
+  // NOVA FUNÇÃO PARA BUSCAR OS CLIENTES DO CONSULTOR
+  getClientsForConsultant: async (token, consultantId, pageNumber = 1, pageSize = 5) => {
+    try {
+      const response = await axios.get(
+        // Usando a nova rota do backend
+        `${BASE_ROUTE}client/by-consultant/${consultantId}`, 
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { pageNumber, pageSize } // Passando os parâmetros de paginação
+        }
+      );
+      return response.data; // Espera-se que retorne { items: [], totalCount: X }
+    } catch (error) {
+      console.error("Erro ao buscar clientes do consultor:", error);
       throw error;
     }
   },

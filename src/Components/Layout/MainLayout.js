@@ -1,26 +1,27 @@
 import React, { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import NotificationContainer from "../Notifications/NotificationContainer";
 
 const layoutStyles = {
   appContainer: {
-    display: 'flex',
-    height: '100vh',
-    width: '100vw',
-    overflow: 'hidden',
-    backgroundColor: '#f8f9fa'
+    display: "flex",
+    height: "100vh",
+    width: "100vw",
+    overflow: "hidden",
+    backgroundColor: "#f8f9fa",
   },
   mainContent: {
     flex: 1,
-    overflowY: 'auto',
-    height: '100vh',
-    paddingLeft: '280px', 
-    paddingRight: '20px', 
-    transition: 'padding-left 0.3s ease',
+    overflowY: "auto",
+    height: "100vh",
+    paddingLeft: "280px",
+    paddingRight: "20px",
+    transition: "padding-left 0.3s ease",
   },
   mainContentCollapsed: {
-    paddingLeft: '110px',
-  }
+    paddingLeft: "110px",
+  },
 };
 
 export default function MainLayout() {
@@ -30,9 +31,9 @@ export default function MainLayout() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const getActiveContext = (path) => {
-    if (path.startsWith('/ecommerce')) return 'ecommerce';
-    if (path.startsWith('/site')) return 'site';
-    return 'platform';
+    if (path.startsWith("/ecommerce")) return "ecommerce";
+    if (path.startsWith("/site")) return "site";
+    return "platform";
   };
 
   const activeContext = getActiveContext(location.pathname);
@@ -42,9 +43,9 @@ export default function MainLayout() {
   };
 
   const handleContextChange = (context) => {
-    let newPath = '/platform/dashboard';
-    if (context === 'ecommerce') newPath = '/ecommerce/dashboard';
-    if (context === 'site') newPath = '/site/home';
+    let newPath = "/platform/dashboard";
+    if (context === "ecommerce") newPath = "/ecommerce/dashboard";
+    if (context === "site") newPath = "/site/home";
     handleNavigate(newPath);
   };
 
@@ -54,7 +55,7 @@ export default function MainLayout() {
 
   const contentStyle = {
     ...layoutStyles.mainContent,
-    ...(isSidebarCollapsed && layoutStyles.mainContentCollapsed)
+    ...(isSidebarCollapsed && layoutStyles.mainContentCollapsed),
   };
 
   return (
@@ -70,6 +71,7 @@ export default function MainLayout() {
       <main style={contentStyle}>
         <Outlet />
       </main>
+      <NotificationContainer />
     </div>
   );
 }

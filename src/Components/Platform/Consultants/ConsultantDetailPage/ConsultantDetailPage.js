@@ -6,6 +6,8 @@ import consultantService from "../../../../dbServices/consultantService";
 import formatServices from "../../../../formatServices/formatServices";
 import AddBalanceModal from "./AddBalanceModal/AddBalanceModal";
 
+const CLIENTS_PER_PAGE = 5;
+
 function ConsultantDetailPage() {
   const { consultantId } = useParams();
   const navigate = useNavigate();
@@ -17,6 +19,37 @@ function ConsultantDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
 
+  // Estados para a lista de clientes
+  const [clients, setClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
+  const [clientsCurrentPage, setClientsCurrentPage] = useState(1);
+  const [clientsTotalPages, setClientsTotalPages] = useState(0);
+
+  const fetchClients = useCallback(
+    async (page) => {
+      if (!token || !consultantId) return;
+      setClientsLoading(true);
+      try {
+        const data = await consultantService.getClientsForConsultant(
+          token,
+          consultantId,
+          page,
+          CLIENTS_PER_PAGE
+        );
+        setClients(data.items || []);
+        setClientsTotalPages(
+          Math.ceil((data.totalCount || 0) / CLIENTS_PER_PAGE)
+        );
+      } catch (error) {
+        console.error("Falha ao buscar clientes:", error);
+        setClients([]);
+      } finally {
+        setClientsLoading(false);
+      }
+    },
+    [consultantId, token]
+  );
+
   const fetchConsultant = useCallback(async () => {
     if (!token || !consultantId) return;
     setIsLoading(true);
@@ -27,16 +60,25 @@ function ConsultantDetailPage() {
       );
       setConsultant(data);
       setOriginalConsultant(data);
+      // Busca a primeira página de clientes
+      await fetchClients(1);
     } catch (error) {
       navigate("/platform/consultants");
     } finally {
       setIsLoading(false);
     }
-  }, [consultantId, token, navigate]);
+  }, [consultantId, token, navigate, fetchClients]);
 
   useEffect(() => {
     fetchConsultant();
   }, [fetchConsultant]);
+
+  useEffect(() => {
+    // Evita a busca inicial duplicada, só busca quando a página muda
+    if (!isLoading && !isEditing) {
+      fetchClients(clientsCurrentPage);
+    }
+  }, [clientsCurrentPage, isLoading, isEditing, fetchClients]);
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -219,7 +261,70 @@ function ConsultantDetailPage() {
                 </div>
               </div>
             </div>
+
+            <div style={styles.infoCard}>
+              <div style={styles.cardTitleContainer}>
+                <h3 style={styles.cardTitle}>
+                  <i className="fa-solid fa-users"></i> Clientes Associados
+                </h3>
+                {clientsTotalPages > 1 && (
+                  <div style={styles.paginationControls}>
+                    <button
+                      onClick={() => setClientsCurrentPage((p) => p - 1)}
+                      disabled={clientsCurrentPage === 1}
+                      style={styles.paginationButton}
+                    >
+                      <i className="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span style={styles.pageInfo}>
+                      {clientsCurrentPage} / {clientsTotalPages}
+                    </span>
+                    <button
+                      onClick={() => setClientsCurrentPage((p) => p + 1)}
+                      disabled={clientsCurrentPage === clientsTotalPages}
+                      style={styles.paginationButton}
+                    >
+                      <i className="fa-solid fa-chevron-right"></i>
+                    </button>
+                  </div>
+                )}
+              </div>
+              {clientsLoading ? (
+                <p style={styles.loadingText}>Carregando clientes...</p>
+              ) : clients.length > 0 ? (
+                <div style={styles.clientsList}>
+                  {clients.map((client) => (
+                    <div
+                      key={client.id}
+                      style={styles.clientItem}
+                      onClick={() => navigate(`/platform/clients/${client.id}`)}
+                    >
+                      <div style={styles.clientAvatar}>
+                        {client.profilePictureUrl ? (
+                          <img
+                            src={client.profilePictureUrl}
+                            alt={client.name}
+                            style={styles.clientAvatarImg}
+                          />
+                        ) : (
+                          client.name.charAt(0)
+                        )}
+                      </div>
+                      <div style={styles.clientInfo}>
+                        <p style={styles.clientName}>{client.name}</p>
+                        <p style={styles.clientEmail}>{client.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={styles.loadingText}>
+                  Nenhum cliente associado a este consultor.
+                </p>
+              )}
+            </div>
           </div>
+
           <div style={styles.rightColumn}>
             <div style={styles.infoCard}>
               <h3 style={styles.cardTitle}>

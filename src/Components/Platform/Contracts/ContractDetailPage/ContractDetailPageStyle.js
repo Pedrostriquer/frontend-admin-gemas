@@ -1,5 +1,3 @@
-// src/pages/Admin/ContractDetailPage/ContractDetailPageStyle.js
-
 const styles = {
   detailPageContainer: {
     fontFamily: "'Poppins', sans-serif",
@@ -62,6 +60,34 @@ const styles = {
   statusPendente: { backgroundColor: "#fef3c7", color: "#92400e" },
   statusFinalizado: { backgroundColor: "#e5e7eb", color: "#4b5563" },
   statusCancelado: { backgroundColor: "#fee2e2", color: "#991b1b" },
+
+  // --- NOVOS ESTILOS PARA OS BOTÕES DE AÇÃO ---
+  pendingActions: {
+    display: "flex",
+    gap: "12px",
+  },
+  actionButton: {
+    border: "none",
+    borderRadius: "12px",
+    padding: "10px 18px",
+    fontWeight: 600,
+    fontSize: "0.9rem",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "all 0.2s ease",
+  },
+  approveBtn: {
+    backgroundColor: "#10b981",
+    color: "#fff",
+  },
+  denyBtn: {
+    backgroundColor: "#ef4444",
+    color: "#fff",
+  },
+  // --- FIM DOS NOVOS ESTILOS ---
+
   detailGrid: {
     display: "grid",
     gridTemplateColumns: "2fr 1fr",
@@ -504,7 +530,6 @@ const styles = {
     alignSelf: "flex-start",
     fontSize: "0.85rem",
   },
-  // --- NOVO ESTILO ADICIONADO AQUI ---
   toggleSpinner: {
     position: "absolute",
     top: "4px",
