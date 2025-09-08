@@ -56,14 +56,16 @@ const styles = {
         flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
-        overflowX: 'hidden',
+        // ✨ A propriedade de overflow foi REMOVIDA daqui.
+        // O min-height é um truque de flexbox para garantir que o overflow funcione corretamente nos filhos.
+        minHeight: 0,
     },
     contextSwitcher: {
         display: 'flex',
         flexDirection: 'column',
         padding: '0 24px 0px 24px',
         gap: '8px',
+        flexShrink: 0, // Garante que esta seção não seja espremida
     },
     contextButton: {
         width: '100%',
@@ -101,21 +103,36 @@ const styles = {
         opacity: 0,
         width: 0,
     },
+    
+    // ✨ Novo estilo para o container do menu
+    menuContainer: {
+        flexGrow: 1, // Faz este container ocupar todo o espaço restante em mainNav
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0, // Garante que o overflow funcione corretamente no filho (contextMenu)
+    },
 
     menuDivider: {
         height: '1px',
         backgroundColor: colors.border,
         margin: '8px 24px',
+        flexShrink: 0,
     },
     globalMenu: {
         listStyle: 'none',
         padding: '0 24px',
         margin: 0,
+        flexShrink: 0, // Garante que esta seção não seja espremida
     },
     contextMenu: {
         listStyle: 'none',
         padding: '0 24px',
         margin: 0,
+        // ✨ É AQUI que a mágica acontece!
+        flexGrow: 1, // Faz esta lista ocupar todo o espaço restante no menuContainer
+        overflowY: 'auto', // Adiciona a barra de rolagem SÓ AQUI se o conteúdo for maior
+        overflowX: 'hidden',
+        paddingBottom: '16px', // Espaço no final da lista para a rolagem ficar mais suave
     },
     navItem: {
         display: 'flex',
@@ -172,7 +189,7 @@ const styles = {
         padding: '8px',
         borderRadius: '8px',
         cursor: 'pointer',
-        marginBottom: '16px', // Espaçamento original restaurado
+        marginBottom: '16px',
         transition: 'background-color 0.2s',
     },
     userProfileHover: {
@@ -214,33 +231,28 @@ const styles = {
         fontSize: '0.8rem',
         color: colors.text,
     },
-    toggleButton: {
-        width: '100%',
+    floatingToggleButton: {
+        position: 'fixed',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 101,
+        width: '32px',
+        height: '32px',
+        borderRadius: '50%',
+        backgroundColor: colors.bg,
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
-        background: 'none',
-        border: 'none',
-        color: colors.text,
-        padding: '12px',
-        borderRadius: '8px',
-        cursor: 'pointer',
-    },
-    toggleButtonHover: {
-        backgroundColor: colors.activeBg,
-    },
-    toggleButtonCollapsed: {
         justifyContent: 'center',
-        gap: 0,
+        cursor: 'pointer',
+        color: colors.text,
+        transition: 'left 0.3s ease, background-color 0.2s, color 0.2s, transform 0.2s ease',
     },
-    toggleButtonSpan: {
-        whiteSpace: 'nowrap',
-        opacity: 1,
-        transition: 'opacity 0.2s ease',
-    },
-    toggleButtonSpanCollapsed: {
-        opacity: 0,
-        width: 0,
+    floatingToggleButtonHover: {
+        backgroundColor: colors.accent,
+        color: '#ffffff',
+        transform: 'translate(-50%, -50%) scale(1.1)',
     },
     firebaseModalBackdrop: {
         position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',

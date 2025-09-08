@@ -4,6 +4,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 
+// Componente FirebaseLoginModal (sem alterações)
 const FirebaseLoginModal = ({ onClose, onSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -37,6 +38,7 @@ const FirebaseLoginModal = ({ onClose, onSuccess }) => {
     );
 };
 
+// Componente ContextButton (sem alterações)
 const ContextButton = ({ isActive, isCollapsed, onClick, icon, children }) => {
     const [isHovered, setIsHovered] = useState(false);
     const style = {
@@ -53,6 +55,7 @@ const ContextButton = ({ isActive, isCollapsed, onClick, icon, children }) => {
     );
 };
 
+// Componente NavItem (sem alterações)
 const NavItem = ({ isActive, isCollapsed, onClick, icon, children, hoverStyle }) => {
     const [isHovered, setIsHovered] = useState(false);
     const style = {
@@ -70,11 +73,12 @@ const NavItem = ({ isActive, isCollapsed, onClick, icon, children, hoverStyle })
 };
 
 function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle, activePath, onLinkClick }) {
-    const [isToggleHovered, setIsToggleHovered] = useState(false);
     const [isUserHovered, setIsUserHovered] = useState(false);
     const { logout } = useAuth();
     const [firebaseUser, setFirebaseUser] = useState(null);
     const [showFirebaseModal, setShowFirebaseModal] = useState(false);
+    // ✨ Novo estado de hover para o botão flutuante
+    const [isToggleHovered, setIsToggleHovered] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -103,7 +107,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
     const platformMenu = [
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/platform/dashboard' },
         { name: 'Clientes', icon: 'fa-solid fa-users', path: '/platform/clients' },
-        { name: 'Consultores', icon: 'fa-solid fa-users', path: '/platform/consultants' },
+        { name: 'Consultores', icon: 'fa-solid fa-user-tie', path: '/platform/consultants' },
         { name: 'Contratos', icon: 'fa-solid fa-file-signature', path: '/platform/contracts' },
         { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/platform/withdraws' },
         { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/platform/controller' },
@@ -131,17 +135,31 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         }
     };
 
-    const handleLogout = () => {
-        logout();
-    };
-
     const navStyle = { ...styles.sidebar, ...(isSidebarCollapsed && styles.sidebarCollapsed) };
-    const toggleButtonStyle = { ...styles.toggleButton, ...(isToggleHovered && styles.toggleButtonHover), ...(isSidebarCollapsed && styles.toggleButtonCollapsed) };
     const userProfileStyle = { ...styles.userProfile, ...(isUserHovered && styles.userProfileHover), ...(isSidebarCollapsed && styles.userProfileCollapsed) };
+    
+    // ✨ Estilo dinâmico para o novo botão flutuante
+    const floatingToggleStyle = {
+        ...styles.floatingToggleButton,
+        left: isSidebarCollapsed ? styles.sidebarCollapsed.width : styles.sidebar.width,
+        ...(isToggleHovered && styles.floatingToggleButtonHover)
+    };
 
     return (
         <>
             {showFirebaseModal && <FirebaseLoginModal onClose={() => setShowFirebaseModal(false)} onSuccess={handleFirebaseLoginSuccess} />}
+            
+            {/* ✨ Botão de recolher agora é flutuante e renderizado aqui */}
+            <button
+                style={floatingToggleStyle}
+                onClick={onToggle}
+                onMouseEnter={() => setIsToggleHovered(true)}
+                onMouseLeave={() => setIsToggleHovered(false)}
+                aria-label={isSidebarCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
+            >
+                <i className={`fa-solid ${isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+            </button>
+            
             <nav style={navStyle}>
                 <header style={styles.header}>
                     <i className="fa-solid fa-gem" style={styles.logoIcon}></i>
@@ -156,12 +174,19 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                     </div>
                     
                     <div style={styles.menuContainer}>
-                        <ul style={styles.globalMenu}>
-                            <NavItem isCollapsed={isSidebarCollapsed} onClick={handleLogout} icon="fa-solid fa-right-from-bracket" hoverStyle={styles.navItemLogoutHover}>Sair</NavItem>
-                        </ul>
+                        {/* ✨ Botão de Sair foi removido daqui */}
                         <div style={styles.menuDivider}></div>
                         <ul style={styles.globalMenu}>
                             <NavItem isActive={activePath === '/users'} isCollapsed={isSidebarCollapsed} onClick={() => onLinkClick('/users')} icon="fa-solid fa-user-shield">Usuários</NavItem>
+                            {/* ✨ Novo botão "Extrair dados" adicionado */}
+                            <NavItem
+                                isActive={activePath === '/extract-data'}
+                                isCollapsed={isSidebarCollapsed}
+                                onClick={() => onLinkClick('/extract-data')}
+                                icon="fa-solid fa-file-export"
+                            >
+                                Extrair dados
+                            </NavItem>
                         </ul>
                         <div style={styles.menuDivider}></div>
                         <ul style={styles.contextMenu}>
@@ -180,10 +205,17 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                             <span style={styles.userRoleText}>Admin</span>
                         </div>
                     </div>
-                    <button style={toggleButtonStyle} onClick={onToggle} onMouseEnter={() => setIsToggleHovered(true)} onMouseLeave={() => setIsToggleHovered(false)}>
-                        <i className={`fa-solid ${isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
-                        <span style={{...styles.toggleButtonSpan, ...(isSidebarCollapsed && styles.toggleButtonSpanCollapsed)}}>Recolher</span>
-                    </button>
+                    {/* ✨ Botão de Sair agora está aqui, no lugar do antigo botão de recolher */}
+                    <ul style={styles.globalMenu}> {/* Usando ul para consistência */}
+                        <NavItem 
+                            isCollapsed={isSidebarCollapsed} 
+                            onClick={logout} 
+                            icon="fa-solid fa-right-from-bracket" 
+                            hoverStyle={styles.navItemLogoutHover}
+                        >
+                            Sair
+                        </NavItem>
+                    </ul>
                 </footer>
             </nav>
         </>

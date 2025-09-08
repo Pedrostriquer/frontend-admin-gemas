@@ -12,6 +12,9 @@ import Login from "./Components/Login/Login";
 import UserProfile from "./Components/UserProfile/UserProfile";
 import UsersPage from "./Components/Users/UsersPage";
 
+// ✨ 1. CORREÇÃO: Importar o componente do caminho correto
+import ExtractData from "./Components/ExtractData/ExtractData";
+
 // Páginas da Plataforma (Admin)
 import ContractsDashboard from "./Components/Platform/Dashboard/ContractsDashboard";
 import ClientsPage from "./Components/Platform/Clients/ClientsPage";
@@ -62,6 +65,9 @@ function App() {
                 <Route index element={<Navigate to="/platform/dashboard" />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="profile" element={<UserProfile />} />
+                
+                {/* A rota em si já estava correta */}
+                <Route path="extract-data" element={<ExtractData />} />
                 
                 {/* Rotas da Plataforma */}
                 <Route path="platform/dashboard" element={<ContractsDashboard />} />
