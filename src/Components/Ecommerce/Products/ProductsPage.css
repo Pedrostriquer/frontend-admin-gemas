@@ -145,3 +145,19 @@
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes scaleDown { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
+
+/* =================================================================
+ * ✨ CÓDIGO PARA REMOVER SETAS DOS INPUTS NUMÉRICOS ✨
+ * ================================================================= */
+
+/* Remove as setas no Chrome, Safari, Edge e Opera */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove as setas no Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}

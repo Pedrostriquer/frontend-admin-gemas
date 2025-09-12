@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import './ProductsPage.css';
-import productServices from '../../../dbServices/productServices'; // Ajuste o caminho
+import productServices from '../../../dbServices/productServices'; // Ajuste o caminho se necessário
 
 // --- Funções Utilitárias ---
 const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -39,14 +39,12 @@ const CustomDropdown = ({ options, selected, onSelect, placeholder }) => {
     );
 };
 
-// ✨✨✨ COMPONENTE QUE ESTAVA FALTANDO, AGORA CORRIGIDO ✨✨✨
 const SearchableDropdown = ({ options, selected, onSelect, placeholder }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const wrapperRef = useRef(null);
     useOutsideAlerter(wrapperRef, () => setIsOpen(false));
     const filteredOptions = options.filter(opt => opt.label.toLowerCase().includes(searchTerm.toLowerCase()));
-    // O placeholder só é usado se não houver um item selecionado
     const selectedLabel = options.find(opt => opt.value === selected)?.label || placeholder;
 
     return (
@@ -68,8 +66,7 @@ const SearchableDropdown = ({ options, selected, onSelect, placeholder }) => {
 const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
-        const isNumeric = ['carats', 'lengthInMm', 'widthInMm', 'heightInMm', 'quantity'].includes(name);
-        onStoneChange(index, { ...stone, [name]: isNumeric ? parseInt(value, 10) || 0 : value });
+        onStoneChange(index, { ...stone, [name]: value });
     };
 
     return (
@@ -89,12 +86,12 @@ const ProductModal = ({ product, allCategories, onClose, onSave, isClosing }) =>
         id: isEditing ? product.id : 0,
         name: isEditing ? product.name : '',
         description: isEditing ? product.description : '',
-        value: isEditing ? product.value : 0,
+        value: isEditing ? product.value : '',
         status: isEditing ? product.status : 1,
         itemType: isEditing ? product.itemType : 2,
         categories: isEditing ? product.categories || [] : [],
         media: isEditing ? (product.mediaUrls || []).map(url => ({ type: url.includes('.mp4') ? 'video' : 'image', url })) : [],
-        info: isEditing ? product.info : { material: '', weightInGrams: 0, stones: [{ quantity: 1 }] }
+        info: isEditing ? product.info : { material: '', weightInGrams: '', stones: [{ quantity: 1 }] }
     });
     const [newMediaType, setNewMediaType] = useState('image');
     const [newMediaUrl, setNewMediaUrl] = useState('');
@@ -119,8 +116,36 @@ const ProductModal = ({ product, allCategories, onClose, onSave, isClosing }) =>
     const handleRemoveCategory = (catId) => setFormData(prev => ({ ...prev, categories: prev.categories.filter(id => id !== catId) }));
 
     const handleSave = () => {
-        const finalData = { ...formData, mediaUrls: formData.media.map(m => m.url) };
+        // Usar um método de cópia que não remove campos 'undefined'
+        const finalData = {
+            ...formData,
+            info: {
+                ...formData.info,
+                stones: formData.info.stones ? formData.info.stones.map(s => ({ ...s })) : []
+            }
+        };
+
+        // Converte os campos de string para número, permitindo vírgula e tratando campos vazios/undefined
+        finalData.value = parseFloat(String(finalData.value || '0').replace(',', '.')) || 0;
+
+        if (finalData.info) {
+            finalData.info.weightInGrams = parseFloat(String(finalData.info.weightInGrams || '0').replace(',', '.')) || 0;
+            
+            if (finalData.info.stones) {
+                finalData.info.stones = finalData.info.stones.map(stone => ({
+                    ...stone,
+                    quantity: parseInt(stone.quantity, 10) || 1,
+                    carats: parseFloat(String(stone.carats || '0').replace(',', '.')) || 0,
+                    lengthInMm: parseFloat(String(stone.lengthInMm || '0').replace(',', '.')) || 0,
+                    widthInMm: parseFloat(String(stone.widthInMm || '0').replace(',', '.')) || 0,
+                    heightInMm: parseFloat(String(stone.heightInMm || '0').replace(',', '.')) || 0,
+                }));
+            }
+        }
+        
+        finalData.mediaUrls = finalData.media.map(m => m.url);
         delete finalData.media;
+        
         onSave(finalData);
     };
     
@@ -135,9 +160,26 @@ const ProductModal = ({ product, allCategories, onClose, onSave, isClosing }) =>
                         <div className="form-col">
                             <div className="form-group-prod"><label>Nome</label><input type="text" value={formData.name} onChange={e => handleFormChange('name', e.target.value)} /></div>
                             <div className="form-group-prod"><label>Descrição</label><textarea rows="4" value={formData.description} onChange={e => handleFormChange('description', e.target.value)}></textarea></div>
-                            <div className="form-group-row"><div className="form-group-prod"><label>Preço (R$)</label><input type="number" value={formData.value} onChange={e => handleFormChange('value', parseFloat(e.target.value) || 0)} /></div><div className="form-group-prod"><label>Status</label><CustomDropdown options={[{value: 1, label: 'Ativo'}, {value: 0, label: 'Inativo'}]} selected={formData.status} onSelect={(val) => handleFormChange('status', val)} /></div></div>
+                            <div className="form-group-row">
+                                <div className="form-group-prod">
+                                    <label>Preço (R$)</label>
+                                    <input type="number" value={formData.value} onChange={e => handleFormChange('value', e.target.value)} />
+                                </div>
+                                <div className="form-group-prod">
+                                    <label>Status</label>
+                                    <CustomDropdown options={[{value: 1, label: 'Ativo'}, {value: 0, label: 'Inativo'}]} selected={formData.status} onSelect={(val) => handleFormChange('status', val)} />
+                                </div>
+                            </div>
                             <div className="form-group-prod"><label>Tipo de Item</label><CustomDropdown options={[{value: 1, label: 'Joia'}, {value: 2, label: 'Gema'}]} selected={formData.itemType} onSelect={(val) => handleFormChange('itemType', val)} /></div>
-                            {formData.itemType === 1 && (<div className="form-group-row"><div className="form-group-prod"><label>Material</label><input type="text" value={formData.info.material || ''} onChange={e => handleInfoChange('material', e.target.value)} /></div><div className="form-group-prod"><label>Peso (g)</label><input type="number" step="0.1" value={formData.info.weightInGrams || ''} onChange={e => handleInfoChange('weightInGrams', parseFloat(e.target.value) || 0)} /></div></div>)}
+                            {formData.itemType === 1 && (
+                                <div className="form-group-row">
+                                    <div className="form-group-prod"><label>Material</label><input type="text" value={formData.info.material || ''} onChange={e => handleInfoChange('material', e.target.value)} /></div>
+                                    <div className="form-group-prod">
+                                        <label>Peso (g)</label>
+                                        <input type="number" step="0.1" value={formData.info.weightInGrams || ''} onChange={e => handleInfoChange('weightInGrams', e.target.value)} />
+                                    </div>
+                                </div>
+                            )}
                             <div className="form-group-prod"><label>Categorias</label>
                                 <SearchableDropdown placeholder="Adicionar Categoria..." options={availableCategories.map(c => ({value: c.id, label: c.name}))} onSelect={handleAddCategory} />
                                 <div className="category-tags">{formData.categories.map(catId => { const cat = allCategories.find(c => c.id === catId); return cat ? <span key={cat.id}>{cat.name} <i className="fa-solid fa-xmark" onClick={() => handleRemoveCategory(cat.id)}></i></span> : null; })}</div>
@@ -223,7 +265,7 @@ function ProductsPage() {
     const handleSaveProduct = async (productData) => {
         setIsLoading(true);
         try {
-            if (productData.id) {
+            if (productData.id && productData.id !== 0) {
                 await productServices.updateProduct(productData.id, productData);
             } else {
                 await productServices.createProduct(productData);
@@ -260,14 +302,20 @@ function ProductsPage() {
     };
 
     const handleSelectAll = (e) => {
-        if (e.target.checked) setSelectedProducts(new Set(products.map(p => p.id)));
-        else setSelectedProducts(new Set());
+        if (e.target.checked) {
+            setSelectedProducts(new Set(products.map(p => p.id)));
+        } else {
+            setSelectedProducts(new Set());
+        }
     };
 
     const handleSelectOne = (productId) => {
         const newSelection = new Set(selectedProducts);
-        if (newSelection.has(productId)) newSelection.delete(productId);
-        else newSelection.add(productId);
+        if (newSelection.has(productId)) {
+            newSelection.delete(productId);
+        } else {
+            newSelection.add(productId);
+        }
         setSelectedProducts(newSelection);
     };
 
