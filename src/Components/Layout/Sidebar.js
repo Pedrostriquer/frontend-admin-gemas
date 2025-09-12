@@ -169,7 +169,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                 <div style={styles.mainNav}>
                     <div style={styles.contextSwitcher}>
                         <ContextButton isActive={activeContext === 'platform'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('platform')} icon="fa-solid fa-briefcase">Plataforma</ContextButton>
-                        <ContextButton isActive={activeContext === 'ecommerce'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('ecommerce')} icon="fa-solid fa-store">E-commerce</ContextButton>
+                        <ContextButton isActive={activeContext === 'ecommerce'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('ecommerce')} icon="fa-solid fa-store">Gemas Preciosas</ContextButton>
                         <ContextButton isActive={activeContext === 'site'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('site')} icon="fa-solid fa-globe">Site</ContextButton>
                     </div>
                     
