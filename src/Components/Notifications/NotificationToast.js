@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import styles from "./NotificationStyle";
 import { useNavigate } from "react-router-dom";
 
-// --- ATUALIZAÇÃO PRINCIPAL AQUI ---
 const notificationConfig = {
   NEW_CLIENT: {
     icon: "fa-solid fa-user-plus",
@@ -12,30 +11,27 @@ const notificationConfig = {
     link: (data) => `/platform/clients/${data.id}`,
   },
   
-  // Manteve-se a notificação de contrato antigo, caso ainda use em algum lugar.
-  NEW_CONTRACT: {
-    icon: "fa-solid fa-file-signature",
-    title: "Novo Contrato!",
-    style: styles.contractToast,
-    message: (data) =>
-      `${data.clientName} comprou um contrato de ${data.amount.toLocaleString(
-        "pt-BR",
-        { style: "currency", currency: "BRL" }
-      )}.`,
-    link: (data) => `/platform/contracts/${data.id}`,
-  },
-  
-  // NOVA CONFIGURAÇÃO PARA CONTRATOS PENDENTES
   NEW_CONTRACT_PENDING_PAYMENT: {
-    icon: "fa-solid fa-hourglass-start", // Ícone de ampulheta, mais adequado
+    icon: "fa-solid fa-hourglass-start",
     title: "Contrato Aguardando Pagamento!",
-    style: styles.withdrawalToast, // Usando a cor laranja para indicar "atenção"
+    style: styles.withdrawalToast, // Laranja para "atenção"
     message: (data) =>
       `${data.clientName} criou um contrato de ${data.amount.toLocaleString(
         "pt-BR",
         { style: "currency", currency: "BRL" }
-      )} via ${data.paymentMethod}.`, // Mensagem mais informativa
-    link: (data) => `/platform/contracts/${data.id}`, // Leva para a mesma página de detalhes
+      )} via ${data.paymentMethod}.`,
+    link: (data) => `/platform/contracts/${data.id}`,
+  },
+  
+  // --- NOVA CONFIGURAÇÃO PARA PAGAMENTO APROVADO ---
+  PAYMENT_APPROVED: {
+    icon: "fa-solid fa-circle-check", // Ícone de check de sucesso
+    title: "Pagamento Confirmado!",
+    style: styles.contractToast, // Verde para "sucesso"
+    message: (data) => `O pagamento para um contrato foi aprovado e o contrato ativado.`,
+    // Poderíamos linkar para o contrato, mas precisaríamos do ID dele.
+    // Por enquanto, a notificação é informativa. Podemos evoluir depois.
+    // link: (data) => `/platform/contracts/???`, 
   },
 
   NEW_WITHDRAWAL: {
@@ -55,14 +51,13 @@ const NotificationToast = ({ notification, onDismiss }) => {
   const [exiting, setExiting] = useState(false);
   const navigate = useNavigate();
   
-  // O '|| {}' garante que o código não quebre se o tipo de notificação não existir
   const config = notificationConfig[notification.type] || {};
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setExiting(true);
       setTimeout(() => onDismiss(notification.id), 500);
-    }, 5000); // Notificação some em 5 segundos
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [notification.id, onDismiss]);
@@ -74,11 +69,15 @@ const NotificationToast = ({ notification, onDismiss }) => {
   };
 
   const handleToastClick = () => {
-    if (config.link) {
-      const destination = config.link(notification.data);
-      navigate(destination);
-      setExiting(true);
-      setTimeout(() => onDismiss(notification.id), 500);
+    if (config.link && notification.data) {
+      try {
+        const destination = config.link(notification.data);
+        navigate(destination);
+        setExiting(true);
+        setTimeout(() => onDismiss(notification.id), 500);
+      } catch (error) {
+        console.error("Erro ao gerar link da notificação:", error);
+      }
     }
   };
 
@@ -90,12 +89,13 @@ const NotificationToast = ({ notification, onDismiss }) => {
         ...config.style,
         ...(exiting && styles.toastExiting),
       }}
+      disabled={!config.link} // Desabilita o clique se não houver link
     >
-      <i className={config.icon || 'fa-solid fa-bell'} style={styles.icon}></i> {/* Ícone padrão */}
+      <i className={config.icon || 'fa-solid fa-bell'} style={styles.icon}></i>
       <div style={styles.content}>
         <p style={styles.title}>{config.title || 'Nova Notificação'}</p>
         <p style={styles.message}>
-          {config.message
+          {config.message && notification.data
             ? config.message(notification.data)
             : "Você tem uma nova atualização."}
         </p>
