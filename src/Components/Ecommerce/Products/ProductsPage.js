@@ -349,33 +349,40 @@ const ProductModal = ({
   };
 
   const handleSave = () => {
+    // Função auxiliar para limpar e converter strings em números
+    const cleanAndParseFloat = (val) => {
+      const str = String(val || "0");
+      // 1. Remove todos os pontos (separadores de milhar)
+      // 2. Troca a vírgula (separador decimal) por um ponto
+      const parsable = str.replace(/\./g, "").replace(",", ".");
+      return parseFloat(parsable) || 0;
+    };
+
     const localFiles = formData.media.filter((m) => m.file).map((m) => m.file);
     const existingUrls = formData.media
       .filter((m) => !m.file)
       .map((m) => m.url);
+      
     const finalData = { ...formData };
-    finalData.value =
-      parseFloat(String(finalData.value || "0").replace(",", ".")) || 0;
+
+    // Aplica a nova lógica de conversão para todos os campos necessários
+    finalData.value = cleanAndParseFloat(finalData.value);
+    
     if (finalData.info) {
-      finalData.info.weightInGrams =
-        parseFloat(
-          String(finalData.info.weightInGrams || "0").replace(",", ".")
-        ) || 0;
+      finalData.info.weightInGrams = cleanAndParseFloat(finalData.info.weightInGrams);
+      
       if (finalData.info.stones) {
         finalData.info.stones = finalData.info.stones.map((stone) => ({
           ...stone,
           quantity: parseInt(stone.quantity, 10) || 1,
-          carats:
-            parseFloat(String(stone.carats || "0").replace(",", ".")) || 0,
-          lengthInMm:
-            parseFloat(String(stone.lengthInMm || "0").replace(",", ".")) || 0,
-          widthInMm:
-            parseFloat(String(stone.widthInMm || "0").replace(",", ".")) || 0,
-          heightInMm:
-            parseFloat(String(stone.heightInMm || "0").replace(",", ".")) || 0,
+          carats: cleanAndParseFloat(stone.carats),
+          lengthInMm: cleanAndParseFloat(stone.lengthInMm),
+          widthInMm: cleanAndParseFloat(stone.widthInMm),
+          heightInMm: cleanAndParseFloat(stone.heightInMm),
         }));
       }
     }
+
     delete finalData.media;
     onSave(finalData, localFiles, existingUrls);
   };
@@ -387,7 +394,6 @@ const ProductModal = ({
   return (
     <div
       className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-      onClick={onClose}
     >
       <div
         className={`modal-content-prod v2 ${isClosing ? "closing" : ""}`}
@@ -418,13 +424,15 @@ const ProductModal = ({
                 ></textarea>
               </div>
               <div className="form-group-row">
-                <div className="form-group-prod">
-                  <label>Preço (R$)</label>
-                  <input
-                    type="number"
+              <div className="form-group-prod">
+                <label>Preço (R$)</label>
+                <input
+                    type="text"
+                    inputMode="decimal" // Ajuda a exibir o teclado numérico em celulares
+                    placeholder="0,00"
                     value={formData.value}
                     onChange={(e) => handleFormChange("value", e.target.value)}
-                  />
+                />
                 </div>
                 <div className="form-group-prod">
                   <label>Status</label>
