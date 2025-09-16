@@ -301,12 +301,18 @@
     gap: 16px;
 }
 
-.product-info-cell img {
+/* ✨ --- INÍCIO DA CORREÇÃO NO CSS --- ✨ */
+/* Aplica o mesmo estilo para imagens e vídeos na célula da tabela */
+.product-info-cell img,
+.product-info-cell video {
     width: 40px;
     height: 40px;
     border-radius: 8px;
     object-fit: cover;
 }
+
+/* ✨ --- FIM DA CORREÇÃO NO CSS --- ✨ */
+
 
 .status-badge-prod {
     padding: 4px 10px;

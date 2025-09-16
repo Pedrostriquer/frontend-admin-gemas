@@ -5,6 +5,17 @@ import productServices from "../../../dbServices/productServices"; // Ajuste o c
 // --- Funções Utilitárias ---
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+// Verifica se uma URL corresponde a um formato de vídeo conhecido.
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  // Lista de extensões de vídeo comuns (incluindo .mov)
+  const videoExtensions = [".mp4", ".mov", ".webm", ".ogg"];
+  const lowercasedUrl = url.toLowerCase();
+  // Verifica se a URL contém alguma das extensões de vídeo antes do token do Firebase
+  return videoExtensions.some((ext) => lowercasedUrl.includes(ext + "?"));
+};
+
 const ITEMS_PER_PAGE = 5;
 
 // --- Hooks Customizados ---
@@ -247,7 +258,7 @@ const ProductModal = ({
     categories: isEditing ? product.categories || [] : [],
     media: isEditing
       ? (product.mediaUrls || []).map((url) => ({
-          type: url.includes(".mp4") ? "video" : "image",
+          type: isVideoUrl(url) ? "video" : "image",
           url,
           file: null,
         }))
@@ -556,12 +567,17 @@ const ProductModal = ({
                   </button>
                 </div>
                 <div className="media-preview-list">
-                  {formData.media.map((m) => (
-                    <div key={m.url} className="media-preview-item">
+                  {formData.media.map((m, index) => (
+                    <div
+                      key={`${m.url}-${index}`}
+                      className="media-preview-item"
+                    >
                       {m.type === "image" ? (
                         <img src={m.url} alt="preview" />
                       ) : (
-                        <video src={m.url} autoPlay loop muted playsInline />
+                        <video src={m.url} autoPlay loop muted playsInline>
+                          Seu navegador não suporta o elemento de vídeo.
+                        </video>
                       )}
                       <i
                         className="fa-solid fa-trash-can"
@@ -679,16 +695,20 @@ function ProductsPage() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedFilters]);
+
   useEffect(() => {
     fetchProducts(currentPage, debouncedFilters);
   }, [debouncedFilters, currentPage, fetchProducts]);
 
   const handleFilterChange = (name, value) =>
     setFilters((prev) => ({ ...prev, [name]: value }));
+
   const handleOpenModal = (type, data = null) => setModal({ type, data });
+
   const handleCloseModal = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -704,28 +724,28 @@ function ProductsPage() {
       let productToUpdate = { ...productData };
 
       if (productData.id && productData.id !== 0) {
-        // Edição
         if (localFiles.length > 0) {
           const uploadPromises = localFiles.map((file) =>
             productServices.uploadProductMedia(productData.id, file)
           );
           const newUrls = await Promise.all(uploadPromises);
-          finalMediaUrls.push(...newUrls);
+          finalMediaUrls.push(...newUrls.flat());
         }
         productToUpdate.mediaUrls = finalMediaUrls;
         await productServices.updateProduct(productData.id, productToUpdate);
       } else {
-        // Criação
         productToUpdate.mediaUrls = existingUrls;
         const newProduct = await productServices.createProduct(productToUpdate);
+        const newProductId = newProduct.id;
 
         if (localFiles.length > 0) {
           const uploadPromises = localFiles.map((file) =>
-            productServices.uploadProductMedia(newProduct.id, file)
+            productServices.uploadProductMedia(newProductId, file)
           );
           const newUrls = await Promise.all(uploadPromises);
-          finalMediaUrls.push(...newUrls);
-          await productServices.updateProduct(newProduct.id, {
+          finalMediaUrls.push(...newUrls.flat());
+
+          await productServices.updateProduct(newProductId, {
             ...newProduct,
             mediaUrls: finalMediaUrls,
           });
@@ -734,7 +754,7 @@ function ProductsPage() {
       handleCloseModal();
       fetchProducts(productData.id ? currentPage : 1, debouncedFilters);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao salvar produto:", error);
       alert("Ocorreu um erro ao salvar o produto.");
     } finally {
       setIsLoading(false);
@@ -744,44 +764,52 @@ function ProductsPage() {
   const handleBulkDelete = async () => {
     setIsLoading(true);
     try {
-        await productServices.deleteProducts(Array.from(selectedProducts));
-        setSelectedProducts(new Set());
-        handleCloseModal();
-        fetchProducts(1, debouncedFilters);
+      await productServices.deleteProducts(Array.from(selectedProducts));
+      setSelectedProducts(new Set());
+      handleCloseModal();
+      fetchProducts(1, debouncedFilters);
     } catch (error) {
-        alert("Ocorreu um erro ao deletar os produtos.");
-    } finally { setIsLoading(false); }
-};
+      alert("Ocorreu um erro ao deletar os produtos.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-const handleBulkStatusChange = async (status) => {
+  const handleBulkStatusChange = async (status) => {
     setIsLoading(true);
     try {
-        await productServices.updateProductsStatus(Array.from(selectedProducts), status);
-        setSelectedProducts(new Set());
-        handleCloseModal();
-        fetchProducts(currentPage, debouncedFilters);
+      await productServices.updateProductsStatus(
+        Array.from(selectedProducts),
+        status
+      );
+      setSelectedProducts(new Set());
+      handleCloseModal();
+      fetchProducts(currentPage, debouncedFilters);
     } catch (error) {
-        alert("Ocorreu um erro ao alterar o status.");
-    } finally { setIsLoading(false); }
-};
-
-const handleSelectAll = (e) => {
-    if (e.target.checked) {
-        setSelectedProducts(new Set(products.map(p => p.id)));
-    } else {
-        setSelectedProducts(new Set());
+      alert("Ocorreu um erro ao alterar o status.");
+    } finally {
+      setIsLoading(false);
     }
-};
+  };
 
-const handleSelectOne = (productId) => {
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedProducts(new Set(products.map((p) => p.id)));
+    } else {
+      setSelectedProducts(new Set());
+    }
+  };
+
+  const handleSelectOne = (productId) => {
     const newSelection = new Set(selectedProducts);
     if (newSelection.has(productId)) {
-        newSelection.delete(productId);
+      newSelection.delete(productId);
     } else {
-        newSelection.add(productId);
+      newSelection.add(productId);
     }
     setSelectedProducts(newSelection);
-};
+  };
+
   const isAllSelectedOnPage =
     products.length > 0 && products.every((p) => selectedProducts.has(p.id));
 
@@ -791,6 +819,7 @@ const handleSelectOne = (productId) => {
         <h1>Produtos</h1>
         <p>Gerencie o catálogo da sua loja.</p>
       </header>
+
       <section className="product-kpi-cards">
         <div className="product-kpi-card v2">
           <i className="fa-solid fa-boxes-stacked"></i>
@@ -802,6 +831,7 @@ const handleSelectOne = (productId) => {
           </div>
         </div>
       </section>
+
       <section className="product-controls-wrapper">
         <div className="product-controls">
           <div className="search-box-prod">
@@ -940,13 +970,26 @@ const handleSelectOne = (productId) => {
                   </td>
                   <td onClick={() => handleOpenModal("edit", product)}>
                     <div className="product-info-cell">
-                      <img
-                        src={
-                          product.mediaUrls?.[0] ||
-                          "https://placehold.co/80x80/e0e0e0/a0a0a0?text=Gema"
-                        }
-                        alt={product.name}
-                      />
+                      {/* ✨ --- INÍCIO DA CORREÇÃO NA TABELA --- ✨ */}
+                      {isVideoUrl(product.mediaUrls?.[0]) ? (
+                        <video
+                          src={product.mediaUrls[0]}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          alt={product.name}
+                        />
+                      ) : (
+                        <img
+                          src={
+                            product.mediaUrls?.[0] ||
+                            "https://placehold.co/80x80/e0e0e0/a0a0a0?text=Gema"
+                          }
+                          alt={product.name}
+                        />
+                      )}
+                      {/* ✨ --- FIM DA CORREÇÃO NA TABELA --- ✨ */}
                       <span>{product.name}</span>
                     </div>
                   </td>
