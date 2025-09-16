@@ -24,7 +24,10 @@ const contractServices = {
       );
       return response.data;
     } catch (error) {
-      console.error("Erro ao alterar disponibilidade de reinvestimento:", error);
+      console.error(
+        "Erro ao alterar disponibilidade de reinvestimento:",
+        error
+      );
       throw error.response?.data || error;
     }
   },
@@ -48,7 +51,7 @@ const contractServices = {
             "Content-Type": "application/json",
             // A validação no backend que você me mostrou usa o token,
             // então o Client-ID-Ref pode não ser estritamente necessário aqui, mas mantemos por consistência.
-            "Client-ID-Ref": idCliente, 
+            "Client-ID-Ref": idCliente,
           },
         }
       );
@@ -58,7 +61,7 @@ const contractServices = {
       throw error;
     }
   },
-  
+
   updateContractStatus: async (token, ids, newStatus) => {
     try {
       const response = await axios.post(
@@ -388,6 +391,39 @@ const contractServices = {
       return response.data;
     } catch (error) {
       console.error("Erro ao salvar dados de rastreio:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  getPaymentDetails: async (token, paymentId) => {
+    try {
+      const response = await axios.get(
+        `${BASE_ROUTE}payment/${paymentId}/details`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar detalhes do pagamento:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  // NOVO: Função para aprovar um pagamento localmente (para testes)
+  approveLocalPayment: async (token, paymentId) => {
+    try {
+      // Geralmente ações assim são feitas com POST, mesmo sem corpo de requisição
+      const response = await axios.post(
+        `${BASE_ROUTE}payment/test/approve-local/${paymentId}`,
+        {}, // Corpo da requisição vazio
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao aprovar pagamento de teste:", error);
       throw error.response?.data || error;
     }
   },

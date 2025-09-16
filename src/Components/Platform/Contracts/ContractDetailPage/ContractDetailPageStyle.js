@@ -61,7 +61,6 @@ const styles = {
   statusFinalizado: { backgroundColor: "#e5e7eb", color: "#4b5563" },
   statusCancelado: { backgroundColor: "#fee2e2", color: "#991b1b" },
 
-  // --- NOVOS ESTILOS PARA OS BOTÕES DE AÇÃO ---
   pendingActions: {
     display: "flex",
     gap: "12px",
@@ -86,8 +85,6 @@ const styles = {
     backgroundColor: "#ef4444",
     color: "#fff",
   },
-  // --- FIM DOS NOVOS ESTILOS ---
-
   detailGrid: {
     display: "grid",
     gridTemplateColumns: "2fr 1fr",
@@ -541,6 +538,41 @@ const styles = {
     height: "20px",
     animation: "spin 1s linear infinite",
   },
+  // NOVO: Estilos para o Card de Pagamento
+  paymentInfoContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    marginBottom: "16px",
+  },
+  paymentInfoRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    fontSize: "0.9rem",
+  },
+  paymentInfoLabel: {
+    color: "#64748b",
+    fontWeight: 500,
+  },
+  paymentStatusBadge: {
+    padding: "4px 12px",
+    borderRadius: "10px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+  },
+  paymentStatusReceived: { backgroundColor: "#def7ec", color: "#03543f" },
+  paymentStatusPending: { backgroundColor: "#fef3c7", color: "#92400e" },
+  paymentStatusOverdue: { backgroundColor: "#fee2e2", color: "#991b1b" },
+  paymentStatusCancelled: { backgroundColor: "#e5e7eb", color: "#4b5563" },
+  approvePaymentButton: {
+    width: "100%",
+    backgroundColor: "#22c55e",
+    color: "#fff",
+  },
+  // Fim dos novos estilos
+
   "@keyframes spin": {
     "0%": { transform: "rotate(0deg)" },
     "100%": { transform: "rotate(360deg)" },

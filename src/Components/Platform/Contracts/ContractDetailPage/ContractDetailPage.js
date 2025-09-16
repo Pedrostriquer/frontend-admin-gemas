@@ -8,8 +8,11 @@ import { toPng } from "html-to-image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
+// --- Funções Auxiliares e Mapeamentos ---
+
 const formatCurrency = (v) =>
   (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 const formatDate = (d) =>
   d
     ? new Date(d).toLocaleDateString("pt-BR", {
@@ -18,17 +21,37 @@ const formatDate = (d) =>
         year: "numeric",
       })
     : "N/A";
+
 const statusMap = {
   1: "Pendente",
   2: "Valorizando",
   3: "Cancelado",
   4: "Finalizado",
 };
+
 const statusStyleMap = {
   1: "statusPendente",
   2: "statusValorizando",
   3: "statusCancelado",
   4: "statusFinalizado",
+};
+
+// NOVO: Mapeamento para status de pagamento
+const paymentStatusMap = {
+  PENDING: "Pendente",
+  RECEIVED: "Recebido",
+  CONFIRMED: "Confirmado",
+  OVERDUE: "Vencido",
+  CANCELLED: "Cancelado",
+};
+
+// NOVO: Mapeamento de estilos para status de pagamento
+const paymentStatusStyleMap = {
+  PENDING: "paymentStatusPending",
+  RECEIVED: "paymentStatusReceived",
+  CONFIRMED: "paymentStatusReceived",
+  OVERDUE: "paymentStatusOverdue",
+  CANCELLED: "paymentStatusCancelled",
 };
 
 const dataURLtoFile = (dataurl, filename) => {
@@ -42,6 +65,8 @@ const dataURLtoFile = (dataurl, filename) => {
   }
   return new File([u8arr], filename, { type: mime });
 };
+
+// --- Componentes Internos (Completos) ---
 
 const LoadingOverlay = ({ text }) => (
   <div style={styles.loadingOverlay}>
@@ -274,11 +299,14 @@ const TrackingModal = ({ isOpen, onClose, onSubmit, existingTracking }) => {
   );
 };
 
+// --- Componente Principal ---
+
 function ContractDetailPage() {
   const { contractId } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
 
+  // Estados do Contrato e UI
   const [contract, setContract] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -286,11 +314,19 @@ function ContractDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
 
+  // NOVO: Estados do Pagamento
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [isFetchingPayment, setIsFetchingPayment] = useState(false);
+  const [isApprovingPayment, setIsApprovingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
+
+  // Estados de Arquivos e Mídias
   const [media, setMedia] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [newMediaFiles, setNewMediaFiles] = useState([]);
   const [newCertificateFiles, setNewCertificateFiles] = useState([]);
 
+  // Estados dos Modais e Ações
   const [addMonths, setAddMonths] = useState(1);
   const [reinvestAmount, setReinvestAmount] = useState("");
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -298,14 +334,36 @@ function ContractDetailPage() {
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
 
+  // Estados dos Toggles
   const [isTogglingReinvestment, setIsTogglingReinvestment] = useState(false);
   const [isTogglingAutoReinvest, setIsTogglingAutoReinvest] = useState(false);
 
+  // Refs
   const mediaInputRef = useRef(null);
   const certImageInputRef = useRef(null);
 
   const hasPendingChanges =
     newMediaFiles.length > 0 || newCertificateFiles.length > 0;
+
+  // --- Funções de API ---
+
+  // NOVO: Função para buscar detalhes do pagamento
+  const fetchPaymentDetails = useCallback(
+    async (paymentId) => {
+      if (!token || !paymentId) return;
+      setIsFetchingPayment(true);
+      setPaymentError(null);
+      try {
+        const data = await contractServices.getPaymentDetails(token, paymentId);
+        setPaymentDetails(data);
+      } catch (err) {
+        setPaymentError("Não foi possível carregar os detalhes do pagamento.");
+      } finally {
+        setIsFetchingPayment(false);
+      }
+    },
+    [token]
+  );
 
   const fetchContract = useCallback(async () => {
     if (!token || !contractId) return;
@@ -328,22 +386,43 @@ function ContractDetailPage() {
           isNew: false,
         })) || []
       );
+
+      // NOVO: Chama a busca de detalhes do pagamento após carregar o contrato
+      if (data.paymentId) {
+        await fetchPaymentDetails(data.paymentId);
+      }
     } catch (err) {
       setError("Não foi possível carregar o contrato.");
     } finally {
       setIsLoading(false);
     }
-  }, [contractId, token]);
+  }, [contractId, token, fetchPaymentDetails]);
 
   useEffect(() => {
     fetchContract();
   }, [fetchContract]);
 
+  // --- Handlers de Ações ---
+
+  // NOVO: Função para aprovar o pagamento
+  const handleApprovePayment = async () => {
+    if (!contract?.paymentId || isApprovingPayment) return;
+    setIsApprovingPayment(true);
+    try {
+      await contractServices.approveLocalPayment(token, contract.paymentId);
+      alert("Pagamento aprovado com sucesso!");
+      await fetchPaymentDetails(contract.paymentId);
+    } catch (err) {
+      alert("Ocorreu um erro ao aprovar o pagamento.");
+    } finally {
+      setIsApprovingPayment(false);
+    }
+  };
+
   const handleUpdateStatus = async (newStatus) => {
     const action = newStatus === 2 ? "ativar" : "cancelar";
     if (!window.confirm(`Tem certeza que deseja ${action} este contrato?`))
       return;
-
     setIsUpdatingStatus(true);
     try {
       await contractServices.updateContractStatus(
@@ -366,7 +445,6 @@ function ContractDetailPage() {
 
   const handleToggleAutoReinvest = async () => {
     if (isTogglingAutoReinvest) return;
-
     setIsTogglingAutoReinvest(true);
     try {
       const newState = !contract.autoReinvest;
@@ -386,6 +464,7 @@ function ContractDetailPage() {
 
   const handleExtendContract = () =>
     alert(`Funcionalidade de extensão ainda não implementada.`);
+
   const handleOpenCancelModal = () => setIsCancelModalOpen(true);
 
   const handleToggleReinvestmentAvailability = async () => {
@@ -543,18 +622,15 @@ function ContractDetailPage() {
     }
   };
 
-  if (isLoading || isDeleting || isUpdatingStatus)
-    return (
-      <LoadingOverlay
-        text={
-          isDeleting
-            ? "Excluindo arquivos..."
-            : isUpdatingStatus
-            ? "Atualizando status..."
-            : "Carregando contrato..."
-        }
-      />
-    );
+  // --- Renderização Condicional ---
+
+  if (isLoading || isDeleting || isUpdatingStatus) {
+    let text = "Carregando contrato...";
+    if (isDeleting) text = "Excluindo arquivos...";
+    if (isUpdatingStatus) text = "Atualizando status...";
+    return <LoadingOverlay text={text} />;
+  }
+
   if (error)
     return (
       <div style={{ padding: "40px", textAlign: "center", color: "red" }}>
@@ -570,6 +646,8 @@ function ContractDetailPage() {
 
   const progressPercentage =
     (contract.totalIncome / contract.finalAmount) * 100;
+
+  // --- JSX de Retorno ---
 
   return (
     <>
@@ -659,6 +737,7 @@ function ContractDetailPage() {
             </span>
           </div>
         </header>
+
         <div style={styles.detailGrid}>
           <div style={styles.mainContent}>
             <div style={styles.kpiGrid}>
@@ -687,6 +766,7 @@ function ContractDetailPage() {
                 </p>
               </div>
             </div>
+
             <div style={styles.progressSection}>
               <div style={styles.progressHeader}>
                 <h3 style={styles.progressTitle}>Progresso do Contrato</h3>
@@ -708,6 +788,7 @@ function ContractDetailPage() {
                 <span>{progressPercentage.toFixed(1)}%</span>
               </div>
             </div>
+
             <div style={styles.infoCard}>
               <div style={styles.cardHeaderAction}>
                 <h3 style={styles.infoCardTitle}>
@@ -763,6 +844,7 @@ function ContractDetailPage() {
                 </button>
               </div>
             </div>
+
             <div style={styles.infoCard}>
               <div style={styles.cardHeaderAction}>
                 <h3 style={styles.infoCardTitle}>
@@ -862,7 +944,68 @@ function ContractDetailPage() {
               </div>
             </div>
           </div>
+
           <aside style={styles.actionPanel}>
+            {/* NOVO: Card de Status de Pagamento */}
+            {contract.paymentId && (
+              <div style={styles.actionCard}>
+                <h3 style={styles.actionCardTitle}>
+                  <i className="fa-solid fa-receipt"></i> Status do Pagamento
+                </h3>
+                {isFetchingPayment ? (
+                  <p>Buscando status...</p>
+                ) : paymentError ? (
+                  <p style={{ color: "red" }}>{paymentError}</p>
+                ) : paymentDetails ? (
+                  <>
+                    <div style={styles.paymentInfoContainer}>
+                      <div style={styles.paymentInfoRow}>
+                        <span style={styles.paymentInfoLabel}>Método:</span>
+                        <strong>{paymentDetails.paymentMethod}</strong>
+                      </div>
+                      <div style={styles.paymentInfoRow}>
+                        <span style={styles.paymentInfoLabel}>Status:</span>
+                        <span
+                          style={{
+                            ...styles.paymentStatusBadge,
+                            ...styles[
+                              paymentStatusStyleMap[paymentDetails.status] ||
+                                "paymentStatusCancelled"
+                            ],
+                          }}
+                        >
+                          {paymentStatusMap[paymentDetails.status] ||
+                            "Desconhecido"}
+                        </span>
+                      </div>
+                    </div>
+                    {paymentDetails.status !== "RECEIVED" &&
+                      paymentDetails.status !== "CONFIRMED" && (
+                        <button
+                          onClick={handleApprovePayment}
+                          style={{
+                            ...styles.actionCardButton,
+                            ...styles.approvePaymentButton,
+                          }}
+                          disabled={isApprovingPayment}
+                        >
+                          {isApprovingPayment ? (
+                            <div style={styles.buttonSpinner}></div>
+                          ) : (
+                            <i className="fa-solid fa-check-double"></i>
+                          )}
+                          {isApprovingPayment
+                            ? "Aprovando..."
+                            : "Aprovar Pagamento (Teste)"}
+                        </button>
+                      )}
+                  </>
+                ) : (
+                  <p>Nenhum detalhe de pagamento encontrado.</p>
+                )}
+              </div>
+            )}
+
             <div style={styles.actionCard}>
               <h3 style={styles.actionCardTitle}>
                 <i className="fa-solid fa-truck-fast"></i> Rastreio da Pedra
@@ -906,6 +1049,7 @@ function ContractDetailPage() {
                 </button>
               )}
             </div>
+
             <div style={styles.actionCard}>
               <h3 style={styles.actionCardTitle}>
                 <i className="fa-solid fa-calendar-plus"></i> Estender Contrato
@@ -930,6 +1074,7 @@ function ContractDetailPage() {
                 </button>
               </div>
             </div>
+
             <div style={styles.actionCard}>
               <h3 style={styles.actionCardTitle}>
                 <i className="fa-solid fa-sack-dollar"></i> Reinvestir Lucros
@@ -1033,6 +1178,7 @@ function ContractDetailPage() {
                 </label>
               </div>
             </div>
+
             {contract.status !== 3 && contract.status !== 4 && (
               <div style={styles.actionCard}>
                 <h3 style={styles.actionCardTitle}>
@@ -1050,6 +1196,7 @@ function ContractDetailPage() {
           </aside>
         </div>
       </div>
+
       <CancelContractModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
