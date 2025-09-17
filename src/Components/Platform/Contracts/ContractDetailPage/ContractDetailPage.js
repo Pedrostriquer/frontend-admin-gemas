@@ -7,6 +7,7 @@ import CancelContractModal from "./CancelContractModal/CancelContractModal";
 import { toPng } from "html-to-image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { useLoad } from "../../../../Context/LoadContext";
 
 // --- Funções Auxiliares e Mapeamentos ---
 
@@ -305,6 +306,7 @@ function ContractDetailPage() {
   const { contractId } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
+  const { startLoading, stopLoading } = useLoad();
 
   // Estados do Contrato e UI
   const [contract, setContract] = useState(null);
@@ -369,6 +371,7 @@ function ContractDetailPage() {
     if (!token || !contractId) return;
     setIsLoading(true);
     setError(null);
+    startLoading();
     try {
       const data = await contractServices.getById(token, contractId);
       setContract(data);
@@ -395,6 +398,7 @@ function ContractDetailPage() {
       setError("Não foi possível carregar o contrato.");
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   }, [contractId, token, fetchPaymentDetails]);
 
@@ -409,6 +413,7 @@ function ContractDetailPage() {
     if (!contract?.paymentId || isApprovingPayment) return;
     setIsApprovingPayment(true);
     try {
+      startLoading();
       await contractServices.approveLocalPayment(token, contract.paymentId);
       alert("Pagamento aprovado com sucesso!");
       await fetchPaymentDetails(contract.paymentId);
@@ -416,6 +421,7 @@ function ContractDetailPage() {
       alert("Ocorreu um erro ao aprovar o pagamento.");
     } finally {
       setIsApprovingPayment(false);
+      stopLoading();
     }
   };
 
@@ -425,6 +431,7 @@ function ContractDetailPage() {
       return;
     setIsUpdatingStatus(true);
     try {
+      startLoading();
       await contractServices.updateContractStatus(
         token,
         [contractId],
@@ -438,6 +445,7 @@ function ContractDetailPage() {
       alert(`Ocorreu um erro ao ${action} o contrato.`);
     } finally {
       setIsUpdatingStatus(false);
+      stopLoading();
     }
   };
 
@@ -447,6 +455,7 @@ function ContractDetailPage() {
     if (isTogglingAutoReinvest) return;
     setIsTogglingAutoReinvest(true);
     try {
+      startLoading();
       const newState = !contract.autoReinvest;
       await contractServices.atualizarAutoReinvestimentoCliente(
         token,
@@ -459,6 +468,7 @@ function ContractDetailPage() {
       alert("Erro ao alterar o reinvestimento automático.");
     } finally {
       setIsTogglingAutoReinvest(false);
+      stopLoading();
     }
   };
 
@@ -471,6 +481,7 @@ function ContractDetailPage() {
     if (isTogglingReinvestment) return;
     setIsTogglingReinvestment(true);
     try {
+      startLoading();
       const newState = !contract.reivestmentAvaliable;
       const updatedContract =
         await contractServices.setReinvestmentAvailability(
@@ -483,6 +494,7 @@ function ContractDetailPage() {
       alert("Erro ao alterar a permissão de reinvestimento.");
     } finally {
       setIsTogglingReinvestment(false);
+      stopLoading();
     }
   };
 
@@ -527,6 +539,7 @@ function ContractDetailPage() {
     if (!hasPendingChanges || isSaving) return;
     setIsSaving(true);
     try {
+      startLoading();
       await contractServices.uploadContractFiles(
         token,
         contractId,
@@ -541,6 +554,7 @@ function ContractDetailPage() {
       alert("Ocorreu um erro ao salvar os arquivos. Tente novamente.");
     } finally {
       setIsSaving(false);
+      stopLoading();
     }
   };
 
@@ -568,6 +582,7 @@ function ContractDetailPage() {
       return;
     setIsDeleting(true);
     try {
+      startLoading();
       await contractServices.deleteContractFile(
         token,
         contractId,
@@ -579,6 +594,7 @@ function ContractDetailPage() {
       alert("Erro ao excluir o arquivo.");
     } finally {
       setIsDeleting(false);
+      stopLoading();
     }
   };
 
@@ -592,6 +608,7 @@ function ContractDetailPage() {
       return;
     setIsDeleting(true);
     try {
+      startLoading();
       await contractServices.deleteAllContractFiles(
         token,
         contractId,
@@ -601,6 +618,7 @@ function ContractDetailPage() {
     } catch (err) {
       alert(`Erro ao excluir todas as ${typeName}.`);
     } finally {
+      stopLoading();
       setIsDeleting(false);
     }
   };
@@ -608,6 +626,7 @@ function ContractDetailPage() {
   const handleSaveTracking = async (trackingData) => {
     setIsSaving(true);
     try {
+      startLoading();
       await contractServices.addOrUpdateTracking(
         token,
         contractId,
@@ -618,6 +637,7 @@ function ContractDetailPage() {
     } catch (err) {
       alert("Erro ao salvar as informações de rastreio.");
     } finally {
+      stopLoading();
       setIsSaving(false);
     }
   };

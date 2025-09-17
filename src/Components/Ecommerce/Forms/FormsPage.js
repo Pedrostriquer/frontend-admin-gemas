@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './FormsPage.css';
 import formServices from '../../../dbServices/formServices'; // Ajuste o caminho se necessário
 import { useAuth } from '../../../Context/AuthContext'; // Para pegar o token
+import { useLoad } from '../../../Context/LoadContext';
 
 const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
 
@@ -44,11 +45,13 @@ function FormsPage() {
     const [selectedForm, setSelectedForm] = useState(null);
     const [isClosing, setIsClosing] = useState(false);
     const { token } = useAuth();
+  const {startLoading, stopLoading} = useLoad();
 
     const fetchForms = useCallback(async () => {
         if (!token) return;
         setIsLoading(true);
         try {
+            startLoading();
             const data = await formServices.getAllForms(token);
             setAllForms(data || []);
         } catch (error) {
@@ -56,6 +59,7 @@ function FormsPage() {
             setAllForms([]);
         } finally {
             setIsLoading(false);
+            stopLoading();
         }
     }, [token]);
 

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../Context/AuthContext';
 import style from './UserProfileStyle';
+import { useLoad } from '../../Context/LoadContext';
 
 export default function UserProfile() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
+  const {startLoading, stopLoading} = useLoad();
 
   useEffect(() => {
     if (user) {

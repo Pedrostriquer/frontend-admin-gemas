@@ -5,6 +5,7 @@ import { useAuth } from "../../../../Context/AuthContext";
 import consultantService from "../../../../dbServices/consultantService";
 import formatServices from "../../../../formatServices/formatServices";
 import AddBalanceModal from "./AddBalanceModal/AddBalanceModal";
+import { useLoad } from "../../../../Context/LoadContext";
 
 const CLIENTS_PER_PAGE = 5;
 
@@ -18,6 +19,7 @@ function ConsultantDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false);
+  const { startLoading, stopLoading } = useLoad();
 
   // Estados para a lista de clientes
   const [clients, setClients] = useState([]);
@@ -29,6 +31,7 @@ function ConsultantDetailPage() {
     async (page) => {
       if (!token || !consultantId) return;
       setClientsLoading(true);
+      startLoading();
       try {
         const data = await consultantService.getClientsForConsultant(
           token,
@@ -45,6 +48,7 @@ function ConsultantDetailPage() {
         setClients([]);
       } finally {
         setClientsLoading(false);
+        stopLoading();
       }
     },
     [consultantId, token]
@@ -53,6 +57,7 @@ function ConsultantDetailPage() {
   const fetchConsultant = useCallback(async () => {
     if (!token || !consultantId) return;
     setIsLoading(true);
+    startLoading();
     try {
       const data = await consultantService.getConsultantById(
         token,
@@ -66,6 +71,7 @@ function ConsultantDetailPage() {
       navigate("/platform/consultants");
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   }, [consultantId, token, navigate, fetchClients]);
 
@@ -95,6 +101,7 @@ function ConsultantDetailPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      startLoading();
       const updatedData = {
         ...consultant,
         status: parseInt(consultant.status, 10),
@@ -112,12 +119,14 @@ function ConsultantDetailPage() {
       alert("Falha ao atualizar o consultor.");
     } finally {
       setIsSaving(false);
+      stopLoading();
     }
   };
 
   const handleAddBalance = async ({ amount }) => {
     setIsSaving(true);
     try {
+      startLoading();
       await consultantService.addBalance(token, consultantId, amount);
       alert("Saldo adicionado com sucesso!");
       setIsBalanceModalOpen(false);
@@ -126,6 +135,7 @@ function ConsultantDetailPage() {
       alert(`Erro: ${error.message || "Não foi possível adicionar o saldo."}`);
     } finally {
       setIsSaving(false);
+      stopLoading();
     }
   };
 

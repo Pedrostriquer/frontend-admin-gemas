@@ -4,6 +4,7 @@ import styles from "./CreateWithdrawalPageStyle";
 import { useAuth } from "../../../../Context/AuthContext";
 import withdrawServices from "../../../../dbServices/withdrawServices";
 import clientServices from "../../../../dbServices/clientServices";
+import { useLoad } from "../../../../Context/LoadContext";
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -31,12 +32,14 @@ function CreateWithdrawalPage() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const navigate = useNavigate();
   const { token } = useAuth();
+  const {startLoading, stopLoading} = useLoad();
 
   useEffect(() => {
     if (debouncedSearchTerm.length > 0) {
       const fetchClients = async () => {
         setIsSearching(true);
         try {
+          startLoading();
           const response = await clientServices.getClients(token, debouncedSearchTerm);
           setSearchResults(response.items || []);
         } catch (error) {
@@ -44,6 +47,7 @@ function CreateWithdrawalPage() {
           setSearchResults([]);
         } finally {
           setIsSearching(false);
+          stopLoading();
         }
       };
       fetchClients();
@@ -64,6 +68,7 @@ function CreateWithdrawalPage() {
   const handleConfirmWithdrawal = async () => {
     setIsSubmitting(true);
     try {
+      startLoading();
       const data = { 
         clientId: selectedClient.id, 
         amount: parseFloat(amount) 
@@ -76,6 +81,7 @@ function CreateWithdrawalPage() {
       console.error(err);
     } finally {
       setIsSubmitting(false);
+      stopLoading();
     }
   };
 

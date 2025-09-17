@@ -1,0 +1,183 @@
+/* src/components/LoadingGemas.css */
+
+/* Para uma fonte mais elegante, se quiser usar (opcional) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap');
+
+:root {
+    --gem-color-1: #6a11cb;
+    --gem-color-2: #2575fc;
+    --glow-color: rgba(147, 112, 219, 0.7);
+    /* MediumPurple com alpha */
+    --particle-color: #ffffff;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* O fundo é transparente, mas usamos um backdrop-filter para desfocar o que está atrás.
+     Isso dá um efeito de vidro fosco, super chique e moderno! */
+    background-color: rgba(10, 5, 20, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    /* Suporte para Safari */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+
+    /* Animação suave de entrada */
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.gem-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    /* Ativa a renderização 3D para os filhos */
+    transform-style: preserve-3d;
+    animation: rotateContainer 20s linear infinite;
+}
+
+.gem {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    transform: translate(-50%, -50%) rotateX(60deg) rotateZ(45deg);
+    transform-style: preserve-3d;
+    animation: gemPulse 2.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.gem-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--gem-color-1), var(--gem-color-2));
+    opacity: 0.8;
+    /* clip-path cria a forma de diamante */
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.gem-face-top {
+    transform: translateZ(20px);
+}
+
+.gem-face-bottom {
+    transform: rotateX(180deg) translateZ(20px);
+}
+
+/* O brilho mágico da gema! */
+.gem::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150%;
+    height: 150%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--glow-color) 0%, rgba(255, 255, 255, 0) 60%);
+    filter: blur(15px);
+    z-index: -1;
+}
+
+/* Partículas de brilho */
+.particula {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background-color: var(--particle-color);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--particle-color), 0 0 20px var(--particle-color);
+
+    /* Usamos as variáveis do JS aqui! */
+    animation: orbit var(--duration) linear var(--delay) infinite;
+}
+
+.loading-text {
+    margin-top: 40px;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--glow-color);
+    animation: textPulse 2.5s ease-in-out infinite;
+}
+
+
+/* --- KEYFRAMES DAS ANIMAÇÕES --- */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Rotação lenta de todo o container para dar a sensação de 3D */
+@keyframes rotateContainer {
+    from {
+        transform: rotateY(0deg) rotateX(10deg);
+    }
+
+    to {
+        transform: rotateY(360deg) rotateX(10deg);
+    }
+}
+
+/* Pulsação da gema e seu brilho */
+@keyframes gemPulse {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) rotateX(60deg) rotateZ(45deg) scale3d(1, 1, 1);
+    }
+
+    50% {
+        transform: translate(-50%, -50%) rotateX(60deg) rotateZ(45deg) scale3d(1.1, 1.1, 1.1);
+    }
+}
+
+/* Movimento orbital das partículas */
+@keyframes orbit {
+    from {
+        /* Começa girando no ângulo definido e no centro */
+        transform: rotate(var(--angle)) translateY(0) scale(0.1);
+        opacity: 0.2;
+    }
+
+    50% {
+        /* No meio do caminho, está no raio máximo e totalmente visível */
+        opacity: 1;
+    }
+
+    to {
+        /* Termina no mesmo ângulo, mas expandido, e desaparece */
+        transform: rotate(var(--angle)) translateY(100px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Pulsação sutil do texto */
+@keyframes textPulse {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}

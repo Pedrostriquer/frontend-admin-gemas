@@ -4,6 +4,7 @@ import styles from "./ConsultantsPageStyle";
 import { useAuth } from "../../../Context/AuthContext";
 import consultantService from "../../../dbServices/consultantService";
 import formatServices from "../../../formatServices/formatServices";
+import { useLoad } from "../../../Context/LoadContext";
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -26,12 +27,15 @@ function ConsultantsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredRow, setHoveredRow] = useState(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const { startLoading, stopLoading } = useLoad();
 
   const fetchConsultants = useCallback(
     async (page, search) => {
       if (!token) return;
       setIsLoading(true);
+
       try {
+        startLoading();
         const data = await consultantService.getConsultants(
           token,
           search,
@@ -45,6 +49,7 @@ function ConsultantsPage() {
         setTotalPages(0);
       } finally {
         setIsLoading(false);
+        stopLoading();
       }
     },
     [token]

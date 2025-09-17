@@ -9,6 +9,7 @@ import AddBalanceModal from "./AddBalanceModal/AddBalanceModal";
 import ChangePasswordModal from "./ChangePasswordModal/ChangePasswordModal";
 import AssociateConsultantModal from "./AssociateConsultantModal/AssociateConsultantModal";
 import ImageWithLoader from "../../ImageWithLoader/ImageWithLoader";
+import { useLoad } from "../../../../Context/LoadContext";
 
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -64,11 +65,13 @@ function ClientDetailPage() {
   const [allContracts, setAllContracts] = useState([]);
   const [contractsLoading, setContractsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const { startLoading, stopLoading } = useLoad();
 
   const fetchClientData = useCallback(async () => {
     if (!token || !clientId) return;
     setIsLoading(true);
     setContractsLoading(true);
+    startLoading();
     try {
       const data = await clientServices.getById(token, clientId);
       setClient(data);
@@ -86,6 +89,7 @@ function ClientDetailPage() {
     } finally {
       setIsLoading(false);
       setContractsLoading(false);
+      stopLoading();
     }
   }, [token, clientId]);
 
@@ -117,30 +121,39 @@ function ClientDetailPage() {
   };
   const handleAddBalance = async ({ amount }) => {
     try {
+      startLoading();
       await clientServices.addExtraBalance(token, clientId, amount);
       alert("Saldo adicionado com sucesso!");
       setIsBalanceModalOpen(false);
       fetchClientData();
     } catch (error) {
       alert(`Erro: ${error.message || "Não foi possível adicionar o saldo."}`);
+    } finally {
+      stopLoading();
     }
   };
   const handleChangePassword = async ({ password }) => {
     try {
+      startLoading();
       await clientServices.changePasswordByAdmin(token, clientId, password);
       alert("Senha alterada com sucesso!");
       setIsPasswordModalOpen(false);
     } catch (error) {
       alert(`Erro: ${error.message || "Não foi possível alterar a senha."}`);
+    } finally {
+      stopLoading();
     }
   };
   const handleAssociateConsultant = async (consultantId) => {
     try {
+      startLoading();
       await clientServices.associateConsultant(token, clientId, consultantId);
       setIsAssociateModalOpen(false);
       await fetchClientData();
     } catch (error) {
       alert("Falha ao associar consultor.");
+    } finally {
+      stopLoading();
     }
   };
   const handleRemoveConsultant = async () => {
@@ -149,11 +162,14 @@ function ClientDetailPage() {
         `Tem certeza que deseja remover o consultor ${client.consultantName} deste cliente?`
       )
     ) {
+      startLoading();
       try {
         await clientServices.removeConsultant(token, clientId);
         await fetchClientData();
       } catch (error) {
         alert("Falha ao remover consultor.");
+      } finally {
+        stopLoading();
       }
     }
   };
@@ -164,11 +180,14 @@ function ClientDetailPage() {
       )
     ) {
       try {
+        startLoading();
         await clientServices.deleteProfilePicture(clientId, token);
         alert("Foto de perfil removida com sucesso.");
         fetchClientData();
       } catch (error) {
         alert("Não foi possível remover a foto de perfil.");
+      } finally {
+        stopLoading();
       }
     }
   };
@@ -209,6 +228,7 @@ function ClientDetailPage() {
       return;
     }
     try {
+      startLoading();
       await clientServices.updateClientPartial(clientId, updates, token);
       alert("Cliente atualizado com sucesso!");
       setIsEditing(false);
@@ -220,6 +240,7 @@ function ClientDetailPage() {
       );
     } finally {
       setIsSaving(false);
+      stopLoading();
     }
   };
 

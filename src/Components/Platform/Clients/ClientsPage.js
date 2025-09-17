@@ -4,6 +4,7 @@ import styles from "./ClientsPageStyle";
 import clientServices from "../../../dbServices/clientServices";
 import { useAuth } from "../../../Context/AuthContext";
 import ImageWithLoader from "../ImageWithLoader/ImageWithLoader";
+import { useLoad } from "../../../Context/LoadContext";
 
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -32,6 +33,7 @@ function ClientsPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const { startLoading, stopLoading } = useLoad();
 
   // NOVOS ESTADOS PARA ORDENAÇÃO
   const [sortBy, setSortBy] = useState("id");
@@ -44,6 +46,7 @@ function ClientsPage() {
     async (page, search, sortBy, sortDirection) => {
       if (!token) return;
       setIsLoading(true);
+      startLoading();
       try {
         const data = await clientServices.getClients(
           token,
@@ -61,6 +64,7 @@ function ClientsPage() {
         setTotalPages(0);
       } finally {
         setIsLoading(false);
+        stopLoading()
       }
     },
     [token] // A dependência do token é a principal aqui

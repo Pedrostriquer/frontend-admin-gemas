@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { startLoading, stopLoading } = useLoad();
+  const { startLoading, stopLoading, loadState } = useLoad();
 
   const logout = () => {
     setUser(null);

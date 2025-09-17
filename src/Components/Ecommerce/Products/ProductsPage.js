@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import "./ProductsPage.css";
 import productServices from "../../../dbServices/productServices"; // Ajuste o caminho se necessário
+import { useLoad } from "../../../Context/LoadContext";
 
 // --- Funções Utilitárias ---
 const formatCurrency = (value) =>
@@ -362,15 +363,17 @@ const ProductModal = ({
     const existingUrls = formData.media
       .filter((m) => !m.file)
       .map((m) => m.url);
-      
+
     const finalData = { ...formData };
 
     // Aplica a nova lógica de conversão para todos os campos necessários
     finalData.value = cleanAndParseFloat(finalData.value);
-    
+
     if (finalData.info) {
-      finalData.info.weightInGrams = cleanAndParseFloat(finalData.info.weightInGrams);
-      
+      finalData.info.weightInGrams = cleanAndParseFloat(
+        finalData.info.weightInGrams
+      );
+
       if (finalData.info.stones) {
         finalData.info.stones = finalData.info.stones.map((stone) => ({
           ...stone,
@@ -392,9 +395,7 @@ const ProductModal = ({
   );
 
   return (
-    <div
-      className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-    >
+    <div className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}>
       <div
         className={`modal-content-prod v2 ${isClosing ? "closing" : ""}`}
         onClick={(e) => e.stopPropagation()}
@@ -424,15 +425,15 @@ const ProductModal = ({
                 ></textarea>
               </div>
               <div className="form-group-row">
-              <div className="form-group-prod">
-                <label>Preço (R$)</label>
-                <input
+                <div className="form-group-prod">
+                  <label>Preço (R$)</label>
+                  <input
                     type="text"
                     inputMode="decimal" // Ajuda a exibir o teclado numérico em celulares
                     placeholder="0,00"
                     value={formData.value}
                     onChange={(e) => handleFormChange("value", e.target.value)}
-                />
+                  />
                 </div>
                 <div className="form-group-prod">
                   <label>Status</label>
@@ -672,10 +673,12 @@ function ProductsPage() {
   const [isClosing, setIsClosing] = useState(false);
 
   const debouncedFilters = useDebounce(filters, 500);
+  const { startLoading, stopLoading } = useLoad();
 
   const fetchProducts = useCallback(async (page, currentFilters) => {
     setIsLoading(true);
     try {
+      startLoading();
       const data = await productServices.searchProducts(
         currentFilters,
         page,
@@ -688,15 +691,19 @@ function ProductsPage() {
       alert("Não foi possível carregar os produtos.");
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   }, []);
 
   const fetchCategories = useCallback(async () => {
     try {
+      startLoading();
       const catData = await productServices.getAllCategories();
       setCategories(catData || []);
     } catch (error) {
       alert("Não foi possível carregar as categorias.");
+    } finally {
+      stopLoading();
     }
   }, []);
 
@@ -728,6 +735,7 @@ function ProductsPage() {
   const handleSaveProduct = async (productData, localFiles, existingUrls) => {
     setIsLoading(true);
     try {
+      startLoading();
       let finalMediaUrls = [...existingUrls];
       let productToUpdate = { ...productData };
 
@@ -772,6 +780,7 @@ function ProductsPage() {
   const handleBulkDelete = async () => {
     setIsLoading(true);
     try {
+      startLoading();
       await productServices.deleteProducts(Array.from(selectedProducts));
       setSelectedProducts(new Set());
       handleCloseModal();
@@ -780,11 +789,13 @@ function ProductsPage() {
       alert("Ocorreu um erro ao deletar os produtos.");
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   };
 
   const handleBulkStatusChange = async (status) => {
     setIsLoading(true);
+    startLoading();
     try {
       await productServices.updateProductsStatus(
         Array.from(selectedProducts),
@@ -797,6 +808,7 @@ function ProductsPage() {
       alert("Ocorreu um erro ao alterar o status.");
     } finally {
       setIsLoading(false);
+      stopLoading();
     }
   };
 

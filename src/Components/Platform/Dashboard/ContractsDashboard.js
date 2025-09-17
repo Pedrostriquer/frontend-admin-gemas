@@ -15,6 +15,7 @@ import platformServices from "../../../dbServices/platformServices.js";
 import { useAuth } from "../../../Context/AuthContext.js";
 import ImageWithLoader from "../ImageWithLoader/ImageWithLoader.js";
 import { useNavigate } from "react-router-dom";
+import { useLoad } from "../../../Context/LoadContext.js";
 
 const RoundedBar = (props) => {
   const { x, y, width, height, fill } = props;
@@ -56,6 +57,7 @@ function ContractsDashboard() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { token } = useAuth();
+  const { startLoading, stopLoading } = useLoad();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,12 +65,14 @@ function ContractsDashboard() {
       if (!token) return;
       try {
         setIsLoading(true);
+        startLoading();
         const dashboardData = await platformServices.getDashboardData(token);
         setData(dashboardData);
       } catch (error) {
         console.error("Falha ao buscar dados do dashboard:", error);
       } finally {
         setIsLoading(false);
+        stopLoading()
       }
     };
     fetchData();
