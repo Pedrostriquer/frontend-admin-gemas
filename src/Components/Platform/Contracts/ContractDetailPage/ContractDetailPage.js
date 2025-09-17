@@ -1,3 +1,6 @@
+// src: /components/Platform/Contracts/ContractDetailPage/ContractDetailPage.js
+// Copie e cole o conteúdo completo deste arquivo.
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styles from "./ContractDetailPageStyle";
@@ -315,6 +318,7 @@ function ContractDetailPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
+  const [isAppreciating, setIsAppreciating] = useState(false); // NOVO ESTADO
 
   // NOVO: Estados do Pagamento
   const [paymentDetails, setPaymentDetails] = useState(null);
@@ -407,6 +411,32 @@ function ContractDetailPage() {
   }, [fetchContract]);
 
   // --- Handlers de Ações ---
+
+  // --- NOVA FUNÇÃO HANDLER AQUI ---
+  const handleAppreciateDay = async () => {
+    if (isAppreciating) return;
+
+    const confirmed = window.confirm(
+      "Tem certeza que deseja rodar a valorização de UM DIA para este contrato?\n\nEsta ação não pode ser desfeita."
+    );
+
+    if (confirmed) {
+      setIsAppreciating(true);
+      startLoading();
+      try {
+        await contractServices.appreciateContractForDay(token, contractId);
+        alert("Valorização diária executada com sucesso!");
+        await fetchContract(); // Recarrega os dados para ver o lucro atualizado
+      } catch (error) {
+        const errorMessage = error?.message || "Ocorreu um erro desconhecido.";
+        alert(`Falha ao executar a valorização: ${errorMessage}`);
+      } finally {
+        setIsAppreciating(false);
+        stopLoading();
+      }
+    }
+  };
+  // --- FIM DA NOVA FUNÇÃO HANDLER ---
 
   // NOVO: Função para aprovar o pagamento
   const handleApprovePayment = async () => {
@@ -1069,6 +1099,28 @@ function ContractDetailPage() {
                 </button>
               )}
             </div>
+            
+            {/* --- NOVO CARD E BOTÃO AQUI --- */}
+            {contract.status === 2 && ( // Só mostra para contratos em valorização
+                <div style={styles.actionCard}>
+                <h3 style={styles.actionCardTitle}>
+                  <i className="fa-solid fa-gears"></i> Ações Administrativas
+                </h3>
+                <button
+                  onClick={handleAppreciateDay}
+                  style={{...styles.actionCardButton, ...styles.appreciateBtn}}
+                  disabled={isAppreciating}
+                >
+                  {isAppreciating ? (
+                      <div style={styles.buttonSpinner}></div>
+                    ) : (
+                      <i className="fa-solid fa-angles-up"></i>
+                    )}
+                  {isAppreciating ? "Valorizando..." : "Rodar Valorização Diária"}
+                </button>
+              </div>
+            )}
+            {/* --- FIM DO NOVO CARD --- */}
 
             <div style={styles.actionCard}>
               <h3 style={styles.actionCardTitle}>

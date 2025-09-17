@@ -427,6 +427,22 @@ const contractServices = {
       throw error.response?.data || error;
     }
   },
+
+  appreciateContractForDay: async (token, contractId) => {
+    try {
+      const response = await axios.post(
+        `${BASE_ROUTE}contract/${contractId}/appreciate-day`,
+        {}, // Corpo da requisição vazio
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao rodar valorização diária:", error);
+      throw error.response?.data || error;
+    }
+  },
 };
 
 export default contractServices;

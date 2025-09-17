@@ -1,3 +1,6 @@
+// src: /components/Platform/Contracts/ContractDetailPage/ContractDetailPageStyle.js
+// Copie e cole o conteúdo completo deste arquivo.
+
 const styles = {
   detailPageContainer: {
     fontFamily: "'Poppins', sans-serif",
@@ -571,7 +574,15 @@ const styles = {
     backgroundColor: "#22c55e",
     color: "#fff",
   },
-  // Fim dos novos estilos
+
+  // --- NOVO ESTILO ADICIONADO AQUI ---
+  appreciateBtn: {
+    width: "100%",
+    backgroundColor: "#4f46e5", // Cor indigo para diferenciar
+    color: "#fff",
+    padding: "12px",
+  },
+  // --- FIM DO NOVO ESTILO ---
 
   "@keyframes spin": {
     "0%": { transform: "rotate(0deg)" },
