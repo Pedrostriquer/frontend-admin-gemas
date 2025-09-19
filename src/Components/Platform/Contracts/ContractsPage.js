@@ -41,6 +41,12 @@ const statusOptions = [
   { value: 4, label: "Finalizado" },
   { value: 3, label: "Cancelado" },
 ];
+// --- NOVO FILTRO AQUI ---
+const gemOptions = [
+  { value: "todos", label: "Com/Sem Gema" },
+  { value: true, label: "Com Gema" },
+  { value: false, label: "Sem Gema" },
+];
 
 function ContractsPage() {
   const { token } = useAuth();
@@ -49,12 +55,18 @@ function ContractsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [filters, setFilters] = useState({ searchTerm: "", status: "Todos" });
+  // --- ADICIONADO NOVO CAMPO AOS FILTROS ---
+  const [filters, setFilters] = useState({
+    searchTerm: "",
+    status: "Todos",
+    withGem: "todos",
+  });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [hoveredRow, setHoveredRow] = useState(null);
   const debouncedFilters = useDebounce(filters, 500);
   const { startLoading, stopLoading } = useLoad();
 
+  // --- FUNÇÃO fetchContracts CORRIGIDA (sem start/stopLoading nas dependências) ---
   const fetchContracts = useCallback(
     async (page, currentFilters) => {
       if (!token) return;
@@ -77,7 +89,7 @@ function ContractsPage() {
         stopLoading();
       }
     },
-    [token]
+    [token] // <-- Array de dependências restaurado para a versão original e estável
   );
 
   useEffect(() => {
@@ -143,6 +155,7 @@ function ContractsPage() {
         idsToUpdate.forEach((id) => newSet.delete(id));
         return newSet;
       });
+      // Importante: Passa `filters` aqui para manter os filtros atuais
       fetchContracts(currentPage, filters);
     } catch (error) {
       alert("Ocorreu um erro ao processar a solicitação.");
@@ -188,6 +201,19 @@ function ContractsPage() {
               </option>
             ))}
           </select>
+          {/* --- NOVO SELECT PARA O FILTRO withGem --- */}
+          <select
+            name="withGem"
+            value={filters.withGem}
+            onChange={handleFilterChange}
+            style={styles.filterSelect}
+          >
+            {gemOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       {selectedIds.size > 0 && (
@@ -198,15 +224,13 @@ function ContractsPage() {
               onClick={() => handleUpdateStatus(Array.from(selectedIds), 2)}
               style={{ ...styles.bulkActionButton, ...styles.approveBtn }}
             >
-              {" "}
-              Ativar Selecionados{" "}
+              Ativar Selecionados
             </button>
             <button
               onClick={() => handleUpdateStatus(Array.from(selectedIds), 3)}
               style={{ ...styles.bulkActionButton, ...styles.denyBtn }}
             >
-              {" "}
-              Cancelar Selecionados{" "}
+              Cancelar Selecionados
             </button>
           </div>
         </div>
@@ -230,10 +254,13 @@ function ContractsPage() {
                 CPF/CNPJ
               </th>
               <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
-                Valor Investido
+                Valor
               </th>
               <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
                 Finaliza em
+              </th>
+              <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
+                Tipo
               </th>
               <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
                 Status
@@ -247,7 +274,7 @@ function ContractsPage() {
             {isLoading ? (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="9"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   Buscando contratos...
@@ -313,6 +340,16 @@ function ContractsPage() {
                     onClick={() => handleNavigateToContract(contract.id)}
                   >
                     <span
+                      style={contract.withGem ? styles.gemTag : styles.noGemTag}
+                    >
+                      {contract.withGem ? "Com Gema" : "Sem Gema"}
+                    </span>
+                  </td>
+                  <td
+                    style={styles.tableCell}
+                    onClick={() => handleNavigateToContract(contract.id)}
+                  >
+                    <span
                       style={{
                         ...styles.statusBadge,
                         ...styles[`status${statusStyleMap[contract.status]}`],
@@ -350,7 +387,7 @@ function ContractsPage() {
             ) : (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="9"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   Nenhum contrato encontrado para os filtros selecionados.

@@ -729,6 +729,7 @@ function ContractDetailPage() {
             </button>
             <h1 style={styles.headerTitle}>
               Contrato <span style={styles.headerTitleId}>#{contract.id}</span>
+              <span style={{...styles.headerTitleWithGem, background: contract.withGem ? "rgba(0, 200, 200, 1)" : "rgba(150, 150, 150, 1)", color: contract.withGem ? "white" : "black"}}>{contract.withGem ? "Com Gema" : "Sem Gema"}</span>
             </h1>
           </div>
           <div style={styles.headerActions}>
@@ -1099,24 +1100,29 @@ function ContractDetailPage() {
                 </button>
               )}
             </div>
-            
+
             {/* --- NOVO CARD E BOTÃO AQUI --- */}
             {contract.status === 2 && ( // Só mostra para contratos em valorização
-                <div style={styles.actionCard}>
+              <div style={styles.actionCard}>
                 <h3 style={styles.actionCardTitle}>
                   <i className="fa-solid fa-gears"></i> Ações Administrativas
                 </h3>
                 <button
                   onClick={handleAppreciateDay}
-                  style={{...styles.actionCardButton, ...styles.appreciateBtn}}
+                  style={{
+                    ...styles.actionCardButton,
+                    ...styles.appreciateBtn,
+                  }}
                   disabled={isAppreciating}
                 >
                   {isAppreciating ? (
-                      <div style={styles.buttonSpinner}></div>
-                    ) : (
-                      <i className="fa-solid fa-angles-up"></i>
-                    )}
-                  {isAppreciating ? "Valorizando..." : "Rodar Valorização Diária"}
+                    <div style={styles.buttonSpinner}></div>
+                  ) : (
+                    <i className="fa-solid fa-angles-up"></i>
+                  )}
+                  {isAppreciating
+                    ? "Valorizando..."
+                    : "Rodar Valorização Diária"}
                 </button>
               </div>
             )}

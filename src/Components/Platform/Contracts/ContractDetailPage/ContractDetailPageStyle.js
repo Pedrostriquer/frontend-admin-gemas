@@ -35,9 +35,22 @@ const styles = {
     margin: 0,
     fontSize: "2rem",
     fontWeight: 700,
+    display: "flex",
+    // gap: 20,
     color: "#1e293b",
+    alignItems: "center",
   },
-  headerTitleId: { color: "#64748b", fontWeight: 500 },
+  headerTitleId: { color: "#64748b", fontWeight: 500, marginLeft: 10 },
+  headerTitleWithGem: {
+    color: "#64748b",
+    fontWeight: 500,
+    marginLeft: 20,
+    fontSize: 16,
+    borderRadius: 20,
+    boxSizing: "border-box",
+    padding: "5px 15px"
+  },
+
   headerActions: { display: "flex", gap: "16px", alignItems: "center" },
   goToClientButton: {
     background: "#fff",

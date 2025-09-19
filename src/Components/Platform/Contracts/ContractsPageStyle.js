@@ -33,8 +33,6 @@ const styles = {
     fontFamily: "'Poppins', sans-serif",
     fontSize: "0.9rem",
   },
-
-  // Estilos para o novo filtro
   filters: { display: "flex", gap: "12px" },
   filterSelect: {
     background: "#fff",
@@ -47,7 +45,6 @@ const styles = {
     boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
     minWidth: "180px",
   },
-
   contractsTableCard: {
     background: "rgba(255, 255, 255, 0.6)",
     backdropFilter: "blur(10px)",
@@ -142,6 +139,24 @@ const styles = {
   },
   approveBtn: { backgroundColor: "#10b981" },
   denyBtn: { backgroundColor: "#ef4444" },
+
+  // --- NOVOS ESTILOS PARA AS TAGS "Com/Sem Gema" ---
+  gemTag: {
+    padding: "4px 10px",
+    borderRadius: "12px",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    backgroundColor: "#e0e7ff", // Azul claro
+    color: "#4338ca", // Azul escuro
+  },
+  noGemTag: {
+    padding: "4px 10px",
+    borderRadius: "12px",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    backgroundColor: "#f3f4f6", // Cinza claro
+    color: "#6b7280", // Cinza escuro
+  },
 };
 
 export default styles;

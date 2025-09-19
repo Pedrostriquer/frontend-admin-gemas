@@ -81,10 +81,18 @@ const contractServices = {
     try {
       const normalizedFilter = normalizeSearchString(filters.searchTerm);
 
+      // Constrói a URL base com os parâmetros obrigatórios
       let url = `${BASE_ROUTE}contract/search?searchTerm=${normalizedFilter}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
+      // Adiciona o filtro de status se não for "Todos"
       if (filters.status && filters.status !== "Todos") {
         url += `&status=${filters.status}`;
+      }
+
+      // --- AQUI ESTÁ A CORREÇÃO ---
+      // Adiciona o filtro withGem se não for "todos"
+      if (filters.withGem && filters.withGem !== "todos") {
+        url += `&withGem=${filters.withGem}`;
       }
 
       const response = await axios.get(url, {
