@@ -71,3 +71,8 @@
 .editor-actions { margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end; }
 .add-slide-btn, .add-faq-btn, .add-review-btn { background-color: #e0e7ff; color: #4338ca; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; }
 .save-btn { background-color: #16a34a; color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; }
+.footer-editor-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}

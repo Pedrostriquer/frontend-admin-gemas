@@ -45,6 +45,8 @@ import FormsPage from "./Components/Ecommerce/Forms/FormsPage";
 import PersonalizadasManager from "./Components/SiteConfig/Personalizadas/PersonalizadasManager";
 import HomeManager from "./Components/SiteConfig/Home/HomeManager";
 import GemCashManager from "./Components/SiteConfig/GemCash/GemCashManager";
+import BlogAdminPage from "./Components/Ecommerce/BlogAdminPage/BlogAdminPage"; 
+
 
 // ✨ MUDANÇA PRINCIPAL: CRIAMOS ESTE COMPONENTE INTERNO ✨
 // Ele vive DENTRO dos providers, então pode usar os hooks de contexto sem erro.
@@ -89,6 +91,7 @@ const AppContent = () => {
             {/* Rotas do E-commerce Admin */}
             <Route path="ecommerce/dashboard" element={<EcommerceDashboard />} />
             <Route path="ecommerce/products" element={<ProductsPage />} />
+            <Route path="ecommerce/blog" element={<BlogAdminPage />} /> 
             <Route path="ecommerce/orders" element={<OrdersPage />} />
             <Route path="ecommerce/promotions" element={<PromotionsPage />} />
             <Route path="ecommerce/categories" element={<CategoriesPage />} />

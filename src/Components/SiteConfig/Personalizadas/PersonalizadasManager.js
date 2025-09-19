@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../firebase/config';
-import { doc, getDoc, setDoc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore'; // Importações atualizadas
 import './PersonalizadasManager.css';
 
 // Estrutura de dados padrão completa para a página, incluindo todos os campos editáveis
@@ -24,9 +24,7 @@ const defaultPageData = {
 };
 
 const PersonalizadasManager = () => {
-    const [activeTab, setActiveTab] = useState('content');
     const [pageData, setPageData] = useState(null);
-    const [submissions, setSubmissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -36,7 +34,6 @@ const PersonalizadasManager = () => {
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const firestoreData = docSnap.data();
-                // Mesclagem profunda para garantir que a estrutura 'benefits.items' não seja perdida
                 setPageData({
                     ...defaultPageData,
                     ...firestoreData,
@@ -45,24 +42,14 @@ const PersonalizadasManager = () => {
             } else {
                 setPageData(defaultPageData);
             }
+            setLoading(false);
         };
 
-        const fetchSubmissions = () => {
-            const q = query(collection(db, 'formSubmissions'), orderBy('submittedAt', 'desc'));
-            const unsub = onSnapshot(q, (snapshot) => {
-                setSubmissions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            });
-            return unsub;
-        };
-
-        Promise.all([fetchContent()]).then(() => setLoading(false));
-        const submissionUnsub = fetchSubmissions();
-        return () => submissionUnsub();
+        fetchContent();
     }, []);
 
     const handleChange = (section, field, value, index = null) => {
         setPageData(prev => {
-            // Cópia profunda para evitar mutação de estado em objetos aninhados
             const newData = JSON.parse(JSON.stringify(prev));
             if (section === 'benefits' && field === 'items') {
                 newData.benefits.items[index].text = value;
@@ -93,90 +80,56 @@ const PersonalizadasManager = () => {
     return (
         <div className="manage-personalizadas-container">
             <h1 className="fonte-principal">Gerenciar Página "Joias"</h1>
-            <div className="admin-tabs">
-                <button onClick={() => setActiveTab('content')} className={activeTab === 'content' ? 'active' : ''}>Editar Conteúdo</button>
-                <button onClick={() => setActiveTab('submissions')} className={activeTab === 'submissions' ? 'active' : ''}>Visualizar Envios</button>
+
+            <div className="content-editor">
+                <div className="management-section">
+                    <h3 className="editor-title">Seção Hero (Banner Superior)</h3>
+                    <div className="form-group"> <label>Título</label> <input type="text" value={pageData.hero.title} onChange={e => handleChange('hero', 'title', e.target.value)} /> </div>
+                    <div className="form-group"> <label>Subtítulo</label> <input type="text" value={pageData.hero.subtitle} onChange={e => handleChange('hero', 'subtitle', e.target.value)} /> </div>
+                </div>
+                <div className="management-section">
+                    <h3 className="editor-title">Seção de Introdução</h3>
+                    <div className="form-group"> <label>Título</label> <input type="text" value={pageData.intro.title} onChange={e => handleChange('intro', 'title', e.target.value)} /> </div>
+                    <div className="form-group"> <label>Primeiro Parágrafo</label> <textarea value={pageData.intro.text1} onChange={e => handleChange('intro', 'text1', e.target.value)} rows="4" /> </div>
+                    <div className="form-group"> <label>Segundo Parágrafo</label> <textarea value={pageData.intro.text2} onChange={e => handleChange('intro', 'text2', e.target.value)} rows="4" /> </div>
+                </div>
+                <div className="management-section">
+                    <h3 className="editor-title">Seção de Benefícios</h3>
+                    <div className="form-group">
+                        <label>Título da Seção</label>
+                        <input type="text" value={pageData.benefits.title} onChange={e => handleChange('benefits', 'title', e.target.value)} />
+                    </div>
+                    <div className="benefits-editor-grid">
+                        {pageData.benefits.items.map((item, index) => (
+                            <div className="benefit-editor-item" key={item.id}>
+                                <label><i className={item.icon}></i> {item.title}</label>
+                                <textarea
+                                    value={item.text}
+                                    onChange={e => handleChange('benefits', 'items', e.target.value, index)}
+                                    rows="4"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="management-section">
+                    <h3 className="editor-title">Seção de Citação</h3>
+                    <div className="form-group"> <label>Texto da Citação</label> <textarea value={pageData.quote.text} onChange={e => handleChange('quote', 'text', e.target.value)} rows="4" /> </div>
+                </div>
+                <div className="management-section">
+                    <h3 className="editor-title">Seção "Como Funciona"</h3>
+                    <div className="form-group"> <label>Título</label> <input type="text" value={pageData.howItWorks.title} onChange={e => handleChange('howItWorks', 'title', e.target.value)} /> </div>
+                </div>
+                <div className="management-section">
+                    <h3 className="editor-title">Seção do Formulário</h3>
+                    <div className="form-group"> <label>Título</label> <input type="text" value={pageData.form.title} onChange={e => handleChange('form', 'title', e.target.value)} /> </div>
+                    <div className="form-group"> <label>Subtítulo</label> <textarea value={pageData.form.subtitle} onChange={e => handleChange('form', 'subtitle', e.target.value)} rows="2" /> </div>
+                    <div className="form-group"> <label>Texto do Rodapé do Formulário</label> <textarea value={pageData.form.footerText} onChange={e => handleChange('form', 'footerText', e.target.value)} rows="2" /> </div>
+                </div>
+                <button onClick={handleSave} className="save-btn-full" disabled={isSaving}>
+                    {isSaving ? 'Salvando...' : 'Salvar Todo o Conteúdo da Página'}
+                </button>
             </div>
-
-            {activeTab === 'content' && (
-                <div className="content-editor">
-                    <div className="management-section">
-                        <h3 className="editor-title">Seção Hero (Banner Superior)</h3>
-                        <div className="form-group"> <label>Título</label> <input type="text" value={pageData.hero.title} onChange={e => handleChange('hero', 'title', e.target.value)} /> </div>
-                        <div className="form-group"> <label>Subtítulo</label> <input type="text" value={pageData.hero.subtitle} onChange={e => handleChange('hero', 'subtitle', e.target.value)} /> </div>
-                    </div>
-                    <div className="management-section">
-                        <h3 className="editor-title">Seção de Introdução</h3>
-                        <div className="form-group"> <label>Título</label> <input type="text" value={pageData.intro.title} onChange={e => handleChange('intro', 'title', e.target.value)} /> </div>
-                        <div className="form-group"> <label>Primeiro Parágrafo</label> <textarea value={pageData.intro.text1} onChange={e => handleChange('intro', 'text1', e.target.value)} rows="4" /> </div>
-                        <div className="form-group"> <label>Segundo Parágrafo</label> <textarea value={pageData.intro.text2} onChange={e => handleChange('intro', 'text2', e.target.value)} rows="4" /> </div>
-                    </div>
-                    <div className="management-section">
-                        <h3 className="editor-title">Seção de Benefícios</h3>
-                        <div className="form-group">
-                            <label>Título da Seção</label>
-                            <input type="text" value={pageData.benefits.title} onChange={e => handleChange('benefits', 'title', e.target.value)} />
-                        </div>
-                        <div className="benefits-editor-grid">
-                            {pageData.benefits.items.map((item, index) => (
-                                <div className="benefit-editor-item" key={item.id}>
-                                    <label><i className={item.icon}></i> {item.title}</label>
-                                    <textarea 
-                                        value={item.text} 
-                                        onChange={e => handleChange('benefits', 'items', e.target.value, index)} 
-                                        rows="4" 
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="management-section">
-                        <h3 className="editor-title">Seção de Citação</h3>
-                        <div className="form-group"> <label>Texto da Citação</label> <textarea value={pageData.quote.text} onChange={e => handleChange('quote', 'text', e.target.value)} rows="4" /> </div>
-                    </div>
-                    <div className="management-section">
-                        <h3 className="editor-title">Seção "Como Funciona"</h3>
-                        <div className="form-group"> <label>Título</label> <input type="text" value={pageData.howItWorks.title} onChange={e => handleChange('howItWorks', 'title', e.target.value)} /> </div>
-                    </div>
-                    <div className="management-section">
-                        <h3 className="editor-title">Seção do Formulário</h3>
-                        <div className="form-group"> <label>Título</label> <input type="text" value={pageData.form.title} onChange={e => handleChange('form', 'title', e.target.value)} /> </div>
-                        <div className="form-group"> <label>Subtítulo</label> <textarea value={pageData.form.subtitle} onChange={e => handleChange('form', 'subtitle', e.target.value)} rows="2" /> </div>
-                        <div className="form-group"> <label>Texto do Rodapé do Formulário</label> <textarea value={pageData.form.footerText} onChange={e => handleChange('form', 'footerText', e.target.value)} rows="2" /> </div>
-                    </div>
-                    <button onClick={handleSave} className="save-btn-full" disabled={isSaving}>
-                        {isSaving ? 'Salvando...' : 'Salvar Todo o Conteúdo da Página'}
-                    </button>
-                </div>
-            )}
-
-            {activeTab === 'submissions' && (
-                <div className="submissions-viewer">
-                    {submissions.length > 0 ? (
-                        <div className="table-wrapper">
-                            <table>
-                               <thead>
-                                    <tr>
-                                        <th>Data</th><th>Nome</th><th>Contato</th>
-                                        <th>Objetivo</th><th>Descrição</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {submissions.map(sub => (
-                                        <tr key={sub.id}>
-                                            <td>{sub.submittedAt ? new Date(sub.submittedAt.toDate()).toLocaleString('pt-BR') : '-'}</td>
-                                            <td>{sub.name}</td>
-                                            <td>{sub.email}<br/>{sub.phone}</td>
-                                            <td>{sub.objective}</td>
-                                            <td>{sub.description}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : <p>Nenhum formulário foi enviado ainda.</p>}
-                </div>
-            )}
         </div>
     );
 };

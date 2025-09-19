@@ -35,6 +35,7 @@ const defaultHomeData = {
 
 const HomeManager = () => {
     const [homeData, setHomeData] = useState(null);
+    const [footerData, setFooterData] = useState(null); 
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -42,21 +43,43 @@ const HomeManager = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const docRef = doc(db, 'siteContent', 'homePage');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const firestoreData = docSnap.data();
-                setHomeData({ 
-                    banner: { ...defaultHomeData.banner, ...firestoreData.banner },
-                    aboutSection: { ...defaultHomeData.aboutSection, ...firestoreData.aboutSection },
-                    featureSections: { ...defaultHomeData.featureSections, ...firestoreData.featureSections },
-                    faq: firestoreData.faq || defaultHomeData.faq,
-                    reviews: firestoreData.reviews || defaultHomeData.reviews
-                });
-            } else {
+            const homeDocRef = doc(db, 'siteContent', 'homePage');
+            const footerDocRef = doc(db, 'siteContent', 'footer');
+
+            try {
+                const [homeDocSnap, footerDocSnap] = await Promise.all([
+                    getDoc(homeDocRef),
+                    getDoc(footerDocRef)
+                ]);
+
+                // Processa dados da Home
+                if (homeDocSnap.exists()) {
+                    const firestoreData = homeDocSnap.data();
+                    setHomeData({ 
+                        banner: { ...defaultHomeData.banner, ...firestoreData.banner },
+                        aboutSection: { ...defaultHomeData.aboutSection, ...firestoreData.aboutSection },
+                        featureSections: { ...defaultHomeData.featureSections, ...firestoreData.featureSections },
+                        faq: firestoreData.faq || defaultHomeData.faq,
+                        reviews: firestoreData.reviews || defaultHomeData.reviews
+                    });
+                } else {
+                    setHomeData(defaultHomeData);
+                }
+
+                // Processa dados do Rodapé
+                if (footerDocSnap.exists()) {
+                    setFooterData(footerDocSnap.data());
+                } else {
+                    setFooterData({ phone: '', email: '', whatsappNumber: '', instagram: '', facebook: '' });
+                }
+
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
                 setHomeData(defaultHomeData);
+                setFooterData({ phone: '', email: '', whatsappNumber: '', instagram: '', facebook: '' });
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchData();
     }, []);
@@ -74,6 +97,11 @@ const HomeManager = () => {
         });
     };
     
+    const handleFooterChange = (e) => {
+        const { name, value } = e.target;
+        setFooterData(prev => ({ ...prev, [name]: value }));
+    };
+
     const handleMediaUpload = async (path, file) => {
         if (!file) return;
         setIsUploading(true);
@@ -118,20 +146,28 @@ const HomeManager = () => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await setDoc(doc(db, 'siteContent', 'homePage'), homeData, { merge: true });
-            alert("Conteúdo da Home salvo com sucesso!");
+            const homeDocRef = doc(db, 'siteContent', 'homePage');
+            const footerDocRef = doc(db, 'siteContent', 'footer');
+            
+            await Promise.all([
+                setDoc(homeDocRef, homeData, { merge: true }),
+                setDoc(footerDocRef, footerData, { merge: true })
+            ]);
+
+            alert("Conteúdo da Home e do Rodapé salvos com sucesso!");
         } catch (error) {
+            console.error("Erro ao salvar:", error);
             alert("Erro ao salvar o conteúdo.");
         } finally {
             setIsSaving(false);
         }
     };
     
-    if (loading || !homeData) return <p className="loading-message">Carregando...</p>;
+    if (loading || !homeData || !footerData) return <p className="loading-message">Carregando...</p>;
 
     return (
         <div className="manage-home-container">
-            <div className="manage-home-header"><h1>Gerenciar Página Home</h1></div>
+            <div className="manage-home-header"><h1>Gerenciar Página Home e Rodapé</h1></div>
 
             {/* Banner Editor */}
             <div className="management-section">
@@ -263,8 +299,35 @@ const HomeManager = () => {
                 </div>
             </div>
             
+            {/* Footer Editor */}
+            <div className="management-section">
+                <h3 className="editor-title">Gerenciar Rodapé</h3>
+                <div className="footer-editor-form-grid">
+                    <div className="form-group">
+                        <label htmlFor="phone">Telefone</label>
+                        <input type="text" id="phone" name="phone" value={footerData.phone || ''} onChange={handleFooterChange} placeholder="Ex: (11) 99999-8888" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input type="email" id="email" name="email" value={footerData.email || ''} onChange={handleFooterChange} placeholder="Ex: contato@gemasbrilhantes.com" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="whatsappNumber">Número do WhatsApp (com código do país)</label>
+                        <input type="text" id="whatsappNumber" name="whatsappNumber" value={footerData.whatsappNumber || ''} onChange={handleFooterChange} placeholder="Ex: 5511999998888" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="instagram">Link do Instagram</label>
+                        <input type="url" id="instagram" name="instagram" value={footerData.instagram || ''} onChange={handleFooterChange} placeholder="https://www.instagram.com/..." />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="facebook">Link do Facebook</label>
+                        <input type="url" id="facebook" name="facebook" value={footerData.facebook || ''} onChange={handleFooterChange} placeholder="https://www.facebook.com/..." />
+                    </div>
+                </div>
+            </div>
+            
             <button onClick={handleSave} className="save-btn-full" disabled={isSaving || isUploading}>
-                {isSaving ? 'Salvando...' : (isUploading ? 'Aguarde o upload...' : 'Salvar Todas as Alterações da Home')}
+                {isSaving ? 'Salvando...' : (isUploading ? 'Aguarde o upload...' : 'Salvar Todas as Alterações')}
             </button>
         </div>
     );
