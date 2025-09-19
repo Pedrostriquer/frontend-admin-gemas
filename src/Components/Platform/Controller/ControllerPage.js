@@ -5,7 +5,8 @@ import { useAuth } from "../../../Context/AuthContext";
 import withdrawServices from "../../../dbServices/withdrawServices";
 import contractServices from "../../../dbServices/contractServices";
 import indicationService from "../../../dbServices/indicationService";
-import valorizationServices from "../../../dbServices/valorizationServices"; // <-- NOVO: Importa o serviço de valorização
+import valorizationServices from "../../../dbServices/valorizationServices";
+import depositAccountService from "../../../dbServices/depositAccountService";
 
 const initialClientPages = [
   {
@@ -48,6 +49,147 @@ const ToggleSwitch = ({ label, enabled, onChange }) => {
   );
 };
 
+const DepositAccountModal = ({ account, onClose, onSave, isClosing }) => {
+  const isEditing = !!account?.id;
+  const [formData, setFormData] = useState({
+    bankName: account?.bankName || "",
+    agencyNumber: account?.agencyNumber || "",
+    accountNumber: account?.accountNumber || "",
+    pixKeyType: account?.pixKeyType || "",
+    pixKey: account?.pixKey || "",
+    beneficiaryName: account?.beneficiaryName || "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave({ id: account?.id, ...formData });
+      onClose();
+    } catch (error) {
+      console.error("Falha ao salvar conta de depósito:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return ReactDOM.createPortal(
+    <div
+      style={{
+        ...styles.modalBackdrop,
+        animation: isClosing
+          ? "fadeOut 0.3s ease forwards"
+          : "fadeIn 0.3s ease",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          ...styles.modalContent,
+          animation: isClosing
+            ? "scaleDown 0.3s ease forwards"
+            : "scaleUp 0.3s ease",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={styles.modalHeaderCtrl}>
+          <h3 style={styles.modalHeaderCtrlH3}>
+            {isEditing ? "Editar Conta de Depósito" : "Criar Nova Conta"}
+          </h3>
+        </div>
+        <div style={styles.createRuleForm}>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Nome do Beneficiário</label>
+            <input
+              type="text"
+              name="beneficiaryName"
+              value={formData.beneficiaryName}
+              onChange={handleChange}
+              style={styles.formInput}
+            />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Nome do Banco</label>
+            <input
+              type="text"
+              name="bankName"
+              value={formData.bankName}
+              onChange={handleChange}
+              style={styles.formInput}
+            />
+          </div>
+          <div style={styles.formGroupRow}>
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Agência</label>
+              <input
+                type="text"
+                name="agencyNumber"
+                value={formData.agencyNumber}
+                onChange={handleChange}
+                style={styles.formInput}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Número da Conta</label>
+              <input
+                type="text"
+                name="accountNumber"
+                value={formData.accountNumber}
+                onChange={handleChange}
+                style={styles.formInput}
+              />
+            </div>
+          </div>
+          <div style={styles.formGroupRow}>
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Tipo de Chave PIX</label>
+              <input
+                type="text"
+                name="pixKeyType"
+                value={formData.pixKeyType}
+                onChange={handleChange}
+                style={styles.formInput}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Chave PIX</label>
+              <input
+                type="text"
+                name="pixKey"
+                value={formData.pixKey}
+                onChange={handleChange}
+                style={styles.formInput}
+              />
+            </div>
+          </div>
+        </div>
+        <div style={styles.modalFooterCtrl}>
+          <button
+            style={styles.cancelBtnCtrl}
+            onClick={onClose}
+            disabled={isSaving}
+          >
+            Cancelar
+          </button>
+          <button
+            style={styles.saveCardButton}
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? "Salvando..." : "Salvar Conta"}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const RuleModal = ({ rule, onClose, onSave, isClosing }) => {
   const isEditing = !!rule?.id;
   const [formData, setFormData] = useState({
@@ -83,6 +225,7 @@ const RuleModal = ({ rule, onClose, onSave, isClosing }) => {
           ? "fadeOut 0.3s ease forwards"
           : "fadeIn 0.3s ease",
       }}
+      onClick={onClose}
     >
       <div
         style={{
@@ -171,6 +314,7 @@ const PageModal = ({ page, onClose, isClosing }) => {
           ? "fadeOut 0.3s ease forwards"
           : "fadeIn 0.3s ease",
       }}
+      onClick={onClose}
     >
       <div
         style={{
@@ -230,7 +374,6 @@ const PageModal = ({ page, onClose, isClosing }) => {
 function ControllerPage() {
   const { token } = useAuth();
 
-  // Estados existentes
   const [withdrawRules, setWithdrawRules] = useState({
     minimumToWithdraw: "",
     fee: "",
@@ -243,33 +386,32 @@ function ControllerPage() {
   const [contractSettings, setContractSettings] = useState({
     minimumValue: "",
     isReinvestmentEnabled: true,
-  }); // <-- REMOVIDO: isValuationEnabled
+  });
   const [indicationRule, setIndicationRule] = useState({
     percentage: "",
     isActive: true,
   });
   const [visiblePages, setVisiblePages] = useState(initialClientPages);
-
-  // NOVO ESTADO: para a configuração de valorização
   const [valorizationConfig, setValorizationConfig] = useState({
     valorizationTime: "00:00:00",
     valorizationStatus: true,
   });
+  const [depositAccounts, setDepositAccounts] = useState([]);
 
-  // Estados de UI e Carregamento
   const [isLoading, setIsLoading] = useState({
     withdraw: true,
     contractRules: true,
     contractSettings: true,
     indication: true,
     valorization: true,
-  }); // <-- Adicionado 'valorization'
+    depositAccounts: true,
+  });
   const [isSaving, setIsSaving] = useState({
     withdraw: false,
     contractSettings: false,
     indication: false,
     valorization: false,
-  }); // <-- Adicionado 'valorization'
+  });
   const [modal, setModal] = useState({ type: null, data: null });
   const [isClosing, setIsClosing] = useState(false);
   const [showRules, setShowRules] = useState(true);
@@ -278,6 +420,15 @@ function ControllerPage() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
+    setIsLoading((prev) => ({
+      ...prev,
+      withdraw: true,
+      contractRules: true,
+      contractSettings: true,
+      indication: true,
+      valorization: true,
+      depositAccounts: true,
+    }));
     try {
       const [
         withdrawData,
@@ -285,8 +436,8 @@ function ControllerPage() {
         contractSettingsData,
         indicationData,
         valorizationData,
+        depositAccountsData,
       ] = await Promise.all([
-        // <-- Adicionado 'valorizationData'
         withdrawServices.getRules(token).catch((e) => {
           console.error("Falha ao buscar regras de saque", e);
           return {};
@@ -306,13 +457,18 @@ function ControllerPage() {
         valorizationServices.getConfig(token).catch((e) => {
           console.error("Falha ao buscar config de valorização", e);
           return {};
-        }), // <-- NOVO: busca a config de valorização
+        }),
+        depositAccountService.getAll(token).catch((e) => {
+          console.error("Falha ao buscar contas de depósito", e);
+          return [];
+        }),
       ]);
       setWithdrawRules((prev) => ({ ...prev, ...withdrawData }));
       setContractRules(contractRulesData);
       setContractSettings((prev) => ({ ...prev, ...contractSettingsData }));
       setIndicationRule((prev) => ({ ...prev, ...indicationData }));
-      setValorizationConfig((prev) => ({ ...prev, ...valorizationData })); // <-- NOVO: atualiza o estado de valorização
+      setValorizationConfig((prev) => ({ ...prev, ...valorizationData }));
+      setDepositAccounts(depositAccountsData);
     } catch (error) {
       console.error("Erro ao buscar configurações iniciais:", error);
     } finally {
@@ -322,7 +478,8 @@ function ControllerPage() {
         contractSettings: false,
         indication: false,
         valorization: false,
-      }); // <-- Atualizado
+        depositAccounts: false,
+      });
     }
   }, [token]);
 
@@ -330,7 +487,6 @@ function ControllerPage() {
     fetchData();
   }, [fetchData]);
 
-  // Handlers de mudança
   const handleWithdrawRuleChange = (e) =>
     setWithdrawRules((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   const handleContractSettingsChange = (e) =>
@@ -344,75 +500,64 @@ function ControllerPage() {
     setValorizationConfig((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    })); // <-- NOVO
+    }));
 
-  // Handlers de salvamento
-  const handleSaveWithdrawRules = async () => {
-    setIsSaving((prev) => ({ ...prev, withdraw: true }));
-    try {
-      const dataToSave = {
-        ...withdrawRules,
-        fee: parseFloat(withdrawRules.fee),
-        minimumToWithdraw: parseFloat(withdrawRules.minimumToWithdraw),
-        day: parseInt(withdrawRules.day, 10),
-      };
-      await withdrawServices.updateRules(token, dataToSave);
-      alert("Regras de saque salvas com sucesso!");
-    } catch (error) {
-      alert("Falha ao salvar as regras de saque.");
-    } finally {
-      setIsSaving((prev) => ({ ...prev, withdraw: false }));
-    }
-  };
+  const createSaveHandler =
+    (serviceCall, stateKey, successMsg, errorMsg) => async (data) => {
+      setIsSaving((prev) => ({ ...prev, [stateKey]: true }));
+      try {
+        await serviceCall(token, data);
+        alert(successMsg);
+        await fetchData();
+      } catch (error) {
+        console.error(errorMsg, error);
+        alert(errorMsg);
+      } finally {
+        setIsSaving((prev) => ({ ...prev, [stateKey]: false }));
+      }
+    };
 
-  const handleSaveContractSettings = async () => {
-    setIsSaving((prev) => ({ ...prev, contractSettings: true }));
-    try {
-      const dataToSave = {
-        ...contractSettings,
-        minimumValue: parseFloat(contractSettings.minimumValue),
-      };
-      await contractServices.updateContractSettings(token, dataToSave);
-      alert("Configurações de contrato salvas com sucesso!");
-    } catch (error) {
-      alert("Falha ao salvar as configurações de contrato.");
-    } finally {
-      setIsSaving((prev) => ({ ...prev, contractSettings: false }));
-    }
-  };
+  const handleSaveWithdrawRules = createSaveHandler(
+    (token, data) =>
+      withdrawServices.updateRules(token, {
+        ...data,
+        fee: parseFloat(data.fee),
+        minimumToWithdraw: parseFloat(data.minimumToWithdraw),
+        day: parseInt(data.day, 10),
+      }),
+    "withdraw",
+    "Regras de saque salvas!",
+    "Falha ao salvar regras de saque."
+  );
 
-  const handleSaveIndicationRule = async () => {
-    setIsSaving((prev) => ({ ...prev, indication: true }));
-    try {
-      const dataToSave = {
-        ...indicationRule,
-        percentage: parseFloat(indicationRule.percentage),
-      };
-      await indicationService.updateRule(token, dataToSave);
-      alert("Regra de indicação salva com sucesso!");
-    } catch (error) {
-      alert("Falha ao salvar a regra de indicação.");
-    } finally {
-      setIsSaving((prev) => ({ ...prev, indication: false }));
-    }
-  };
+  const handleSaveContractSettings = createSaveHandler(
+    (token, data) =>
+      contractServices.updateContractSettings(token, {
+        ...data,
+        minimumValue: parseFloat(data.minimumValue),
+      }),
+    "contractSettings",
+    "Configurações de contrato salvas!",
+    "Falha ao salvar configurações de contrato."
+  );
 
-  // NOVO HANDLER: para salvar a config de valorização
-  const handleSaveValorizationConfig = async () => {
-    setIsSaving((prev) => ({ ...prev, valorization: true }));
-    try {
-      const dataToSave = {
-        valorizationTime: valorizationConfig.valorizationTime,
-        valorizationStatus: valorizationConfig.valorizationStatus,
-      };
-      await valorizationServices.updateConfig(token, dataToSave);
-      alert("Configuração de valorização salva com sucesso!");
-    } catch (error) {
-      alert("Falha ao salvar a configuração de valorização.");
-    } finally {
-      setIsSaving((prev) => ({ ...prev, valorization: false }));
-    }
-  };
+  const handleSaveIndicationRule = createSaveHandler(
+    (token, data) =>
+      indicationService.updateRule(token, {
+        ...data,
+        percentage: parseFloat(data.percentage),
+      }),
+    "indication",
+    "Regra de indicação salva!",
+    "Falha ao salvar regra de indicação."
+  );
+
+  const handleSaveValorizationConfig = createSaveHandler(
+    valorizationServices.updateConfig,
+    "valorization",
+    "Configuração de valorização salva!",
+    "Falha ao salvar configuração de valorização."
+  );
 
   const handleSaveContractRule = async (ruleData) => {
     const dataToSave = {
@@ -449,6 +594,33 @@ function ControllerPage() {
     }
   };
 
+  const handleSaveDepositAccount = async (accountData) => {
+    try {
+      if (accountData.id) {
+        await depositAccountService.update(token, accountData.id, accountData);
+      } else {
+        await depositAccountService.create(token, accountData);
+      }
+      await fetchData();
+    } catch (error) {
+      alert("Falha ao salvar a conta de depósito.");
+      throw error;
+    }
+  };
+
+  const handleDeleteDepositAccount = async (accountId) => {
+    if (
+      window.confirm("Tem certeza que deseja excluir esta conta de depósito?")
+    ) {
+      try {
+        await depositAccountService.delete(token, accountId);
+        await fetchData();
+      } catch (error) {
+        alert("Falha ao excluir a conta de depósito.");
+      }
+    }
+  };
+
   const handleOpenModal = (type, data = null) => setModal({ type, data });
   const handleCloseModal = () => {
     setIsClosing(true);
@@ -476,12 +648,7 @@ function ControllerPage() {
 
   return (
     <div style={styles.controllerPageContainer}>
-      <style>{`
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #3b82f6; }
-        input:checked + .slider:before { transform: translateX(20px); }
-      `}</style>
+      <style>{`.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:.4s;border-radius:24px}.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:#fff;transition:.4s;border-radius:50%}input:checked+.slider{background-color:#3b82f6}input:checked+.slider:before{transform:translateX(20px)}`}</style>
 
       <header style={styles.controllerPageHeader}>
         <h1 style={styles.headerH1}>Controlador</h1>
@@ -491,6 +658,66 @@ function ControllerPage() {
         </p>
       </header>
       <div style={styles.layoutFinal}>
+        <div style={styles.controllerCard}>
+          <div style={styles.cardHeader}>
+            <i
+              className="fa-solid fa-landmark"
+              style={styles.cardHeaderIcon}
+            ></i>
+            <h3 style={styles.cardHeaderH3}>Contas para Depósito</h3>
+          </div>
+          <div style={styles.cardBody}>
+            {isLoading.depositAccounts ? (
+              <p style={{ textAlign: "center", color: "#6b7280" }}>
+                Carregando...
+              </p>
+            ) : (
+              <ul style={styles.rulesListUl}>
+                {depositAccounts.length > 0 ? (
+                  depositAccounts.map((account) => (
+                    <li key={account.id} style={styles.rulesListItem}>
+                      <span style={styles.ruleName}>
+                        {account.beneficiaryName} ({account.bankName})
+                      </span>
+                      <div style={styles.ruleActions}>
+                        <button
+                          style={styles.ruleActionButton}
+                          onClick={() =>
+                            handleOpenModal("deposit_account", account)
+                          }
+                        >
+                          <i className="fa-solid fa-pencil"></i>
+                        </button>
+                        <button
+                          style={{
+                            ...styles.ruleActionButton,
+                            ...styles.ruleActionButtonDanger,
+                          }}
+                          onClick={() => handleDeleteDepositAccount(account.id)}
+                        >
+                          <i className="fa-solid fa-trash-can"></i>
+                        </button>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <p style={{ textAlign: "center", color: "#6b7280" }}>
+                    Nenhuma conta cadastrada.
+                  </p>
+                )}
+              </ul>
+            )}
+          </div>
+          <div style={styles.cardFooter}>
+            <button
+              style={styles.saveCardButton}
+              onClick={() => handleOpenModal("deposit_account")}
+            >
+              <i className="fa-solid fa-plus"></i> Criar Nova Conta
+            </button>
+          </div>
+        </div>
+
         <div style={styles.controllerCard}>
           <div style={styles.cardHeader}>
             <i
@@ -579,7 +806,7 @@ function ControllerPage() {
           <div style={styles.cardFooter}>
             <button
               style={styles.saveCardButton}
-              onClick={handleSaveWithdrawRules}
+              onClick={() => handleSaveWithdrawRules(withdrawRules)}
               disabled={isSaving.withdraw}
             >
               {isSaving.withdraw ? (
@@ -593,7 +820,6 @@ function ControllerPage() {
           </div>
         </div>
 
-        {/* NOVO CARD DE VALORIZAÇÃO */}
         <div style={styles.controllerCard}>
           <div style={styles.cardHeader}>
             <i
@@ -638,7 +864,7 @@ function ControllerPage() {
           <div style={styles.cardFooter}>
             <button
               style={styles.saveCardButton}
-              onClick={handleSaveValorizationConfig}
+              onClick={() => handleSaveValorizationConfig(valorizationConfig)}
               disabled={isSaving.valorization}
             >
               {isSaving.valorization ? (
@@ -677,7 +903,6 @@ function ControllerPage() {
                     style={styles.formInput}
                   />
                 </div>
-                {/* O TOGGLE DE VALORIZAÇÃO FOI MOVIDO DAQUI */}
                 <div style={styles.toggleWrapperSeparated}>
                   <ToggleSwitch
                     label="Reinvestimento Ativado"
@@ -791,7 +1016,7 @@ function ControllerPage() {
           <div style={styles.cardFooter}>
             <button
               style={styles.saveCardButton}
-              onClick={handleSaveContractSettings}
+              onClick={() => handleSaveContractSettings(contractSettings)}
               disabled={isSaving.contractSettings}
             >
               {isSaving.contractSettings ? (
@@ -850,7 +1075,7 @@ function ControllerPage() {
           <div style={styles.cardFooter}>
             <button
               style={styles.saveCardButton}
-              onClick={handleSaveIndicationRule}
+              onClick={() => handleSaveIndicationRule(indicationRule)}
               disabled={isSaving.indication}
             >
               {isSaving.indication ? (
@@ -900,6 +1125,14 @@ function ControllerPage() {
           </div>
         </div>
       </div>
+      {modal.type === "deposit_account" && (
+        <DepositAccountModal
+          account={modal.data}
+          onClose={handleCloseModal}
+          onSave={handleSaveDepositAccount}
+          isClosing={isClosing}
+        />
+      )}
       {modal.type === "contract_rule" && (
         <RuleModal
           rule={modal.data}
