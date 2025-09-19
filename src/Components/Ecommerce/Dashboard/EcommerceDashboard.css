@@ -109,6 +109,14 @@
   padding: 28px;
 }
 
+/* <<< SUGESTÃO DE MELHORIA >>> */
+.main-chart-card-neumorph {
+  /* Garante que o container tenha altura suficiente para o gráfico de 400px + padding */
+  min-height: 450px; 
+  display: flex;
+  flex-direction: column;
+}
+
 .card-title-neumorph {
   font-size: 1.25rem;
   font-weight: 600;
