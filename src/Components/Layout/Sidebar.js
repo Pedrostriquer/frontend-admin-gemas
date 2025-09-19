@@ -117,6 +117,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Produtos', icon: 'fa-solid fa-gem', path: '/ecommerce/products' },
         { name: 'Categorias', icon: 'fa-solid fa-sitemap', path: '/ecommerce/categories' },
         { name: 'Formulários', icon: 'fa-solid fa-file-alt', path: '/ecommerce/forms' }, 
+        { name: 'Blog', icon: 'fa-solid fa-newspaper', path: '/ecommerce/blog' }, 
         { name: 'Promoções', icon: 'fa-solid fa-tags', path: '/ecommerce/promotions' },
         { name: 'Pedidos', icon: 'fa-solid fa-box-open', path: '/ecommerce/orders' },
     ];
