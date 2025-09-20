@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL ="https://gemasbackend.demelloagent.app/api";
+const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
 
 const saleServices = {
     getAllSales: async (token, filters, pageNumber = 1, pageSize = 10) => {
@@ -12,7 +12,7 @@ const saleServices = {
             });
             if (filters.searchTerm) params.append('ClientSearchTerm', filters.searchTerm);
 
-            const url = `${API_BASE_URL}/Sale?${params.toString()}`;
+            const url = `${API_BASE_URL}Sale?${params.toString()}`;
             console.log("Chamando API de Vendas com a URL:", url);
 
             const response = await axios.get(url, {
@@ -27,7 +27,7 @@ const saleServices = {
 
     getSaleById: async (token, id) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/Sale/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}Sale/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
@@ -39,7 +39,7 @@ const saleServices = {
 
     getSaleItems: async (token, id) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/Sale/${id}/items`, {
+            const response = await axios.get(`${API_BASE_URL}Sale/${id}/items`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
@@ -51,7 +51,7 @@ const saleServices = {
 
     updateSaleStatus: async (token, id, newStatus) => {
         try {
-            await axios.patch(`${API_BASE_URL}/Sale/${id}/status`, { newStatus }, {
+            await axios.patch(`${API_BASE_URL}Sale/${id}/status`, { newStatus }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
         } catch (error) {

@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://gemasbackend.demelloagent.app/api";
+const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
 
 const promotionServices = {
     getAllPromotions: async (token) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/Promotion`, {
+            const response = await axios.get(`${API_BASE_URL}Promotion`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
@@ -17,7 +17,7 @@ const promotionServices = {
 
     createPromotion: async (token, promotionData) => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/Promotion`, promotionData, {
+            const response = await axios.post(`${API_BASE_URL}Promotion`, promotionData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
@@ -29,7 +29,7 @@ const promotionServices = {
     
     updatePromotion: async (token, id, promotionData) => {
         try {
-            await axios.put(`${API_BASE_URL}/Promotion/${id}`, promotionData, {
+            await axios.put(`${API_BASE_URL}Promotion/${id}`, promotionData, {
                 headers: { Authorization: `Bearer ${token}` },
             });
         } catch (error) {
@@ -40,7 +40,7 @@ const promotionServices = {
 
     updatePromotionStatus: async (token, id, newStatus) => {
         try {
-            await axios.patch(`${API_BASE_URL}/Promotion/${id}/status`, { newStatus }, {
+            await axios.patch(`${API_BASE_URL}Promotion/${id}/status`, { newStatus }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
         } catch (error) {
@@ -51,7 +51,7 @@ const promotionServices = {
 
     deletePromotion: async (token, id) => {
         try {
-            await axios.delete(`${API_BASE_URL}/Promotion/${id}`, {
+            await axios.delete(`${API_BASE_URL}Promotion/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
         } catch (error) {

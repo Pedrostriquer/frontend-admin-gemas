@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://gemasbackend.demelloagent.app/api";
+const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
 
 const categoryServices = {
     getAllCategories: async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/Category`);
+            const response = await axios.get(`${API_BASE_URL}Category`);
             // Simulação de dados adicionais até que a API os forneça
             const categoriesWithData = response.data.map((cat, index) => ({
                 ...cat,
@@ -21,7 +21,7 @@ const categoryServices = {
 
     getProductsForSelection: async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/Product/search?PageSize=1000`);
+            const response = await axios.get(`${API_BASE_URL}Product/search?PageSize=1000`);
             return response.data.items.map(p => ({ id: p.id, name: p.name }));
         } catch (error) {
             console.error("Erro ao buscar produtos para seleção:", error.response?.data || error.message);
@@ -32,7 +32,7 @@ const categoryServices = {
     updateProductCategories: async (categoryIds, productIds) => {
         try {
             const updatePromises = productIds.map(productId => 
-                axios.patch(`${API_BASE_URL}/Product/${productId}/categories`, { categoryIds })
+                axios.patch(`${API_BASE_URL}Product/${productId}/categories`, { categoryIds })
             );
             await Promise.all(updatePromises);
         } catch (error) {
@@ -43,7 +43,7 @@ const categoryServices = {
 
     createCategory: async (categoryData) => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/Category`, { name: categoryData.name });
+            const response = await axios.post(`${API_BASE_URL}Category`, { name: categoryData.name });
             return response.data;
         } catch (error) {
             console.error("Erro ao criar categoria:", error.response?.data || error.message);
@@ -53,7 +53,7 @@ const categoryServices = {
 
     updateCategory: async (id, categoryData) => {
         try {
-            await axios.put(`${API_BASE_URL}/Category/${id}`, categoryData);
+            await axios.put(`${API_BASE_URL}Category/${id}`, categoryData);
         } catch (error) {
             console.error(`Erro ao atualizar categoria ${id}:`, error.response?.data || error.message);
             throw error;
@@ -77,7 +77,7 @@ const categoryServices = {
 
     deleteCategory: async (id) => {
         try {
-            await axios.delete(`${API_BASE_URL}/Category/${id}`);
+            await axios.delete(`${API_BASE_URL}Category/${id}`);
         } catch (error) {
             console.error(`Erro ao deletar categoria ${id}:`, error.response?.data || error.message);
             throw error;

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // URL base da API
-const API_BASE_URL = "https://gemasbackend.demelloagent.app/api";
+const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
 
 const formServices = {
     /**
@@ -12,7 +12,7 @@ const formServices = {
         try {
             // ✨✨✨ CORREÇÃO AQUI, MIGA! ✨✨✨
             // A rota agora é "/Formulary" com "F" maiúsculo
-            const response = await axios.get(`${API_BASE_URL}/Formulary`, {
+            const response = await axios.get(`${API_BASE_URL}Formulary`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
@@ -30,7 +30,7 @@ const formServices = {
     getFormById: async (token, id) => {
         try {
             // ✨✨✨ CORREÇÃO AQUI TAMBÉM ✨✨✨
-            const response = await axios.get(`${API_BASE_URL}/Formulary/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}Formulary/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             return response.data;
