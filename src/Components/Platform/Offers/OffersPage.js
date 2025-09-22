@@ -77,7 +77,7 @@ function OffersPage() {
     mideaType: 1,
     mideaSource: 1,
     mideaUrl: "",
-    redirectUrl: "",
+    mideaRedirect: "",
     categoryName: "",
     panelSide: 1,
     status: 2,
@@ -179,7 +179,7 @@ function OffersPage() {
       mideaType: 1,
       mideaSource: 1,
       mideaUrl: "",
-      redirectUrl: "",
+      mideaRedirect: "",
       categoryName: "",
       panelSide: 1,
       status: 2,
@@ -191,7 +191,6 @@ function OffersPage() {
     if (
       !newOffer.title ||
       !newOffer.mideaUrl ||
-      !newOffer.redirectUrl ||
       !newOffer.categoryName
     ) {
       alert("Por favor, preencha os campos obrigatórios.");
@@ -467,8 +466,8 @@ function OffersPage() {
                     </label>
                     <input
                       type="text"
-                      name="redirectUrl"
-                      value={newOffer.redirectUrl}
+                      name="mideaRedirect"
+                      value={newOffer.mideaRedirect}
                       onChange={handleInputChange}
                       style={styles.formInput}
                     />
