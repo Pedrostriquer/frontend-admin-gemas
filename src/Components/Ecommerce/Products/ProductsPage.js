@@ -95,7 +95,7 @@ const SearchableDropdown = ({ options, onSelect, placeholder }) => {
       {isOpen && (
         <div className="dropdown-list searchable">
           <div className="dropdown-search-wrapper">
-            <i className="fa-solid fa-magnifying-glass"></i>
+            {/* <i className="fa-solid fa-magnifying-glass"></i> */}
             <input
               type="text"
               className="dropdown-search"

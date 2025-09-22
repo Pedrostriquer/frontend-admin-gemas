@@ -3,18 +3,26 @@ import axios from "axios";
 const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
 
 const categoryServices = {
+    /**
+     * ATUALIZADO: Agora busca categorias e a contagem de produtos associados
+     * diretamente do novo endpoint da API.
+     */
     getAllCategories: async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}Category`);
-            // Simulação de dados adicionais até que a API os forneça
+            // Chamada para o novo endpoint que já inclui a contagem de produtos
+            const response = await axios.get(`${API_BASE_URL}Category/with-product-count`);
+            
+            // Mapeia a resposta para o formato que o frontend espera
             const categoriesWithData = response.data.map((cat, index) => ({
                 ...cat,
-                status: index % 4 === 0 ? 'Inativo' : 'Ativo', // Adicionar lógica se a API retornar status
-                productCount: Math.floor(Math.random() * 30) // Simulado
+                name: cat.categoryName, // Garante que a propriedade 'name' exista, caso o frontend a utilize
+                productCount: cat.productsAssociated, // Utiliza a contagem de produtos vinda da API
+                status: index % 4 === 0 ? 'Inativo' : 'Ativo', // Lógica de status mantida como simulação
             }));
             return categoriesWithData;
         } catch (error) {
-            console.error("Erro ao buscar categorias:", error.response?.data || error.message);
+            // Mensagem de erro atualizada para refletir a nova chamada
+            console.error("Erro ao buscar categorias com contagem de produtos:", error.response?.data || error.message);
             throw error;
         }
     },
@@ -60,10 +68,7 @@ const categoryServices = {
         }
     },
     
-    // ✨✨✨ NOVA FUNÇÃO AQUI ✨✨✨
     updateCategoryStatus: async (id, status) => {
-        // ATENÇÃO: Esta é uma simulação. A rota real da API para mudar status de categoria precisa ser confirmada.
-        // Simulando sucesso imediato.
         try {
             console.log(`Simulando atualização de status para categoria ${id}: ${status}`);
             // Exemplo de como seria com uma API real:
