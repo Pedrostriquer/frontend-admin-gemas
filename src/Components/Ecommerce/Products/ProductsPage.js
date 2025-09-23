@@ -148,7 +148,7 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
         <div className="form-group-prod">
           <label>Quantidade</label>
           <input
-            type="number"
+            type="text"
             name="quantity"
             min="1"
             value={stone.quantity || 1}
@@ -169,7 +169,7 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
         <div className="form-group-prod">
           <label>Quilates (ct)</label>
           <input
-            type="number"
+            type="text"
             step="0.01"
             name="carats"
             value={stone.carats || ""}
@@ -201,7 +201,7 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
         <div className="form-group-prod">
           <label>Comprimento (mm)</label>
           <input
-            type="number"
+            type="text"
             step="0.1"
             name="lengthInMm"
             value={stone.lengthInMm || ""}
@@ -211,7 +211,7 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
         <div className="form-group-prod">
           <label>Largura (mm)</label>
           <input
-            type="number"
+            type="text"
             step="0.1"
             name="widthInMm"
             value={stone.widthInMm || ""}
@@ -221,7 +221,7 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
         <div className="form-group-prod">
           <label>Altura (mm)</label>
           <input
-            type="number"
+            type="text"
             step="0.1"
             name="heightInMm"
             value={stone.heightInMm || ""}
