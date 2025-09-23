@@ -34,7 +34,10 @@ const defaultHomeData = {
 };
 
 const defaultFooterData = {
-    phone: '',
+    phones: [
+        { number: '', label: '' },
+        { number: '', label: '' }
+    ],
     email: '',
     whatsappNumber: '',
     instagram: '',
@@ -69,7 +72,11 @@ const HomeManager = () => {
                     setHomeData({ 
                         banner: { ...defaultHomeData.banner, ...firestoreData.banner },
                         aboutSection: { ...defaultHomeData.aboutSection, ...firestoreData.aboutSection },
-                        featureSections: { ...defaultHomeData.featureSections, ...firestoreData.featureSections },
+                        featureSections: {
+                            gemas: { ...defaultHomeData.featureSections.gemas, ...firestoreData.featureSections?.gemas },
+                            gemcash: { ...defaultHomeData.featureSections.gemcash, ...firestoreData.featureSections?.gemcash },
+                            joias: { ...defaultHomeData.featureSections.joias, ...firestoreData.featureSections?.joias }
+                        },
                         faq: firestoreData.faq || defaultHomeData.faq,
                         reviews: firestoreData.reviews || defaultHomeData.reviews
                     });
@@ -78,7 +85,14 @@ const HomeManager = () => {
                 }
 
                 if (footerDocSnap.exists()) {
-                    setFooterData({ ...defaultFooterData, ...footerDocSnap.data() });
+                    const firestoreData = footerDocSnap.data();
+                    let phones = firestoreData.phones || [ { number: firestoreData.phone || '', label: '' }];
+                    
+                    while (phones.length < 2) {
+                        phones.push({ number: '', label: '' });
+                    }
+                    
+                    setFooterData({ ...defaultFooterData, ...firestoreData, phones: phones.slice(0, 2) });
                 } else {
                     setFooterData(defaultFooterData);
                 }
@@ -96,9 +110,10 @@ const HomeManager = () => {
 
     const handleDataChange = (path, value) => {
         setHomeData(prevData => {
-            const newData = { ...prevData };
+            const newData = JSON.parse(JSON.stringify(prevData));
             let current = newData;
             for (let i = 0; i < path.length - 1; i++) {
+                if (current[path[i]] === undefined) { current[path[i]] = {}; }
                 current = current[path[i]];
             }
             current[path[path.length - 1]] = value;
@@ -110,6 +125,14 @@ const HomeManager = () => {
         const { name, value } = e.target;
         setFooterData(prev => ({ ...prev, [name]: value }));
     };
+    
+    const handlePhoneChange = (index, field, value) => {
+        setFooterData(prev => {
+            const newPhones = JSON.parse(JSON.stringify(prev.phones || defaultFooterData.phones));
+            newPhones[index] = { ...newPhones[index], [field]: value };
+            return { ...prev, phones: newPhones };
+        });
+    };
 
     const handleMediaUpload = async (path, file) => {
         if (!file) return;
@@ -119,19 +142,16 @@ const HomeManager = () => {
             const snapshot = await uploadBytes(fileRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
             
-            handleDataChange([...path], downloadURL);
+            handleDataChange(path, downloadURL);
 
-            const pathCopy = [...path];
-            const finalKey = pathCopy.pop();
-
+            const finalKey = path[path.length - 1];
             if (finalKey === 'src' || finalKey === 'mediaSrc') {
-                const typeKey = finalKey === 'src' ? 'type' : 'mediaType';
-                pathCopy.push(typeKey);
-                handleDataChange(pathCopy, file.type.startsWith('video') ? 'video' : 'image');
+                const typePath = [...path];
+                typePath[path.length - 1] = finalKey === 'src' ? 'type' : 'mediaType';
+                const mediaType = file.type.startsWith('video') ? 'video' : 'image';
+                handleDataChange(typePath, mediaType);
             }
-            
         } catch (error) {
-            console.error("Upload failed", error);
             alert("Falha no upload.");
         } finally {
             setIsUploading(false);
@@ -139,29 +159,37 @@ const HomeManager = () => {
     };
     
     const handleDynamicListChange = (section, index, field, value) => handleDataChange([section, index, field], value);
-    
+
     const handleAddListItem = (section, newItem) => {
-        const currentList = homeData[section] || [];
-        handleDataChange([section], [...currentList, newItem]);
+        if (section === 'banner.slides') {
+            const newSlide = {
+                id: uuidv4(), type: 'image', src: '', link: '',
+                overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' },
+                duration: 5000, playUntilEnd: false
+            };
+            const currentSlides = homeData.banner.slides || [];
+            handleDataChange(['banner', 'slides'], [...currentSlides, newSlide]);
+        } else {
+             handleDataChange([section], [...(homeData[section] || []), newItem]);
+        }
     };
 
     const handleRemoveListItem = (sectionPath, indexToRemove) => {
-        const path = sectionPath.split('.');
-        let currentData = { ...homeData };
-        let parent = currentData;
-    
-        for (let i = 0; i < path.length - 1; i++) {
-            parent = parent[path[i]];
-        }
-    
-        const listKey = path[path.length - 1];
-        const updatedList = parent[listKey].filter((_, i) => i !== indexToRemove);
-        parent[listKey] = updatedList;
-        
-        setHomeData(currentData);
+        setHomeData(prevData => {
+            const newData = JSON.parse(JSON.stringify(prevData));
+            const path = sectionPath.split('.');
+            let parent = newData;
+            for (let i = 0; i < path.length - 1; i++) {
+                parent = parent[path[i]];
+            }
+            const listKey = path[path.length - 1];
+            parent[listKey].splice(indexToRemove, 1);
+            return newData;
+        });
     };    
     
-    const handleSlideChange = (index, fieldPath, value) => handleDataChange(['banner', 'slides', index, ...fieldPath], value);
+    const handleSlideChange = (index, field, value) => handleDataChange(['banner', 'slides', index, field], value);
+    const handleOverlayChange = (index, field, value) => handleDataChange(['banner', 'slides', index, 'overlay', field], value);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -169,9 +197,15 @@ const HomeManager = () => {
             const homeDocRef = doc(db, 'siteContent', 'homePage');
             const footerDocRef = doc(db, 'siteContent', 'footer');
             
+            const finalFooterData = JSON.parse(JSON.stringify(footerData));
+            if (finalFooterData.phones && finalFooterData.phones[1] && !finalFooterData.phones[1].number && !finalFooterData.phones[1].label) {
+                finalFooterData.phones.pop();
+            }
+            delete finalFooterData.phone;
+
             await Promise.all([
                 setDoc(homeDocRef, homeData, { merge: true }),
-                setDoc(footerDocRef, footerData, { merge: true })
+                setDoc(footerDocRef, finalFooterData, { merge: true })
             ]);
 
             alert("Conteúdo da Home e do Rodapé salvos com sucesso!");
@@ -197,7 +231,6 @@ const HomeManager = () => {
                 <div className="editor-controls-grid">
                     <div className="control-group"><label>Largura (px)</label><input type="number" value={homeData.banner.width} onChange={e => handleDataChange(['banner', 'width'], Number(e.target.value))} /></div>
                     <div className="control-group"><label>Altura (px)</label><input type="number" value={homeData.banner.height} onChange={e => handleDataChange(['banner', 'height'], Number(e.target.value))} /></div>
-                    <div className="control-group"><label>Velocidade (ms)</label><input type="number" value={homeData.banner.speed} onChange={e => handleDataChange(['banner', 'speed'], Number(e.target.value))} step="500" /><span>0 para desativar</span></div>
                     <div className="control-group checkbox"><input type="checkbox" id="showArrows" checked={homeData.banner.showArrows} onChange={(e) => handleDataChange(['banner', 'showArrows'], e.target.checked)} /><label htmlFor="showArrows">Exibir setas</label></div>
                 </div>
                 <h4 className="slides-title">Slides</h4>
@@ -209,18 +242,47 @@ const HomeManager = () => {
                                 <div className="slide-inputs">
                                     <input type="file" id={`upload-${slide.id}`} className="hidden-file-input" onChange={(e) => handleMediaUpload(['banner', 'slides', index, 'src'], e.target.files[0])} accept="image/*,video/*"/>
                                     <label htmlFor={`upload-${slide.id}`} className="btn-secondary"><i className="fas fa-upload"></i> Trocar</label>
-                                    <input type="text" value={slide.link || ''} onChange={(e) => handleSlideChange(index, ['link'], e.target.value)} placeholder="Link de redirecionamento do slide"/>
+                                    <input type="text" value={slide.link || ''} onChange={(e) => handleSlideChange(index, 'link', e.target.value)} placeholder="Link de redirecionamento do slide"/>
                                     <button onClick={() => handleRemoveListItem('banner.slides', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
                                 </div>
                             </div>
+                            
+                            <div className="slide-timing-controls">
+                                <div className="control-group">
+                                    <label htmlFor={`duration-${slide.id}`}>Duração (ms)</label>
+                                    <input 
+                                        type="number" 
+                                        id={`duration-${slide.id}`}
+                                        value={slide.duration ?? ''} 
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            handleSlideChange(index, 'duration', value === '' ? '' : Number(value));
+                                        }}
+                                        step="500"
+                                        disabled={slide.playUntilEnd || false}
+                                    />
+                                </div>
+                                {slide.type === 'video' && (
+                                    <div className="control-group checkbox">
+                                        <input 
+                                            type="checkbox" 
+                                            id={`playUntilEnd-${slide.id}`} 
+                                            checked={slide.playUntilEnd || false} 
+                                            onChange={(e) => handleSlideChange(index, 'playUntilEnd', e.target.checked)} 
+                                        />
+                                        <label htmlFor={`playUntilEnd-${slide.id}`}>Exibir vídeo até o final</label>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="slide-overlay-controls">
-                                <div className="overlay-header"><h5>Conteúdo Sobreposto</h5><div className="control-group checkbox"><input type="checkbox" id={`showOverlay-${slide.id}`} checked={slide.overlay?.show ?? true} onChange={(e) => handleSlideChange(index, ['overlay', 'show'], e.target.checked)} /><label htmlFor={`showOverlay-${slide.id}`}>Exibir</label></div></div>
+                                <div className="overlay-header"><h5>Conteúdo Sobreposto</h5><div className="control-group checkbox"><input type="checkbox" id={`showOverlay-${slide.id}`} checked={slide.overlay?.show ?? true} onChange={(e) => handleOverlayChange(index, 'show', e.target.checked)} /><label htmlFor={`showOverlay-${slide.id}`}>Exibir</label></div></div>
                                 {(slide.overlay?.show ?? true) && (
                                     <div className="overlay-fields">
-                                        <input type="text" value={slide.overlay?.title || ''} onChange={(e) => handleSlideChange(index, ['overlay', 'title'], e.target.value)} placeholder="Título (ex: GemCash)" />
-                                        <input type="text" value={slide.overlay?.subtitle || ''} onChange={(e) => handleSlideChange(index, ['overlay', 'subtitle'], e.target.value)} placeholder="Subtítulo / Frase" />
-                                        <input type="text" value={slide.overlay?.buttonText || ''} onChange={(e) => handleSlideChange(index, ['overlay', 'buttonText'], e.target.value)} placeholder="Texto do Botão" />
-                                        <input type="text" value={slide.overlay?.buttonLink || ''} onChange={(e) => handleSlideChange(index, ['overlay', 'buttonLink'], e.target.value)} placeholder="Link do Botão" />
+                                        <input type="text" value={slide.overlay?.title || ''} onChange={(e) => handleOverlayChange(index, 'title', e.target.value)} placeholder="Título (ex: GemCash)" />
+                                        <input type="text" value={slide.overlay?.subtitle || ''} onChange={(e) => handleOverlayChange(index, 'subtitle', e.target.value)} placeholder="Subtítulo / Frase" />
+                                        <input type="text" value={slide.overlay?.buttonText || ''} onChange={(e) => handleOverlayChange(index, 'buttonText', e.target.value)} placeholder="Texto do Botão" />
+                                        <input type="text" value={slide.overlay?.buttonLink || ''} onChange={(e) => handleOverlayChange(index, 'buttonLink', e.target.value)} placeholder="Link do Botão" />
                                     </div>
                                 )}
                             </div>
@@ -228,7 +290,7 @@ const HomeManager = () => {
                     ))}
                 </div>
                 <div className="editor-actions">
-                    <button onClick={() => handleAddListItem('banner.slides', { id: uuidv4(), type: 'image', src: '', link: '', overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' } })} className="btn-primary">Adicionar Slide</button>
+                    <button onClick={() => handleAddListItem('banner.slides')} className="btn-primary">Adicionar Slide</button>
                 </div>
             </div>
 
@@ -291,7 +353,7 @@ const HomeManager = () => {
             <div className="management-section">
                 <h3 className="editor-title">FAQ (Perguntas Frequentes)</h3>
                 <div className="dynamic-list">
-                    {homeData.faq.map((item, index) => (
+                    {(homeData.faq || []).map((item, index) => (
                         <div className="dynamic-list-item" key={item.id || index}>
                             <div className="item-inputs">
                                 <input type="text" value={item.question} onChange={(e) => handleDynamicListChange('faq', index, 'question', e.target.value)} placeholder="Pergunta" className="item-input-title" />
@@ -310,7 +372,7 @@ const HomeManager = () => {
             <div className="management-section">
                 <h3 className="editor-title">Avaliações de Clientes</h3>
                 <div className="dynamic-list">
-                    {homeData.reviews.map((item, index) => (
+                    {(homeData.reviews || []).map((item, index) => (
                         <div className="dynamic-list-item" key={item.id || index}>
                             <div className="item-inputs">
                                 <input type="text" value={item.name} onChange={(e) => handleDynamicListChange('reviews', index, 'name', e.target.value)} placeholder="Nome do Cliente" className="item-input-title" />
@@ -329,16 +391,48 @@ const HomeManager = () => {
             <div className="management-section">
                 <h3 className="editor-title">Gerenciar Rodapé</h3>
                 <div className="footer-editor-form-grid">
-                    <div className="form-group">
-                        <label htmlFor="phone">Telefone</label>
-                        <input type="text" id="phone" name="phone" value={footerData.phone || ''} onChange={handleFooterChange} placeholder="Ex: (11) 99999-8888" />
+                    <div className="form-group-compound">
+                        <label>Telefone Principal</label>
+                        <div className="input-group">
+                            <input 
+                                type="text" 
+                                value={footerData?.phones[0]?.number || ''} 
+                                onChange={(e) => handlePhoneChange(0, 'number', e.target.value)} 
+                                placeholder="Nº Principal. Ex: (11) 99999-8888"
+                            />
+                            <input 
+                                type="text" 
+                                value={footerData?.phones[0]?.label || ''} 
+                                onChange={(e) => handlePhoneChange(0, 'label', e.target.value)} 
+                                placeholder="Texto opcional. Ex: WhatsApp"
+                            />
+                        </div>
                     </div>
+
+                    <div className="form-group-compound">
+                        <label>Telefone Opcional</label>
+                        <div className="input-group">
+                            <input 
+                                type="text" 
+                                value={footerData?.phones[1]?.number || ''} 
+                                onChange={(e) => handlePhoneChange(1, 'number', e.target.value)} 
+                                placeholder="Nº Opcional"
+                            />
+                            <input 
+                                type="text" 
+                                value={footerData?.phones[1]?.label || ''} 
+                                onChange={(e) => handlePhoneChange(1, 'label', e.target.value)} 
+                                placeholder="Texto opcional"
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
                         <input type="email" id="email" name="email" value={footerData.email || ''} onChange={handleFooterChange} placeholder="Ex: contato@gemasbrilhantes.com" />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="whatsappNumber">Nº WhatsApp (com código do país)</label>
+                        <label htmlFor="whatsappNumber">Nº WhatsApp (para o botão)</label>
                         <input type="text" id="whatsappNumber" name="whatsappNumber" value={footerData.whatsappNumber || ''} onChange={handleFooterChange} placeholder="Ex: 5511999998888" />
                     </div>
                     <div className="form-group">
