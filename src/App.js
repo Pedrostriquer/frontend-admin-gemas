@@ -46,6 +46,8 @@ import PersonalizadasManager from "./Components/SiteConfig/Personalizadas/Person
 import HomeManager from "./Components/SiteConfig/Home/HomeManager";
 import GemCashManager from "./Components/SiteConfig/GemCash/GemCashManager";
 import BlogAdminPage from "./Components/Ecommerce/BlogAdminPage/BlogAdminPage"; 
+import NotificationsPage from "./Components/Notifications/NotificationContainer";
+
 
 
 // ✨ MUDANÇA PRINCIPAL: CRIAMOS ESTE COMPONENTE INTERNO ✨
@@ -87,6 +89,8 @@ const AppContent = () => {
             <Route path="platform/offers" element={<OffersPage />} />
             <Route path="platform/messages" element={<MessagesPage />} />
             <Route path="clients/create" element={<CreateClientPage />} />
+            <Route path="platform/notifications" element={<NotificationsPage />} />
+
 
             {/* Rotas do E-commerce Admin */}
             <Route path="ecommerce/dashboard" element={<EcommerceDashboard />} />
