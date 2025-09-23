@@ -33,6 +33,18 @@ const defaultHomeData = {
     reviews: []
 };
 
+const defaultFooterData = {
+    phone: '',
+    email: '',
+    whatsappNumber: '',
+    instagram: '',
+    facebook: '',
+    tiktok: '',
+    youtube: '',
+    addressLink: '',
+    addressTitle: ''
+};
+
 const HomeManager = () => {
     const [homeData, setHomeData] = useState(null);
     const [footerData, setFooterData] = useState(null); 
@@ -52,7 +64,6 @@ const HomeManager = () => {
                     getDoc(footerDocRef)
                 ]);
 
-                // Processa dados da Home
                 if (homeDocSnap.exists()) {
                     const firestoreData = homeDocSnap.data();
                     setHomeData({ 
@@ -66,17 +77,16 @@ const HomeManager = () => {
                     setHomeData(defaultHomeData);
                 }
 
-                // Processa dados do Rodapé
                 if (footerDocSnap.exists()) {
-                    setFooterData(footerDocSnap.data());
+                    setFooterData({ ...defaultFooterData, ...footerDocSnap.data() });
                 } else {
-                    setFooterData({ phone: '', email: '', whatsappNumber: '', instagram: '', facebook: '' });
+                    setFooterData(defaultFooterData);
                 }
 
             } catch (error) {
                 console.error("Erro ao buscar dados:", error);
                 setHomeData(defaultHomeData);
-                setFooterData({ phone: '', email: '', whatsappNumber: '', instagram: '', facebook: '' });
+                setFooterData(defaultFooterData);
             } finally {
                 setLoading(false);
             }
@@ -86,10 +96,9 @@ const HomeManager = () => {
 
     const handleDataChange = (path, value) => {
         setHomeData(prevData => {
-            const newData = JSON.parse(JSON.stringify(prevData));
+            const newData = { ...prevData };
             let current = newData;
             for (let i = 0; i < path.length - 1; i++) {
-                if (current[path[i]] === undefined) { current[path[i]] = {}; }
                 current = current[path[i]];
             }
             current[path[path.length - 1]] = value;
@@ -110,20 +119,19 @@ const HomeManager = () => {
             const snapshot = await uploadBytes(fileRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
             
-            const newPath = [...path];
-            const finalKey = newPath.pop();
-            
-            let current = { ...homeData };
-            let parent = current;
-            for (let i = 0; i < newPath.length; i++) { parent = parent[newPath[i]]; }
+            handleDataChange([...path], downloadURL);
 
-            parent[finalKey] = downloadURL;
+            const pathCopy = [...path];
+            const finalKey = pathCopy.pop();
+
             if (finalKey === 'src' || finalKey === 'mediaSrc') {
                 const typeKey = finalKey === 'src' ? 'type' : 'mediaType';
-                parent[typeKey] = file.type.startsWith('video') ? 'video' : 'image';
+                pathCopy.push(typeKey);
+                handleDataChange(pathCopy, file.type.startsWith('video') ? 'video' : 'image');
             }
-            setHomeData(current);
+            
         } catch (error) {
+            console.error("Upload failed", error);
             alert("Falha no upload.");
         } finally {
             setIsUploading(false);
@@ -131,15 +139,27 @@ const HomeManager = () => {
     };
     
     const handleDynamicListChange = (section, index, field, value) => handleDataChange([section, index, field], value);
-    const handleAddListItem = (section, newItem) => handleDataChange([section], [...(homeData[section] || []), newItem]);
-    const handleRemoveListItem = (section, indexToRemove) => {
-        const path = section.split('.');
-        let currentList = homeData;
-        for (let i = 0; i < path.length; i++) {
-            currentList = currentList[path[i]];
-        }
-        handleDataChange(path, currentList.filter((_, i) => i !== indexToRemove));
+    
+    const handleAddListItem = (section, newItem) => {
+        const currentList = homeData[section] || [];
+        handleDataChange([section], [...currentList, newItem]);
     };
+
+    const handleRemoveListItem = (sectionPath, indexToRemove) => {
+        const path = sectionPath.split('.');
+        let currentData = { ...homeData };
+        let parent = currentData;
+    
+        for (let i = 0; i < path.length - 1; i++) {
+            parent = parent[path[i]];
+        }
+    
+        const listKey = path[path.length - 1];
+        const updatedList = parent[listKey].filter((_, i) => i !== indexToRemove);
+        parent[listKey] = updatedList;
+        
+        setHomeData(currentData);
+    };    
     
     const handleSlideChange = (index, fieldPath, value) => handleDataChange(['banner', 'slides', index, ...fieldPath], value);
 
@@ -167,7 +187,9 @@ const HomeManager = () => {
 
     return (
         <div className="manage-home-container">
-            <div className="manage-home-header"><h1>Gerenciar Página Home e Rodapé</h1></div>
+            <div className="manage-home-header">
+                <h1>Gerenciar Página Home e Rodapé</h1>
+            </div>
 
             {/* Banner Editor */}
             <div className="management-section">
@@ -183,12 +205,12 @@ const HomeManager = () => {
                     {(homeData.banner.slides || []).map((slide, index) => (
                         <div className="slide-editor-card" key={slide.id || index}>
                             <div className="slide-media-controls">
-                                <div className="slide-preview">{slide.src ? (slide.type === 'video' ? <video src={slide.src} muted loop autoPlay playsInline /> : <img src={slide.src} alt="Preview" />) : (<div className="no-media-placeholder">Selecione Mídia</div>)}</div>
+                                <div className="slide-preview">{slide.src ? (slide.type === 'video' ? <video src={slide.src} muted loop autoPlay playsInline /> : <img src={slide.src} alt="Preview" />) : (<div className="no-media-placeholder">Mídia</div>)}</div>
                                 <div className="slide-inputs">
                                     <input type="file" id={`upload-${slide.id}`} className="hidden-file-input" onChange={(e) => handleMediaUpload(['banner', 'slides', index, 'src'], e.target.files[0])} accept="image/*,video/*"/>
-                                    <label htmlFor={`upload-${slide.id}`} className="upload-btn"><i className="fas fa-upload"></i> Mídia</label>
-                                    <input type="text" value={slide.link || ''} onChange={(e) => handleSlideChange(index, ['link'], e.target.value)} placeholder="Link de redirecionamento"/>
-                                    <button onClick={() => handleRemoveListItem('banner.slides', index)} className="remove-btn">&times;</button>
+                                    <label htmlFor={`upload-${slide.id}`} className="btn-secondary"><i className="fas fa-upload"></i> Trocar</label>
+                                    <input type="text" value={slide.link || ''} onChange={(e) => handleSlideChange(index, ['link'], e.target.value)} placeholder="Link de redirecionamento do slide"/>
+                                    <button onClick={() => handleRemoveListItem('banner.slides', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
                                 </div>
                             </div>
                             <div className="slide-overlay-controls">
@@ -206,7 +228,7 @@ const HomeManager = () => {
                     ))}
                 </div>
                 <div className="editor-actions">
-                    <button onClick={() => handleAddListItem('banner.slides', { id: uuidv4(), type: 'image', src: '', link: '', overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' } })} className="add-slide-btn">Adicionar Slide</button>
+                    <button onClick={() => handleAddListItem('banner.slides', { id: uuidv4(), type: 'image', src: '', link: '', overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' } })} className="btn-primary">Adicionar Slide</button>
                 </div>
             </div>
 
@@ -247,7 +269,7 @@ const HomeManager = () => {
             {/* Feature Sections Editor */}
             <div className="management-section">
                 <h3 className="editor-title">Seções de Destaque</h3>
-                <div className="sections-container">
+                <div className="feature-sections-grid">
                     {Object.keys(homeData.featureSections).map(key => (
                         <div key={key} className="feature-editor-card">
                             <h4>Seção "{key.charAt(0).toUpperCase() + key.slice(1)}"</h4>
@@ -258,7 +280,7 @@ const HomeManager = () => {
                                 <label>Mídia</label>
                                 {homeData.featureSections[key].mediaSrc && <div className="media-preview">{homeData.featureSections[key].mediaType === 'video' ? <video src={homeData.featureSections[key].mediaSrc} muted loop autoPlay /> : <img src={homeData.featureSections[key].mediaSrc} alt="Preview"/>}</div>}
                                 <input type="file" id={`${key}-media`} className="hidden-file-input" onChange={(e) => handleMediaUpload(['featureSections', key, 'mediaSrc'], e.target.files[0])} accept="image/*,video/*" />
-                                <label htmlFor={`${key}-media`} className="upload-btn small">Trocar Mídia</label>
+                                <label htmlFor={`${key}-media`} className="btn-secondary small">Trocar Mídia</label>
                             </div>
                         </div>
                     ))}
@@ -268,34 +290,38 @@ const HomeManager = () => {
             {/* FAQ Editor */}
             <div className="management-section">
                 <h3 className="editor-title">FAQ (Perguntas Frequentes)</h3>
-                <div className="faq-items-list">
+                <div className="dynamic-list">
                     {homeData.faq.map((item, index) => (
-                        <div className="faq-editor-item" key={item.id || index}>
-                            <input type="text" value={item.question} onChange={(e) => handleDynamicListChange('faq', index, 'question', e.target.value)} placeholder="Pergunta" className="faq-input question" />
-                            <textarea value={item.answer} onChange={(e) => handleDynamicListChange('faq', index, 'answer', e.target.value)} placeholder="Resposta" rows="3" className="faq-input answer" />
-                            <button onClick={() => handleRemoveListItem('faq', index)} className="remove-faq-btn">&times;</button>
+                        <div className="dynamic-list-item" key={item.id || index}>
+                            <div className="item-inputs">
+                                <input type="text" value={item.question} onChange={(e) => handleDynamicListChange('faq', index, 'question', e.target.value)} placeholder="Pergunta" className="item-input-title" />
+                                <textarea value={item.answer} onChange={(e) => handleDynamicListChange('faq', index, 'answer', e.target.value)} placeholder="Resposta" rows="3" />
+                            </div>
+                            <button onClick={() => handleRemoveListItem('faq', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
                         </div>
                     ))}
                 </div>
                 <div className="editor-actions">
-                    <button onClick={() => handleAddListItem('faq', { id: uuidv4(), question: '', answer: '' })} className="add-faq-btn">Adicionar Pergunta</button>
+                    <button onClick={() => handleAddListItem('faq', { id: uuidv4(), question: '', answer: '' })} className="btn-primary">Adicionar Pergunta</button>
                 </div>
             </div>
 
             {/* Reviews Editor */}
             <div className="management-section">
                 <h3 className="editor-title">Avaliações de Clientes</h3>
-                <div className="reviews-items-list">
+                <div className="dynamic-list">
                     {homeData.reviews.map((item, index) => (
-                        <div className="review-editor-item" key={item.id || index}>
-                            <input type="text" value={item.name} onChange={(e) => handleDynamicListChange('reviews', index, 'name', e.target.value)} placeholder="Nome do Cliente" className="review-input name" />
-                            <textarea value={item.comment} onChange={(e) => handleDynamicListChange('reviews', index, 'comment', e.target.value)} placeholder="Comentário / Depoimento" rows="3" className="review-input comment" />
-                            <button onClick={() => handleRemoveListItem('reviews', index)} className="remove-review-btn">&times;</button>
+                        <div className="dynamic-list-item" key={item.id || index}>
+                            <div className="item-inputs">
+                                <input type="text" value={item.name} onChange={(e) => handleDynamicListChange('reviews', index, 'name', e.target.value)} placeholder="Nome do Cliente" className="item-input-title" />
+                                <textarea value={item.comment} onChange={(e) => handleDynamicListChange('reviews', index, 'comment', e.target.value)} placeholder="Comentário" rows="3" />
+                            </div>
+                            <button onClick={() => handleRemoveListItem('reviews', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
                         </div>
                     ))}
                 </div>
                 <div className="editor-actions">
-                    <button onClick={() => handleAddListItem('reviews', { id: uuidv4(), name: '', comment: '' })} className="add-review-btn">Adicionar Avaliação</button>
+                    <button onClick={() => handleAddListItem('reviews', { id: uuidv4(), name: '', comment: '' })} className="btn-primary">Adicionar Avaliação</button>
                 </div>
             </div>
             
@@ -312,7 +338,7 @@ const HomeManager = () => {
                         <input type="email" id="email" name="email" value={footerData.email || ''} onChange={handleFooterChange} placeholder="Ex: contato@gemasbrilhantes.com" />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="whatsappNumber">Número do WhatsApp (com código do país)</label>
+                        <label htmlFor="whatsappNumber">Nº WhatsApp (com código do país)</label>
                         <input type="text" id="whatsappNumber" name="whatsappNumber" value={footerData.whatsappNumber || ''} onChange={handleFooterChange} placeholder="Ex: 5511999998888" />
                     </div>
                     <div className="form-group">
@@ -322,6 +348,29 @@ const HomeManager = () => {
                     <div className="form-group">
                         <label htmlFor="facebook">Link do Facebook</label>
                         <input type="url" id="facebook" name="facebook" value={footerData.facebook || ''} onChange={handleFooterChange} placeholder="https://www.facebook.com/..." />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="tiktok">Link do TikTok</label>
+                        <input type="url" id="tiktok" name="tiktok" value={footerData.tiktok || ''} onChange={handleFooterChange} placeholder="https://www.tiktok.com/@..." />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="youtube">Link do YouTube</label>
+                        <input type="url" id="youtube" name="youtube" value={footerData.youtube || ''} onChange={handleFooterChange} placeholder="https://www.youtube.com/c/..." />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="addressTitle">Título do Endereço</label>
+                        <input 
+                            type="text" 
+                            id="addressTitle" 
+                            name="addressTitle" 
+                            value={footerData.addressTitle || ''} 
+                            onChange={handleFooterChange} 
+                            placeholder="Ex: Loja São Paulo" 
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="addressLink">Link do Endereço (Google Maps)</label>
+                        <input type="url" id="addressLink" name="addressLink" value={footerData.addressLink || ''} onChange={handleFooterChange} placeholder="https://maps.app.goo.gl/..." />
                     </div>
                 </div>
             </div>
