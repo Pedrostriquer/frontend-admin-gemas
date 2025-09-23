@@ -17,7 +17,6 @@ const ConfirmationModal = ({
 }) => (
   <div
     className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-    onClick={onClose}
   >
     <div
       className={`modal-content-prod small ${isClosing ? "closing" : ""}`}
@@ -72,7 +71,6 @@ const CategoryManagerModal = ({ categories, onClose, onSave, isClosing }) => {
   return (
     <div
       className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-      onClick={onClose}
     >
       <div
         className={`modal-content-prod ${isClosing ? "closing" : ""}`}
@@ -279,7 +277,6 @@ const PostModal = ({
   return (
     <div
       className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-      onClick={onClose}
     >
       <div
         className={`modal-content-prod ${isClosing ? "closing" : ""}`}

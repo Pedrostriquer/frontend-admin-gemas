@@ -111,6 +111,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Contratos', icon: 'fa-solid fa-file-signature', path: '/platform/contracts' },
         { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/platform/withdraws' },
         { name: 'Ofertas', icon: 'fa-solid fa-newspaper', path: '/platform/offers' },
+        { name: 'Notificações', icon: 'fa-solid fa-bell', path: '/platform/notifications' },
         { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/platform/controller' },
     ];
     const ecommerceMenu = [
