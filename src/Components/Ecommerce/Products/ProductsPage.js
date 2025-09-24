@@ -1,20 +1,33 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import "./ProductsPage.css";
-import productServices from "../../../dbServices/productServices";
+import productServices from "../../../dbServices/productServices"; // Ajuste o caminho se necessário
 import { useLoad } from "../../../Context/LoadContext";
 
+// --- Funções Utilitárias ---
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Converte um número para uma string com vírgula para exibição no input.
+const formatNumberForInput = (num) => {
+  if (num === null || num === undefined || isNaN(num)) {
+    return "";
+  }
+  return String(num).replace(".", ",");
+};
+
+// Verifica se uma URL corresponde a um formato de vídeo conhecido.
 const isVideoUrl = (url) => {
   if (!url) return false;
+  // Lista de extensões de vídeo comuns (incluindo .mov)
   const videoExtensions = [".mp4", ".mov", ".webm", ".ogg"];
   const lowercasedUrl = url.toLowerCase();
+  // Verifica se a URL contém alguma das extensões de vídeo antes do token do Firebase
   return videoExtensions.some((ext) => lowercasedUrl.includes(ext + "?"));
 };
 
 const ITEMS_PER_PAGE = 5;
 
+// --- Hooks Customizados ---
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -34,6 +47,7 @@ const useOutsideAlerter = (ref, callback) => {
   }, [ref, callback]);
 };
 
+// --- Componentes Reutilizáveis ---
 const CustomDropdown = ({ options, selected, onSelect, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -89,6 +103,7 @@ const SearchableDropdown = ({ options, onSelect, placeholder }) => {
       {isOpen && (
         <div className="dropdown-list searchable">
           <div className="dropdown-search-wrapper">
+            {/* <i className="fa-solid fa-magnifying-glass"></i> */}
             <input
               type="text"
               className="dropdown-search"
@@ -125,6 +140,7 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
     const { name, value } = e.target;
     onStoneChange(index, { ...stone, [name]: value });
   };
+
   return (
     <div className="stone-info-form">
       <div className="stone-form-header">
@@ -170,7 +186,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Quilates (ct)</label>
           <input
             type="text"
-            step="0.01"
             name="carats"
             value={stone.carats || ""}
             onChange={handleChange}
@@ -202,7 +217,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Comprimento (mm)</label>
           <input
             type="text"
-            step="0.1"
             name="lengthInMm"
             value={stone.lengthInMm || ""}
             onChange={handleChange}
@@ -212,7 +226,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Largura (mm)</label>
           <input
             type="text"
-            step="0.1"
             name="widthInMm"
             value={stone.widthInMm || ""}
             onChange={handleChange}
@@ -222,7 +235,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Altura (mm)</label>
           <input
             type="text"
-            step="0.1"
             name="heightInMm"
             value={stone.heightInMm || ""}
             onChange={handleChange}
@@ -244,10 +256,8 @@ const ProductModal = ({
   const [formData, setFormData] = useState({
     id: isEditing ? product.id : 0,
     name: isEditing ? product.name : "",
-    code: isEditing ? product.code || "" : "",
     description: isEditing ? product.description : "",
-    value: isEditing ? product.value : "",
-    stock: isEditing ? product.stock ?? "" : "",
+    value: isEditing ? formatNumberForInput(product.value) : "", // ✨ CORREÇÃO APLICADA
     status: isEditing ? product.status : 1,
     itemType: isEditing ? product.itemType : 2,
     categories: isEditing ? product.categories || [] : [],
@@ -258,12 +268,24 @@ const ProductModal = ({
           file: null,
         }))
       : [],
+    // ✨ CORREÇÃO APLICADA nos campos de 'info'
     info: isEditing
-      ? product.info
+      ? {
+          material: product.info?.material || "",
+          weightInGrams: formatNumberForInput(product.info?.weightInGrams),
+          stones: (product.info?.stones || [{ quantity: 1 }]).map((stone) => ({
+            ...stone,
+            carats: formatNumberForInput(stone.carats),
+            lengthInMm: formatNumberForInput(stone.lengthInMm),
+            widthInMm: formatNumberForInput(stone.widthInMm),
+            heightInMm: formatNumberForInput(stone.heightInMm),
+          })),
+        }
       : { material: "", weightInGrams: "", stones: [{ quantity: 1 }] },
   });
   const [newMediaType, setNewMediaType] = useState("image");
   const [newMediaUrl, setNewMediaUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -293,6 +315,7 @@ const ProductModal = ({
       "stones",
       formData.info.stones.filter((_, i) => i !== index)
     );
+
   const handleAddMediaFromUrl = () => {
     if (newMediaUrl) {
       setFormData((prev) => ({
@@ -305,6 +328,7 @@ const ProductModal = ({
       setNewMediaUrl("");
     }
   };
+
   const handleRemoveMedia = (urlToRemove) => {
     const mediaToRemove = formData.media.find((m) => m.url === urlToRemove);
     if (mediaToRemove && mediaToRemove.file) {
@@ -315,6 +339,7 @@ const ProductModal = ({
       media: prev.media.filter((m) => m.url !== urlToRemove),
     }));
   };
+
   const handleAddCategory = (catId) =>
     !formData.categories.includes(catId) &&
     setFormData((prev) => ({
@@ -340,26 +365,30 @@ const ProductModal = ({
   };
 
   const handleSave = () => {
+    // Função auxiliar para limpar e converter strings em números
     const cleanAndParseFloat = (val) => {
       const str = String(val || "0");
+      // 1. Remove todos os pontos (separadores de milhar)
+      // 2. Troca a vírgula (separador decimal) por um ponto
       const parsable = str.replace(/\./g, "").replace(",", ".");
       return parseFloat(parsable) || 0;
     };
+
     const localFiles = formData.media.filter((m) => m.file).map((m) => m.file);
     const existingUrls = formData.media
       .filter((m) => !m.file)
       .map((m) => m.url);
+
     const finalData = { ...formData };
+
+    // Aplica a lógica de conversão para todos os campos necessários
     finalData.value = cleanAndParseFloat(finalData.value);
-    finalData.stock = parseInt(finalData.stock, 10);
-    if (isNaN(finalData.stock)) {
-      finalData.stock = null;
-    }
 
     if (finalData.info) {
       finalData.info.weightInGrams = cleanAndParseFloat(
         finalData.info.weightInGrams
       );
+
       if (finalData.info.stones) {
         finalData.info.stones = finalData.info.stones.map((stone) => ({
           ...stone,
@@ -371,6 +400,7 @@ const ProductModal = ({
         }));
       }
     }
+
     delete finalData.media;
     onSave(finalData, localFiles, existingUrls);
   };
@@ -380,10 +410,7 @@ const ProductModal = ({
   );
 
   return (
-    <div
-      className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-      onClick={onClose}
-    >
+    <div className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}>
       <div
         className={`modal-content-prod v2 ${isClosing ? "closing" : ""}`}
         onClick={(e) => e.stopPropagation()}
@@ -403,14 +430,6 @@ const ProductModal = ({
                 />
               </div>
               <div className="form-group-prod">
-                <label>Código do Produto (SKU)</label>
-                <input
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) => handleFormChange("code", e.target.value)}
-                />
-              </div>
-              <div className="form-group-prod">
                 <label>Descrição</label>
                 <textarea
                   rows="4"
@@ -425,120 +444,110 @@ const ProductModal = ({
                   <label>Preço (R$)</label>
                   <input
                     type="text"
+                    inputMode="decimal"
+                    placeholder="0,00"
                     value={formData.value}
                     onChange={(e) => handleFormChange("value", e.target.value)}
                   />
                 </div>
                 <div className="form-group-prod">
-                  <label>Estoque</label>
-                  <input
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) => handleFormChange("stock", e.target.value)}
-                    placeholder="Deixe em branco para N/A"
-                  />
-                </div>
-              </div>
-              <div className="form-group-row">
-                <div className="form-group-prod">
                   <label>Status</label>
                   <CustomDropdown
                     options={[
                       { value: 1, label: "Ativo" },
-                      { value: 2, label: "Inativo" },
-                      { value: 3, label: "Esgotado" },
+                      { value: 0, label: "Inativo" },
                     ]}
                     selected={formData.status}
-                    onSelect={(value) => handleFormChange("status", value)}
-                  />
-                </div>
-                <div className="form-group-prod">
-                  <label>Tipo</label>
-                  <CustomDropdown
-                    options={[
-                      { value: 1, label: "Joia" },
-                      { value: 2, label: "Gema" },
-                    ]}
-                    selected={formData.itemType}
-                    onSelect={(value) => handleFormChange("itemType", value)}
+                    onSelect={(val) => handleFormChange("status", val)}
                   />
                 </div>
               </div>
               <div className="form-group-prod">
+                <label>Tipo de Item</label>
+                <CustomDropdown
+                  options={[
+                    { value: 1, label: "Joia" },
+                    { value: 2, label: "Gema" },
+                  ]}
+                  selected={formData.itemType}
+                  onSelect={(val) => handleFormChange("itemType", val)}
+                />
+              </div>
+              {formData.itemType === 1 && (
+                <div className="form-group-row">
+                  <div className="form-group-prod">
+                    <label>Material</label>
+                    <input
+                      type="text"
+                      value={formData.info.material || ""}
+                      onChange={(e) =>
+                        handleInfoChange("material", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="form-group-prod">
+                    <label>Peso (g)</label>
+                    <input
+                      type="text" // Alterado para text para consistência
+                      value={formData.info.weightInGrams || ""}
+                      onChange={(e) =>
+                        handleInfoChange("weightInGrams", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="form-group-prod">
                 <label>Categorias</label>
                 <SearchableDropdown
+                  placeholder="Adicionar Categoria..."
                   options={availableCategories.map((c) => ({
                     value: c.id,
                     label: c.name,
                   }))}
                   onSelect={handleAddCategory}
-                  placeholder="Adicionar Categoria"
                 />
                 <div className="category-tags">
-                  {formData.categories.map((catId) => (
-                    <span key={catId}>
-                      {allCategories.find((c) => c.id === catId)?.name}
-                      <i
-                        className="fa-solid fa-xmark"
-                        onClick={() => handleRemoveCategory(catId)}
-                      ></i>
-                    </span>
-                  ))}
+                  {formData.categories.map((catId) => {
+                    const cat = allCategories.find((c) => c.id === catId);
+                    return cat ? (
+                      <span key={cat.id}>
+                        {cat.name}{" "}
+                        <i
+                          className="fa-solid fa-xmark"
+                          onClick={() => handleRemoveCategory(cat.id)}
+                        ></i>
+                      </span>
+                    ) : null;
+                  })}
                 </div>
               </div>
             </div>
             <div className="form-col">
-              {formData.itemType === 1 && (
-                <div className="form-group-prod">
-                  <label>Informações da Joia</label>
-                  <div className="form-group-row">
-                    <div className="form-group-prod">
-                      <label>Material</label>
-                      <input
-                        type="text"
-                        value={formData.info.material || ""}
-                        onChange={(e) =>
-                          handleInfoChange("material", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="form-group-prod">
-                      <label>Peso (g)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.info.weightInGrams || ""}
-                        onChange={(e) =>
-                          handleInfoChange("weightInGrams", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
               <div className="form-group-prod">
-                <label>Gemas</label>
+                <label>Gemas Associadas</label>
                 <div className="stones-container">
-                  {(formData.info.stones || []).map((stone, index) => (
-                    <StoneInfoForm
-                      key={index}
-                      stone={stone}
-                      index={index}
-                      onStoneChange={handleStoneChange}
-                      onRemoveStone={handleRemoveStone}
-                    />
-                  ))}
+                  {formData.info.stones &&
+                    formData.info.stones.map((stone, index) => (
+                      <StoneInfoForm
+                        key={index}
+                        index={index}
+                        stone={stone}
+                        onStoneChange={handleStoneChange}
+                        onRemoveStone={handleRemoveStone}
+                      />
+                    ))}
                 </div>
                 <button
                   type="button"
-                  onClick={handleAddStone}
                   className="add-stone-btn"
+                  onClick={handleAddStone}
                 >
                   <i className="fa-solid fa-plus"></i> Adicionar Gema
                 </button>
               </div>
               <div className="form-group-prod">
-                <label>Mídias (Imagens e Vídeos)</label>
+                <label>Mídias</label>
                 <div className="media-input-group">
                   <CustomDropdown
                     options={[
@@ -550,28 +559,34 @@ const ProductModal = ({
                   />
                   <input
                     type="text"
-                    placeholder="Cole a URL aqui..."
+                    placeholder="Cole a URL da Mídia"
                     value={newMediaUrl}
                     onChange={(e) => setNewMediaUrl(e.target.value)}
                   />
-                  <button type="button" onClick={handleAddMediaFromUrl}>
-                    <i className="fa-solid fa-plus"></i>
-                  </button>
+                  <button onClick={handleAddMediaFromUrl}>Add</button>
                 </div>
                 <div className="media-upload-area">
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    style={{ display: "none" }}
                     accept="image/*,video/*"
+                    style={{ display: "none" }}
+                    id="media-upload-input"
+                    disabled={isUploading}
                   />
                   <button
                     type="button"
                     className="upload-btn-prod"
                     onClick={() => fileInputRef.current.click()}
+                    disabled={isUploading}
                   >
-                    <i className="fa-solid fa-upload"></i> Ou envie um arquivo
+                    <i
+                      className={`fa-solid ${
+                        isUploading ? "fa-spinner fa-spin" : "fa-upload"
+                      }`}
+                    ></i>
+                    {isUploading ? "Enviando..." : "Fazer Upload de Arquivo"}
                   </button>
                 </div>
                 <div className="media-preview-list">
@@ -652,51 +667,6 @@ const ConfirmationModal = ({
   </div>
 );
 
-const StockModal = ({ product, onClose, onSave, isClosing }) => {
-  const [stock, setStock] = useState(product.stock ?? 0);
-  const handleSave = () => {
-    const newStockValue = parseInt(stock, 10);
-    if (!isNaN(newStockValue)) {
-      onSave(product.id, newStockValue);
-    }
-  };
-  return (
-    <div
-      className={`modal-backdrop-prod ${isClosing ? "closing" : ""}`}
-      onClick={onClose}
-    >
-      <div
-        className={`modal-content-prod small ${isClosing ? "closing" : ""}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header-prod">
-          <h3>Alterar Estoque</h3>
-        </div>
-        <p className="confirmation-text">
-          Produto: <strong>{product.name}</strong>
-        </p>
-        <div className="form-group-prod" style={{ padding: "0 20px" }}>
-          <label>Novo Estoque</label>
-          <input
-            type="number"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <div className="modal-footer-prod confirmation">
-          <button type="button" className="close-btn-prod" onClick={onClose}>
-            Cancelar
-          </button>
-          <button type="button" className="save-btn-prod" onClick={handleSave}>
-            <i className="fa-solid fa-check"></i> Salvar Estoque
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -706,7 +676,6 @@ function ProductsPage() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [filters, setFilters] = useState({
     searchTerm: "",
-    searchCode: "",
     status: "Todos",
     itemType: "Todos",
     minPrice: "",
@@ -766,7 +735,9 @@ function ProductsPage() {
 
   const handleFilterChange = (name, value) =>
     setFilters((prev) => ({ ...prev, [name]: value }));
+
   const handleOpenModal = (type, data = null) => setModal({ type, data });
+
   const handleCloseModal = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -781,6 +752,7 @@ function ProductsPage() {
       startLoading();
       let finalMediaUrls = [...existingUrls];
       let productToUpdate = { ...productData };
+
       if (productData.id && productData.id !== 0) {
         if (localFiles.length > 0) {
           const uploadPromises = localFiles.map((file) =>
@@ -795,12 +767,14 @@ function ProductsPage() {
         productToUpdate.mediaUrls = existingUrls;
         const newProduct = await productServices.createProduct(productToUpdate);
         const newProductId = newProduct.id;
+
         if (localFiles.length > 0) {
           const uploadPromises = localFiles.map((file) =>
             productServices.uploadProductMedia(newProductId, file)
           );
           const newUrls = await Promise.all(uploadPromises);
           finalMediaUrls.push(...newUrls.flat());
+
           await productServices.updateProduct(newProductId, {
             ...newProduct,
             mediaUrls: finalMediaUrls,
@@ -814,22 +788,6 @@ function ProductsPage() {
       alert("Ocorreu um erro ao salvar o produto.");
     } finally {
       setIsLoading(false);
-      stopLoading();
-    }
-  };
-
-  const handleUpdateStock = async (productId, newStock) => {
-    setIsLoading(true);
-    try {
-      startLoading();
-      await productServices.updateProductStock(productId, newStock);
-      handleCloseModal();
-      fetchProducts(currentPage, debouncedFilters);
-    } catch (error) {
-      alert("Ocorreu um erro ao atualizar o estoque.");
-    } finally {
-      setIsLoading(false);
-      stopLoading();
     }
   };
 
@@ -869,15 +827,20 @@ function ProductsPage() {
   };
 
   const handleSelectAll = (e) => {
-    if (e.target.checked)
+    if (e.target.checked) {
       setSelectedProducts(new Set(products.map((p) => p.id)));
-    else setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set());
+    }
   };
 
   const handleSelectOne = (productId) => {
     const newSelection = new Set(selectedProducts);
-    if (newSelection.has(productId)) newSelection.delete(productId);
-    else newSelection.add(productId);
+    if (newSelection.has(productId)) {
+      newSelection.delete(productId);
+    } else {
+      newSelection.add(productId);
+    }
     setSelectedProducts(newSelection);
   };
 
@@ -890,6 +853,7 @@ function ProductsPage() {
         <h1>Produtos</h1>
         <p>Gerencie o catálogo da sua loja.</p>
       </header>
+
       <section className="product-kpi-cards">
         <div className="product-kpi-card v2">
           <i className="fa-solid fa-boxes-stacked"></i>
@@ -901,6 +865,7 @@ function ProductsPage() {
           </div>
         </div>
       </section>
+
       <section className="product-controls-wrapper">
         <div className="product-controls">
           <div className="search-box-prod">
@@ -910,15 +875,6 @@ function ProductsPage() {
               name="searchTerm"
               placeholder="Buscar por nome..."
               onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
-            />
-          </div>
-          <div className="search-box-prod">
-            <i className="fa-solid fa-barcode"></i>
-            <input
-              type="text"
-              name="searchCode"
-              placeholder="Buscar por código..."
-              onChange={(e) => handleFilterChange("searchCode", e.target.value)}
             />
           </div>
           <button
@@ -935,7 +891,6 @@ function ProductsPage() {
               { value: "Todos", label: "Todos Status" },
               { value: "Ativo", label: "Ativo" },
               { value: "Inativo", label: "Inativo" },
-              { value: "Esgotado", label: "Esgotado" },
             ]}
             selected={filters.status}
             onSelect={(value) => handleFilterChange("status", value)}
@@ -976,6 +931,7 @@ function ProductsPage() {
           />
         </div>
       </section>
+
       <section
         className={`bulk-actions-bar ${
           selectedProducts.size > 0 ? "visible" : ""
@@ -1005,6 +961,7 @@ function ProductsPage() {
           </button>
         </div>
       </section>
+
       <div className="products-table-card">
         <table className="products-table">
           <thead>
@@ -1017,10 +974,8 @@ function ProductsPage() {
                 />
               </th>
               <th>Produto</th>
-              <th>Código</th>
               <th>Tipo</th>
               <th>Preço</th>
-              <th>Estoque</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -1028,7 +983,7 @@ function ProductsPage() {
             {isLoading ? (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="5"
                   style={{ textAlign: "center", padding: "40px" }}
                 >
                   Buscando produtos...
@@ -1070,31 +1025,15 @@ function ProductsPage() {
                       <span>{product.name}</span>
                     </div>
                   </td>
-                  <td>{product.code || "N/A"}</td>
                   <td>{product.itemType === 1 ? "Joia" : "Gema"}</td>
                   <td>{formatCurrency(product.value)}</td>
-                  <td
-                    className="stock-cell"
-                    onClick={() => handleOpenModal("stock", product)}
-                  >
-                    {product.stock ?? "N/A"}
-                    <i className="fa-solid fa-pencil"></i>
-                  </td>
                   <td>
                     <span
                       className={`status-badge-prod status-${
-                        product.status === 1
-                          ? "ativo"
-                          : product.status === 3
-                          ? "esgotado"
-                          : "inativo"
+                        product.status === 1 ? "ativo" : "inativo"
                       }`}
                     >
-                      {product.status === 1
-                        ? "Ativo"
-                        : product.status === 3
-                        ? "Esgotado"
-                        : "Inativo"}
+                      {product.status === 1 ? "Ativo" : "Inativo"}
                     </span>
                   </td>
                 </tr>
@@ -1102,7 +1041,7 @@ function ProductsPage() {
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="5"
                   style={{ textAlign: "center", padding: "40px" }}
                 >
                   Nenhum produto encontrado.
@@ -1129,14 +1068,7 @@ function ProductsPage() {
           </button>
         </div>
       </div>
-      {modal.type === "stock" && (
-        <StockModal
-          product={modal.data}
-          onClose={handleCloseModal}
-          onSave={handleUpdateStock}
-          isClosing={isClosing}
-        />
-      )}
+
       {(modal.type === "edit" || modal.type === "create") && (
         <ProductModal
           product={modal.data}
@@ -1168,7 +1100,7 @@ function ProductsPage() {
         <ConfirmationModal
           count={selectedProducts.size}
           action="INATIVAR"
-          onConfirm={() => handleBulkStatusChange(2)}
+          onConfirm={() => handleBulkStatusChange(0)}
           onClose={handleCloseModal}
           isClosing={isClosing}
         />
