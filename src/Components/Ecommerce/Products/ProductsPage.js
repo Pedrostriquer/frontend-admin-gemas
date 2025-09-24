@@ -7,6 +7,14 @@ import { useLoad } from "../../../Context/LoadContext";
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Converte um número para uma string com vírgula para exibição no input.
+const formatNumberForInput = (num) => {
+  if (num === null || num === undefined || isNaN(num)) {
+    return "";
+  }
+  return String(num).replace(".", ",");
+};
+
 // Verifica se uma URL corresponde a um formato de vídeo conhecido.
 const isVideoUrl = (url) => {
   if (!url) return false;
@@ -178,7 +186,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Quilates (ct)</label>
           <input
             type="text"
-            step="0.01"
             name="carats"
             value={stone.carats || ""}
             onChange={handleChange}
@@ -210,7 +217,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Comprimento (mm)</label>
           <input
             type="text"
-            step="0.1"
             name="lengthInMm"
             value={stone.lengthInMm || ""}
             onChange={handleChange}
@@ -220,7 +226,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Largura (mm)</label>
           <input
             type="text"
-            step="0.1"
             name="widthInMm"
             value={stone.widthInMm || ""}
             onChange={handleChange}
@@ -230,7 +235,6 @@ const StoneInfoForm = ({ stone, index, onStoneChange, onRemoveStone }) => {
           <label>Altura (mm)</label>
           <input
             type="text"
-            step="0.1"
             name="heightInMm"
             value={stone.heightInMm || ""}
             onChange={handleChange}
@@ -253,7 +257,7 @@ const ProductModal = ({
     id: isEditing ? product.id : 0,
     name: isEditing ? product.name : "",
     description: isEditing ? product.description : "",
-    value: isEditing ? product.value : "",
+    value: isEditing ? formatNumberForInput(product.value) : "", // ✨ CORREÇÃO APLICADA
     status: isEditing ? product.status : 1,
     itemType: isEditing ? product.itemType : 2,
     categories: isEditing ? product.categories || [] : [],
@@ -264,8 +268,19 @@ const ProductModal = ({
           file: null,
         }))
       : [],
+    // ✨ CORREÇÃO APLICADA nos campos de 'info'
     info: isEditing
-      ? product.info
+      ? {
+          material: product.info?.material || "",
+          weightInGrams: formatNumberForInput(product.info?.weightInGrams),
+          stones: (product.info?.stones || [{ quantity: 1 }]).map((stone) => ({
+            ...stone,
+            carats: formatNumberForInput(stone.carats),
+            lengthInMm: formatNumberForInput(stone.lengthInMm),
+            widthInMm: formatNumberForInput(stone.widthInMm),
+            heightInMm: formatNumberForInput(stone.heightInMm),
+          })),
+        }
       : { material: "", weightInGrams: "", stones: [{ quantity: 1 }] },
   });
   const [newMediaType, setNewMediaType] = useState("image");
@@ -366,7 +381,7 @@ const ProductModal = ({
 
     const finalData = { ...formData };
 
-    // Aplica a nova lógica de conversão para todos os campos necessários
+    // Aplica a lógica de conversão para todos os campos necessários
     finalData.value = cleanAndParseFloat(finalData.value);
 
     if (finalData.info) {
@@ -429,7 +444,7 @@ const ProductModal = ({
                   <label>Preço (R$)</label>
                   <input
                     type="text"
-                    inputMode="decimal" // Ajuda a exibir o teclado numérico em celulares
+                    inputMode="decimal"
                     placeholder="0,00"
                     value={formData.value}
                     onChange={(e) => handleFormChange("value", e.target.value)}
@@ -473,8 +488,7 @@ const ProductModal = ({
                   <div className="form-group-prod">
                     <label>Peso (g)</label>
                     <input
-                      type="number"
-                      step="0.1"
+                      type="text" // Alterado para text para consistência
                       value={formData.info.weightInGrams || ""}
                       onChange={(e) =>
                         handleInfoChange("weightInGrams", e.target.value)
@@ -990,7 +1004,6 @@ function ProductsPage() {
                   </td>
                   <td onClick={() => handleOpenModal("edit", product)}>
                     <div className="product-info-cell">
-                      {/* ✨ --- INÍCIO DA CORREÇÃO NA TABELA --- ✨ */}
                       {isVideoUrl(product.mediaUrls?.[0]) ? (
                         <video
                           src={product.mediaUrls[0]}
@@ -1009,7 +1022,6 @@ function ProductsPage() {
                           alt={product.name}
                         />
                       )}
-                      {/* ✨ --- FIM DA CORREÇÃO NA TABELA --- ✨ */}
                       <span>{product.name}</span>
                     </div>
                   </td>
