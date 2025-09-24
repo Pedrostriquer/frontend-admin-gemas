@@ -89,7 +89,7 @@ const AppContent = () => {
             <Route path="platform/offers" element={<OffersPage />} />
             <Route path="platform/messages" element={<MessagesPage />} />
             <Route path="clients/create" element={<CreateClientPage />} />
-            <Route path="platform/notifications" element={<NotificationsPage />} />
+            <Route path="platform/notifications" element={<MessagesPage />} />
 
 
             {/* Rotas do E-commerce Admin */}
