@@ -4,7 +4,7 @@ import { useAuth } from '../../Context/AuthContext';
 import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 
-// Componente FirebaseLoginModal (sem alterações)
+// Componente FirebaseLoginModal (COM alterações)
 const FirebaseLoginModal = ({ onClose, onSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -27,16 +27,19 @@ const FirebaseLoginModal = ({ onClose, onSuccess }) => {
                 <h4>Acesso Restrito</h4>
                 <p>Insira suas credenciais de administrador do site.</p>
                 <form onSubmit={handleLogin}>
-                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    {/* Estilos aplicados aqui */}
+                    <input style={styles.firebaseInput} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <input style={styles.firebaseInput} type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
                     {error && <p style={{color: 'red', fontSize: '0.8rem'}}>{error}</p>}
-                    <button type="submit">Entrar</button>
+                    {/* Estilo aplicado aqui */}
+                    <button style={styles.firebaseButton} type="submit">Entrar</button>
                 </form>
                 <button style={styles.firebaseModalClose} onClick={onClose}>&times;</button>
             </div>
         </div>
     );
 };
+
 
 // Componente ContextButton (sem alterações)
 const ContextButton = ({ isActive, isCollapsed, onClick, icon, children }) => {
@@ -77,7 +80,6 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
     const { logout } = useAuth();
     const [firebaseUser, setFirebaseUser] = useState(null);
     const [showFirebaseModal, setShowFirebaseModal] = useState(false);
-    // ✨ Novo estado de hover para o botão flutuante
     const [isToggleHovered, setIsToggleHovered] = useState(false);
 
     useEffect(() => {
@@ -86,7 +88,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         });
         return () => unsubscribe();
     }, []);
-    
+
     const handleContextClick = (context) => {
         if (context === 'site') {
             if (firebaseUser) {
@@ -118,8 +120,8 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Dashboard', icon: 'fa-solid fa-chart-pie', path: '/ecommerce/dashboard' },
         { name: 'Produtos', icon: 'fa-solid fa-gem', path: '/ecommerce/products' },
         { name: 'Categorias', icon: 'fa-solid fa-sitemap', path: '/ecommerce/categories' },
-        { name: 'Formulários', icon: 'fa-solid fa-file-alt', path: '/ecommerce/forms' }, 
-        { name: 'Blog', icon: 'fa-solid fa-newspaper', path: '/ecommerce/blog' }, 
+        { name: 'Formulários', icon: 'fa-solid fa-file-alt', path: '/ecommerce/forms' },
+        { name: 'Blog', icon: 'fa-solid fa-newspaper', path: '/ecommerce/blog' },
         { name: 'Promoções', icon: 'fa-solid fa-tags', path: '/ecommerce/promotions' },
         { name: 'Pedidos', icon: 'fa-solid fa-box-open', path: '/ecommerce/orders' },
     ];
@@ -140,8 +142,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
 
     const navStyle = { ...styles.sidebar, ...(isSidebarCollapsed && styles.sidebarCollapsed) };
     const userProfileStyle = { ...styles.userProfile, ...(isUserHovered && styles.userProfileHover), ...(isSidebarCollapsed && styles.userProfileCollapsed) };
-    
-    // ✨ Estilo dinâmico para o novo botão flutuante
+
     const floatingToggleStyle = {
         ...styles.floatingToggleButton,
         left: isSidebarCollapsed ? styles.sidebarCollapsed.width : styles.sidebar.width,
@@ -152,7 +153,6 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         <>
             {showFirebaseModal && <FirebaseLoginModal onClose={() => setShowFirebaseModal(false)} onSuccess={handleFirebaseLoginSuccess} />}
             
-            {/* ✨ Botão de recolher agora é flutuante e renderizado aqui */}
             <button
                 style={floatingToggleStyle}
                 onClick={onToggle}
@@ -177,11 +177,9 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                     </div>
                     
                     <div style={styles.menuContainer}>
-                        {/* ✨ Botão de Sair foi removido daqui */}
                         <div style={styles.menuDivider}></div>
                         <ul style={styles.globalMenu}>
                             <NavItem isActive={activePath === '/users'} isCollapsed={isSidebarCollapsed} onClick={() => onLinkClick('/users')} icon="fa-solid fa-user-shield">Usuários</NavItem>
-                            {/* ✨ Novo botão "Extrair dados" adicionado */}
                             <NavItem
                                 isActive={activePath === '/extract-data'}
                                 isCollapsed={isSidebarCollapsed}
@@ -208,8 +206,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                             <span style={styles.userRoleText}>Admin</span>
                         </div>
                     </div>
-                    {/* ✨ Botão de Sair agora está aqui, no lugar do antigo botão de recolher */}
-                    <ul style={styles.globalMenu}> {/* Usando ul para consistência */}
+                    <ul style={styles.globalMenu}>
                         <NavItem 
                             isCollapsed={isSidebarCollapsed} 
                             onClick={logout} 

@@ -56,8 +56,6 @@ const styles = {
         flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        // ✨ A propriedade de overflow foi REMOVIDA daqui.
-        // O min-height é um truque de flexbox para garantir que o overflow funcione corretamente nos filhos.
         minHeight: 0,
     },
     contextSwitcher: {
@@ -65,7 +63,7 @@ const styles = {
         flexDirection: 'column',
         padding: '0 24px 0px 24px',
         gap: '8px',
-        flexShrink: 0, // Garante que esta seção não seja espremida
+        flexShrink: 0,
     },
     contextButton: {
         width: '100%',
@@ -103,15 +101,12 @@ const styles = {
         opacity: 0,
         width: 0,
     },
-    
-    // ✨ Novo estilo para o container do menu
     menuContainer: {
-        flexGrow: 1, // Faz este container ocupar todo o espaço restante em mainNav
+        flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 0, // Garante que o overflow funcione corretamente no filho (contextMenu)
+        minHeight: 0,
     },
-
     menuDivider: {
         height: '1px',
         backgroundColor: colors.border,
@@ -122,17 +117,16 @@ const styles = {
         listStyle: 'none',
         padding: '0 24px',
         margin: 0,
-        flexShrink: 0, // Garante que esta seção não seja espremida
+        flexShrink: 0,
     },
     contextMenu: {
         listStyle: 'none',
         padding: '0 24px',
         margin: 0,
-        // ✨ É AQUI que a mágica acontece!
-        flexGrow: 1, // Faz esta lista ocupar todo o espaço restante no menuContainer
-        overflowY: 'auto', // Adiciona a barra de rolagem SÓ AQUI se o conteúdo for maior
+        flexGrow: 1,
+        overflowY: 'auto',
         overflowX: 'hidden',
-        paddingBottom: '16px', // Espaço no final da lista para a rolagem ficar mais suave
+        paddingBottom: '16px',
     },
     navItem: {
         display: 'flex',
@@ -266,6 +260,28 @@ const styles = {
     firebaseModalClose: {
         position: 'absolute', top: '10px', right: '15px', background: 'none', border: 'none',
         fontSize: '1.5rem', color: '#aaa', cursor: 'pointer',
+    },
+    // --- NOVOS ESTILOS AQUI ---
+    firebaseInput: {
+        width: '100%',
+        padding: '12px 16px',
+        marginBottom: '16px',
+        borderRadius: '8px',
+        border: `1px solid ${colors.border}`,
+        fontSize: '1rem',
+        boxSizing: 'border-box', // Garante que padding não afete a largura final
+    },
+    firebaseButton: {
+        width: '100%',
+        padding: '12px 16px',
+        borderRadius: '8px',
+        border: 'none',
+        backgroundColor: colors.accent,
+        color: '#ffffff',
+        fontSize: '1rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'background-color 0.2s',
     },
 };
 
