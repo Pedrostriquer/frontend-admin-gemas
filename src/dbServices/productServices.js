@@ -13,7 +13,7 @@ const productServices = {
       if (filters.minPrice) params.append("MinPrice", filters.minPrice);
       if (filters.maxPrice) params.append("MaxPrice", filters.maxPrice);
       if (filters.status && filters.status !== "Todos") {
-        params.append("Status", filters.status === "Ativo" ? 1 : 0);
+        params.append("Status", filters.status === "Ativo" ? 1 : 2);
       }
       if (filters.categories && filters.categories.length > 0) {
         filters.categories.forEach((catId) =>
