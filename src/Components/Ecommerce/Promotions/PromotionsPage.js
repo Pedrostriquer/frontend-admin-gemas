@@ -15,10 +15,6 @@ import { useLoad } from "../../../Context/LoadContext";
 // HELPERS, HOOKS E TRADUÇÕES
 // ========================================================================
 
-const formatDate = (dateString) =>
-  dateString ? new Date(dateString).toISOString().split("T")[0] : "";
-const ITEMS_PER_PAGE = 6;
-
 const statusMap = {
   Scheduled: "Agendada",
   Active: "Ativa",
@@ -31,6 +27,15 @@ const statusOptions = [
   ...Object.entries(statusMap).map(([value, label]) => ({ value, label }))
 ];
 
+const getActionableStatus = (backendStatus) => {
+  switch (backendStatus) {
+    case 'Scheduled':
+    case 'Finished':
+      return 'Inactive';
+    default:
+      return backendStatus;
+  }
+};
 
 const useOutsideAlerter = (ref, callback) => {
   useEffect(() => {
@@ -116,24 +121,13 @@ const ItemSelector = ({ items, selectedItems, onToggleItem, placeholder }) => {
 // MODAL COMPONENTS
 // ========================================================================
 
-// ############ INÍCIO DA MODIFICAÇÃO PRINCIPAL ############
-const DetailsModal = ({
-  promo,
-  allProducts,
-  onSave,
-  onUpdateStatus,
-  onClose,
-  isClosing,
-}) => {
-  const [formData, setFormData] = useState({
-    ...promo,
-    startDate: formatDate(promo.startDate),
-    endDate: formatDate(promo.endDate),
-  });
+const DetailsModal = ({ promo, allProducts, onSave, onUpdateStatus, onClose, isClosing }) => {
+  const [formData, setFormData] = useState({ ...promo });
+  
+  const actionableStatus = getActionableStatus(promo.status);
 
-  const handleInputChange = (name, value) =>
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
+  const handleInputChange = (name, value) => setFormData((prev) => ({ ...prev, [name]: value }));
+  
   const handleToggleProduct = (productId) => {
     setFormData((prev) => {
       const newProductIds = prev.productIds.includes(productId)
@@ -147,24 +141,15 @@ const DetailsModal = ({
   const handleStatusChange = (newStatus) => onUpdateStatus(promo.id, newStatus);
 
   return (
-    <div
-      className={`modal-backdrop-promo ${isClosing ? "closing" : ""}`}
-      onClick={onClose}
-    >
-      <div
-        className={`modal-content-promo large ${isClosing ? "closing" : ""}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className={`modal-backdrop-promo ${isClosing ? "closing" : ""}`} onClick={onClose}>
+      <div className={`modal-content-promo large ${isClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header-promo">
           <h3>Editar Promoção</h3>
-          <span
-            className={`status-badge-promo status-${formData.status.toLowerCase()}`}
-          >
-            {statusMap[formData.status]}
+          <span className={`status-badge-promo status-${promo.status.toLowerCase()}`}>
+            {statusMap[promo.status] || promo.status}
           </span>
         </div>
         <div className="create-promo-form">
-          {/* REMOVIDO: Atributos 'disabled' de todos os campos */}
           <div className="form-group">
             <label>Nome da Promoção</label>
             <input type="text" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} />
@@ -184,52 +169,42 @@ const DetailsModal = ({
             <label>Gerenciar Produtos</label>
             <ItemSelector items={allProducts} selectedItems={formData.productIds} onToggleItem={handleToggleProduct} placeholder="Buscar produtos..." />
           </div>
-          <div className="form-group">
-            <label>Data de Início</label>
-            <input type="date" value={formData.startDate} onChange={(e) => handleInputChange("startDate", e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>Data de Finalização</label>
-            <input type="date" value={formData.endDate} onChange={(e) => handleInputChange("endDate", e.target.value)} />
-          </div>
         </div>
-        
         <div className="modal-footer-promo details">
           <div className="status-actions">
-            {/* Ações para reativar promoções "mortas" */}
-            {(formData.status === 'Finished' || formData.status === 'Cancelled') && (
-              <button type="button" className="action-btn-promo info" onClick={() => handleStatusChange('Scheduled')}>
-                Reagendar
+            {(actionableStatus === 'Active' || actionableStatus === 'Inactive') && (
+              <>
+                <button
+                  type="button"
+                  className={`action-btn-promo ${actionableStatus === 'Active' ? 'warning' : 'success'}`}
+                  onClick={() => handleStatusChange(actionableStatus === 'Active' ? 'Inactive' : 'Active')}
+                >
+                  {actionableStatus === 'Active' ? 'Desativar' : 'Ativar'}
+                </button>
+                <button
+                  type="button"
+                  className="action-btn-promo danger"
+                  onClick={() => handleStatusChange('Cancelled')}
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
+            {/* ###################################################### */}
+            {/* ### CORREÇÃO APLICADA AQUI PARA ATIVAR DIRETAMENTE ### */}
+            {/* ###################################################### */}
+            {actionableStatus === 'Cancelled' && (
+              <button
+                type="button"
+                className="action-btn-promo success" // Mudado para verde
+                onClick={() => handleStatusChange('Active')} // MUDADO DE 'Inactive' PARA 'Active'
+              >
+                Reativar
               </button>
-            )}
-
-            {/* Ações para uma promoção agendada */}
-            {formData.status === 'Scheduled' && (
-              <>
-                <button type="button" className="action-btn-promo success" onClick={() => handleStatusChange('Active')}>
-                  Ativar
-                </button>
-                <button type="button" className="action-btn-promo danger" onClick={() => handleStatusChange('Cancelled')}>
-                  Cancelar
-                </button>
-              </>
-            )}
-
-            {/* Ações para uma promoção ativa */}
-            {formData.status === 'Active' && (
-              <>
-                <button type="button" className="action-btn-promo warning" onClick={() => handleStatusChange('Finished')}>
-                  Finalizar
-                </button>
-                <button type="button" className="action-btn-promo danger" onClick={() => handleStatusChange('Cancelled')}>
-                  Cancelar
-                </button>
-              </>
             )}
           </div>
           <div className="main-actions">
             <button type="button" className="close-btn-promo" onClick={onClose}>Fechar</button>
-            {/* Botão de salvar sempre visível */}
             <button type="button" className="action-btn-promo primary" onClick={handleSaveChanges}>
               Salvar Alterações
             </button>
@@ -239,20 +214,18 @@ const DetailsModal = ({
     </div>
   );
 };
-// ############ FIM DA MODIFICAÇÃO PRINCIPAL ############
-
 
 const CreateModal = ({ allProducts, onSave, onClose, isClosing }) => {
-  const [formData, setFormData] = useState({ name: "", discountType: "Percentage", discountValue: 0, productIds: [], startDate: "", endDate: "", });
+  const [formData, setFormData] = useState({ name: "", discountType: "Percentage", discountValue: 0, productIds: [] });
   const handleInputChange = (name, value) => setFormData((prev) => ({ ...prev, [name]: value }));
   const handleToggleProduct = (productId) => { setFormData((prev) => { const newProductIds = prev.productIds.includes(productId) ? prev.productIds.filter((id) => id !== productId) : [...prev.productIds, productId]; return { ...prev, productIds: newProductIds }; }); };
-  return ( <div className={`modal-backdrop-promo ${isClosing ? "closing" : ""}`} onClick={onClose}> <div className={`modal-content-promo large ${isClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}> <div className="modal-header-promo"><h3>Criar Nova Promoção</h3></div> <div className="create-promo-form"> <div className="form-group"><label>Nome da Promoção</label><input type="text" placeholder="Ex: Liquida Inverno" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} /></div> <div className="form-group"><label>Tipo de Desconto</label><select value={formData.discountType} onChange={(e) => handleInputChange("discountType", e.target.value)}><option value="Percentage">Porcentagem (%)</option><option value="FixedValue">Valor Fixo (R$)</option></select></div> <div className="form-group"><label>Valor do Desconto</label><input type="number" placeholder="Ex: 15 (para 15%)" value={formData.discountValue} onChange={(e) => handleInputChange("discountValue", parseFloat(e.target.value) || 0)} /></div> <div className="form-group full-width"><label>Selecione os Produtos</label><ItemSelector items={allProducts} selectedItems={formData.productIds} onToggleItem={handleToggleProduct} placeholder="Buscar produtos..." /></div> <div className="form-group"><label>Data de Início</label><input type="date" value={formData.startDate} onChange={(e) => handleInputChange("startDate", e.target.value)} /></div> <div className="form-group"><label>Data de Finalização</label><input type="date" value={formData.endDate} onChange={(e) => handleInputChange("endDate", e.target.value)} /></div></div> <div className="modal-footer-promo create"><button type="button" className="close-btn-promo" onClick={onClose}>Cancelar</button><button type="button" className="action-btn-promo primary" onClick={() => onSave(formData)}>Criar Promoção</button></div></div></div>);
+  return ( <div className={`modal-backdrop-promo ${isClosing ? "closing" : ""}`} onClick={onClose}> <div className={`modal-content-promo large ${isClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}> <div className="modal-header-promo"><h3>Criar Nova Promoção</h3></div> <div className="create-promo-form"> <div className="form-group"><label>Nome da Promoção</label><input type="text" placeholder="Ex: Liquida Inverno" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} /></div> <div className="form-group"><label>Tipo de Desconto</label><select value={formData.discountType} onChange={(e) => handleInputChange("discountType", e.target.value)}><option value="Percentage">Porcentagem (%)</option><option value="FixedValue">Valor Fixo (R$)</option></select></div> <div className="form-group"><label>Valor do Desconto</label><input type="number" placeholder="Ex: 15 (para 15%)" value={formData.discountValue} onChange={(e) => handleInputChange("discountValue", parseFloat(e.target.value) || 0)} /></div> <div className="form-group full-width"><label>Selecione os Produtos</label><ItemSelector items={allProducts} selectedItems={formData.productIds} onToggleItem={handleToggleProduct} placeholder="Buscar produtos..." /></div></div> <div className="modal-footer-promo create"><button type="button" className="close-btn-promo" onClick={onClose}>Cancelar</button><button type="button" className="action-btn-promo primary" onClick={() => onSave(formData)}>Criar Promoção</button></div></div></div>);
 };
+
 
 // ========================================================================
 // MAIN PAGE COMPONENT
 // ========================================================================
-
 function PromotionsPage() {
   const { token } = useAuth();
   const [allPromotions, setAllPromotions] = useState([]);
@@ -260,7 +233,6 @@ function PromotionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [modal, setModal] = useState({ type: null, data: null });
   const [isClosing, setIsClosing] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({ searchTerm: "", status: "Todos" });
   const { startLoading, stopLoading } = useLoad();
 
@@ -271,7 +243,7 @@ function PromotionsPage() {
     try {
       const [promoData, productData] = await Promise.all([
         promotionServices.getAllPromotions(),
-        productServices.searchProducts({}, 1, 1000),
+        productServices.searchProducts({}, 1, 1000), 
       ]);
       setAllPromotions(promoData || []);
       setAllProducts(productData.items || []);
@@ -281,16 +253,14 @@ function PromotionsPage() {
       setIsLoading(false);
       stopLoading();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
-  };
+  const handleFilterChange = (name, value) => setFilters((prev) => ({ ...prev, [name]: value }));
   
   const handleOpenModal = (type, data = null) => setModal({ type, data });
   
@@ -343,14 +313,8 @@ function PromotionsPage() {
       );
   }, [filters, allPromotions]);
 
-  const totalPages = Math.ceil(filteredPromotions.length / ITEMS_PER_PAGE);
-  const paginatedPromotions = filteredPromotions.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const activePromos = useMemo(() => allPromotions?.filter((p) => p.status === "Active").length || 0, [allPromotions]);
-  const scheduledPromos = useMemo(() => allPromotions?.filter((p) => p.status === "Scheduled").length || 0, [allPromotions]);
+  const activePromos = useMemo(() => allPromotions?.filter(p => p.status === 'Active').length || 0, [allPromotions]);
+  const scheduledPromos = useMemo(() => allPromotions?.filter(p => p.status === 'Cancelled').length || 0, [allPromotions]);
 
   return (
     <div className="promotions-page-container">
@@ -373,7 +337,7 @@ function PromotionsPage() {
           <div>
             <h4>Status Atual</h4>
             <p className="kpi-main-value-promo">{activePromos} <span className="kpi-unit-promo">Ativas</span></p>
-            <p className="kpi-sub-value-promo">{scheduledPromos} Agendadas</p>
+            <p className="kpi-sub-value-promo">{scheduledPromos} Canceladas</p>
           </div>
         </div>
       </section>
@@ -391,30 +355,23 @@ function PromotionsPage() {
       ) : (
         <>
           <div className="promotions-list">
-            {paginatedPromotions.length > 0 ? (
-                paginatedPromotions.map((promo) => (
+            {filteredPromotions.length > 0 ? (
+              filteredPromotions.map((promo) => (
                 <div key={promo.id} className="promo-card" onClick={() => handleOpenModal("details", promo)}>
-                    <div className="promo-card-header">
+                  <div className="promo-card-header">
                     <h4>{promo.name}</h4>
                     <span className={`status-badge-promo status-${promo.status.toLowerCase()}`}>
-                        {statusMap[promo.status]}
+                      {statusMap[promo.status] || promo.status}
                     </span>
-                    </div>
-                    <div className="promo-card-body"><p><strong>Produtos:</strong> {promo.productIds?.length || 0}</p></div>
-                    <div className="promo-card-footer"><span>Ver Detalhes <i className="fa-solid fa-arrow-right"></i></span></div>
+                  </div>
+                  <div className="promo-card-body"><p><strong>Produtos:</strong> {promo.productIds?.length || 0}</p></div>
+                  <div className="promo-card-footer"><span>Ver Detalhes <i className="fa-solid fa-arrow-right"></i></span></div>
                 </div>
-                ))
+              ))
             ) : (
-                <div className="no-results-message">Nenhuma promoção encontrada.</div>
+              <div className="no-results-message">Nenhuma promoção encontrada.</div>
             )}
           </div>
-          {totalPages > 1 && (
-            <div className="pagination-container-promo">
-              <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}>Anterior</button>
-              <span>Página {currentPage} de {totalPages || 1}</span>
-              <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages}>Próxima</button>
-            </div>
-          )}
         </>
       )}
       {modal.type === "details" && <DetailsModal promo={modal.data} allProducts={allProducts} onSave={handleSavePromotion} onUpdateStatus={handleUpdateStatus} onClose={handleCloseModal} isClosing={isClosing} />}
