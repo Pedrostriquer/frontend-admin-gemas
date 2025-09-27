@@ -83,7 +83,7 @@ const OrderDetailsModal = ({ order, onUpdateStatus, onClose, isClosing }) => {
       setIsLoadingItems(true);
       startLoading();
       try {
-        const saleItems = await saleServices.getSaleItems(token, order.id);
+        const saleItems = await saleServices.getSaleItems(order.id);
         const productPromises = saleItems.map((item) =>
           productServices.getProductById(item.productId)
         );
@@ -259,7 +259,6 @@ function OrdersPage() {
       setIsLoading(true);
       try {
         const data = await saleServices.getAllSales(
-          token,
           currentFilters,
           page,
           ITEMS_PER_PAGE
@@ -268,7 +267,6 @@ function OrdersPage() {
         setTotalPages(data.totalPages || 1);
         if (page === 1 && !currentFilters.searchTerm) {
           const allData = await saleServices.getAllSales(
-            token,
             { sort: "desc" },
             1,
             1000
@@ -304,7 +302,7 @@ function OrdersPage() {
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       startLoading();
-      await saleServices.updateSaleStatus(token, orderId, newStatus);
+      await saleServices.updateSaleStatus(orderId, newStatus);
       handleCloseModal();
       fetchOrders(currentPage, filters);
     } catch (error) {

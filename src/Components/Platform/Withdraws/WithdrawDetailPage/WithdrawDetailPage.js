@@ -44,13 +44,12 @@ function WithdrawDetailPage() {
     setBankAccount(null);
     startLoading();
     try {
-      const withdrawData = await withdrawServices.getById(token, withdrawalId);
+      const withdrawData = await withdrawServices.getById(withdrawalId);
       setWithdrawal(withdrawData);
 
       if (withdrawData && withdrawData.clientId) {
         try {
           const accountData = await clientServices.getBankAccountByClientId(
-            token,
             withdrawData.clientId
           );
           setBankAccount(accountData);
@@ -83,7 +82,6 @@ function WithdrawDetailPage() {
     try {
       startLoading();
       await withdrawServices.updateWithdrawalStatus(
-        token,
         [withdrawal.id],
         newStatus
       );

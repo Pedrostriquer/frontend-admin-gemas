@@ -438,27 +438,27 @@ function ControllerPage() {
         valorizationData,
         depositAccountsData,
       ] = await Promise.all([
-        withdrawServices.getRules(token).catch((e) => {
+        withdrawServices.getRules().catch((e) => {
           console.error("Falha ao buscar regras de saque", e);
           return {};
         }),
-        contractServices.getContractRules(token).catch((e) => {
+        contractServices.getContractRules().catch((e) => {
           console.error("Falha ao buscar regras de contrato", e);
           return [];
         }),
-        contractServices.getContractSettings(token).catch((e) => {
+        contractServices.getContractSettings().catch((e) => {
           console.error("Falha ao buscar configs de contrato", e);
           return {};
         }),
-        indicationService.getRule(token).catch((e) => {
+        indicationService.getRule().catch((e) => {
           console.error("Falha ao buscar regra de indicação", e);
           return {};
         }),
-        valorizationServices.getConfig(token).catch((e) => {
+        valorizationServices.getConfig().catch((e) => {
           console.error("Falha ao buscar config de valorização", e);
           return {};
         }),
-        depositAccountService.getAll(token).catch((e) => {
+        depositAccountService.getAll().catch((e) => {
           console.error("Falha ao buscar contas de depósito", e);
           return [];
         }),
@@ -506,7 +506,7 @@ function ControllerPage() {
     (serviceCall, stateKey, successMsg, errorMsg) => async (data) => {
       setIsSaving((prev) => ({ ...prev, [stateKey]: true }));
       try {
-        await serviceCall(token, data);
+        await serviceCall(data);
         alert(successMsg);
         await fetchData();
       } catch (error) {
@@ -518,8 +518,8 @@ function ControllerPage() {
     };
 
   const handleSaveWithdrawRules = createSaveHandler(
-    (token, data) =>
-      withdrawServices.updateRules(token, {
+    (data) =>
+      withdrawServices.updateRules({
         ...data,
         fee: parseFloat(data.fee),
         minimumToWithdraw: parseFloat(data.minimumToWithdraw),
@@ -531,8 +531,8 @@ function ControllerPage() {
   );
 
   const handleSaveContractSettings = createSaveHandler(
-    (token, data) =>
-      contractServices.updateContractSettings(token, {
+    (data) =>
+      contractServices.updateContractSettings({
         ...data,
         minimumValue: parseFloat(data.minimumValue),
       }),
@@ -542,8 +542,8 @@ function ControllerPage() {
   );
 
   const handleSaveIndicationRule = createSaveHandler(
-    (token, data) =>
-      indicationService.updateRule(token, {
+    (data) =>
+      indicationService.updateRule({
         ...data,
         percentage: parseFloat(data.percentage),
       }),
@@ -568,12 +568,11 @@ function ControllerPage() {
     try {
       if (dataToSave.id) {
         await contractServices.updateContractRule(
-          token,
           dataToSave.id,
           dataToSave
         );
       } else {
-        await contractServices.createContractRule(token, dataToSave);
+        await contractServices.createContractRule(dataToSave);
       }
       await fetchData();
       handleCloseModal();
@@ -586,7 +585,7 @@ function ControllerPage() {
   const handleDeleteContractRule = async (ruleId) => {
     if (window.confirm("Tem certeza que deseja desativar esta regra?")) {
       try {
-        await contractServices.deleteContractRule(token, ruleId);
+        await contractServices.deleteContractRule(ruleId);
         await fetchData();
       } catch (error) {
         alert("Falha ao desativar a regra.");
@@ -597,9 +596,9 @@ function ControllerPage() {
   const handleSaveDepositAccount = async (accountData) => {
     try {
       if (accountData.id) {
-        await depositAccountService.update(token, accountData.id, accountData);
+        await depositAccountService.update(accountData.id, accountData);
       } else {
-        await depositAccountService.create(token, accountData);
+        await depositAccountService.create(accountData);
       }
       await fetchData();
     } catch (error) {
@@ -613,7 +612,7 @@ function ControllerPage() {
       window.confirm("Tem certeza que deseja excluir esta conta de depósito?")
     ) {
       try {
-        await depositAccountService.delete(token, accountId);
+        await depositAccountService.delete(accountId);
         await fetchData();
       } catch (error) {
         alert("Falha ao excluir a conta de depósito.");

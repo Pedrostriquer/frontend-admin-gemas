@@ -56,9 +56,7 @@ function EcommerceDashboard() {
       setIsLoading(true);
       startLoading();
       try {
-        const dashboardData = await ecommerceDashboardService.getDashboardData(
-          token
-        );
+        const dashboardData = await ecommerceDashboardService.getDashboardData();
         setData(dashboardData);
       } catch (error) {
         console.error(

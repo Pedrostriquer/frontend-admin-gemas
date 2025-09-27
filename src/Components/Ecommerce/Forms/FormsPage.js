@@ -52,7 +52,7 @@ function FormsPage() {
         setIsLoading(true);
         try {
             startLoading();
-            const data = await formServices.getAllForms(token);
+            const data = await formServices.getAllForms();
             setAllForms(data || []);
         } catch (error) {
             alert("Não foi possível carregar os formulários.");

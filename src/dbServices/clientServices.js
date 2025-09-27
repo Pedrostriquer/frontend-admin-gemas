@@ -1,6 +1,6 @@
-import axios from "axios";
+// src/services/clientServices.js
 
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api"; // <-- MUDANÇA: Importa a instância central 'api'
 
 const normalizeSearchString = (str) => {
   if (!str) return "";
@@ -11,14 +11,14 @@ const normalizeSearchString = (str) => {
 };
 
 const clientServices = {
-  loginAsClient: async (adminToken, clientId) => {
+  // CASO ESPECIAL: Mantém headers customizados. O token do admin é passado diretamente.
+  loginAsClient: async (clientId) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}auth/login/as-client`,
+      const response = await api.post(
+        'auth/login/as-client',
         {},
         {
           headers: {
-            Authorization: `Bearer ${adminToken}`,
             "X-Client-ID": clientId,
           },
         }
@@ -30,171 +30,117 @@ const clientServices = {
     }
   },
 
-  getById: async (token, id) => {
+  getById: async (id) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}client/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`client/${id}`); // Interceptor cuida do token
       return response.data;
     } catch (error) {
       console.log(error);
       throw error;
     }
   },
-  getClients: async (token, searchFilter, pageNumber = 1, pageSize = 10) => {
+  
+  getClients: async (searchFilter, pageNumber = 1, pageSize = 10) => {
     try {
       const normalizedFilter = normalizeSearchString(searchFilter);
-      const response = await axios.get(
-        `${BASE_ROUTE}client/search?searchFilter=${normalizedFilter}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // Usando 'params' para uma URL mais limpa
+      const response = await api.get('client/search', {
+        params: { searchFilter: normalizedFilter, pageNumber, pageSize }
+      });
       return response.data;
     } catch (error) {
       console.log(error);
       throw error;
     }
   },
-  editClient: async (id, updates, token) => {
+  
+  editClient: async (id, updates) => {
     try {
-      const response = await axios.patch(`${BASE_ROUTE}client/${id}`, updates, {
-        headers: { Authorization: `Bearer ${token}`, "Client-ID-Ref": id },
+      const response = await api.patch(`client/${id}`, updates, {
+        headers: { "Client-ID-Ref": id }, // Interceptor adicionará 'Authorization'
       });
       return response.data;
     } catch (error) {
       console.log(error);
-
       throw error;
     }
   },
 
-  // NOVA FUNÇÃO PARA ATUALIZAÇÃO PARCIAL - MAIS EFICIENTE!
-  updateClientPartial: async (id, updates, token) => {
-    // A 'updates' já deve ser um array de objetos como:
-    // [{ FieldName: 'Name', FieldNewValue: 'Novo Nome' }, ...]
+  updateClientPartial: async (id, updates) => {
     try {
-      const response = await axios.patch(`${BASE_ROUTE}client/${id}`, updates, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.patch(`client/${id}`, updates);
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao atualizar parcialmente o cliente:",
-        error.response?.data || error
-      );
+      console.error("Erro ao atualizar parcialmente o cliente:", error.response?.data || error);
       throw error.response?.data || error;
     }
   },
 
-  informacoesCarteiraCliente: async (token, id) => {
+  informacoesCarteiraCliente: async (id) => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}withdraw/client/wallet-info`,
-        {
-          headers: { Authorization: `Bearer ${token}`, "Client-ID-Ref": id },
-        }
-      );
+      const response = await api.get('withdraw/client/wallet-info', {
+        headers: { "Client-ID-Ref": id }, // Interceptor adicionará 'Authorization'
+      });
       return response.data;
     } catch (error) {
       console.log(error);
-
       throw error;
     }
   },
+  
   cadastrar: async (info) => {
     try {
-      const response = await axios.post(`${BASE_ROUTE}client`, info);
+      const response = await api.post('client', info);
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao cadastrar cliente:",
-        error.response?.data || error.message
-      );
-      throw (
-        error.response?.data ||
-        new Error("Não foi possível completar o cadastro.")
-      );
+      console.error("Erro ao cadastrar cliente:", error.response?.data || error.message);
+      throw (error.response?.data || new Error("Não foi possível completar o cadastro."));
     }
   },
+  
   requestPasswordReset: async (email) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}verification/forgot-password`,
-        { email }
-      );
+      const response = await api.post('verification/forgot-password', { email });
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao solicitar redefinição de senha:",
-        error.response?.data || error.message
-      );
-      throw (
-        error.response?.data ||
-        new Error("Não foi possível solicitar a redefinição de senha.")
-      );
+      console.error("Erro ao solicitar redefinição de senha:", error.response?.data || error.message);
+      throw (error.response?.data || new Error("Não foi possível solicitar a redefinição de senha."));
     }
   },
+  
   resetPassword: async (verificationCode, newPassword) => {
     try {
-      const response = await axios.post(`${BASE_ROUTE}client/reset-password`, {
-        verificationCode,
-        newPassword,
-      });
+      const response = await api.post('client/reset-password', { verificationCode, newPassword });
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao redefinir senha:",
-        error.response?.data || error.message
-      );
-      throw (
-        error.response?.data || new Error("Não foi possível redefinir a senha.")
-      );
+      console.error("Erro ao redefinir senha:", error.response?.data || error.message);
+      throw (error.response?.data || new Error("Não foi possível redefinir a senha."));
     }
   },
-  addExtraBalance: async (token, clientId, amount, description) => {
+
+  addExtraBalance: async (clientId, amount, description) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}extra`,
-        { clientId, amount, description },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post('extra', { clientId, amount, description });
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao adicionar saldo extra:",
-        error.response?.data || error
-      );
+      console.error("Erro ao adicionar saldo extra:", error.response?.data || error);
       throw error.response?.data || error;
     }
   },
 
-  changePasswordByAdmin: async (token, clientId, newPassword) => {
+  changePasswordByAdmin: async (clientId, newPassword) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}client/${clientId}/change-password-admin`,
-        { newPassword },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post(`client/${clientId}/change-password-admin`, { newPassword });
       return response.data;
     } catch (error) {
       console.error("Erro ao alterar senha:", error.response?.data || error);
       throw error.response?.data || error;
     }
   },
-  associateConsultant: async (token, clientId, consultantId) => {
+
+  associateConsultant: async (clientId, consultantId) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}client/${clientId}/associate-consultant/${consultantId}`,
-        null,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post(`client/${clientId}/associate-consultant/${consultantId}`, null);
       return response.data;
     } catch (error) {
       console.error("Erro ao associar consultor:", error);
@@ -202,14 +148,9 @@ const clientServices = {
     }
   },
 
-  removeConsultant: async (token, clientId) => {
+  removeConsultant: async (clientId) => {
     try {
-      const response = await axios.delete(
-        `${BASE_ROUTE}client/${clientId}/remove-consultant`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.delete(`client/${clientId}/remove-consultant`);
       return response.data;
     } catch (error) {
       console.error("Erro ao remover consultor:", error);
@@ -217,40 +158,22 @@ const clientServices = {
     }
   },
 
-  deleteProfilePicture: async (id, token) => {
+  deleteProfilePicture: async (id) => {
     try {
-      const response = await axios.delete(
-        `${BASE_ROUTE}client/${id}/profile-picture`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.delete(`client/${id}/profile-picture`);
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao deletar a foto:",
-        error.response?.data || error.message
-      );
-      throw (
-        error.response?.data || new Error("Não foi possível deletar a foto.")
-      );
+      console.error("Erro ao deletar a foto:", error.response?.data || error.message);
+      throw (error.response?.data || new Error("Não foi possível deletar a foto."));
     }
   },
 
-  getBankAccountByClientId: async (token, clientId) => {
+  getBankAccountByClientId: async (clientId) => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}BankAccount/client/${clientId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.get(`BankAccount/client/${clientId}`);
       return response.data;
     } catch (error) {
-      console.error(
-        "Erro ao obter conta bancária do cliente:",
-        error.response?.data || error.message
-      );
+      console.error("Erro ao obter conta bancária do cliente:", error.response?.data || error.message);
       throw error;
     }
   },

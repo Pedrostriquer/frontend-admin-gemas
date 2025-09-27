@@ -271,7 +271,7 @@ function UsersPage() {
       if (!token) return;
       try {
         setIsLoading(true);
-        const data = await adminServices.getAllAdmins(token);
+        const data = await adminServices.getAllAdmins();
         setUsers(data);
       } catch (err) {
         setError("Não foi possível carregar os usuários.");

@@ -40,7 +40,7 @@ function CreateWithdrawalPage() {
         setIsSearching(true);
         try {
           startLoading();
-          const response = await clientServices.getClients(token, debouncedSearchTerm);
+          const response = await clientServices.getClients(debouncedSearchTerm);
           setSearchResults(response.items || []);
         } catch (error) {
           console.error("Erro ao buscar clientes:", error);
@@ -73,7 +73,7 @@ function CreateWithdrawalPage() {
         clientId: selectedClient.id, 
         amount: parseFloat(amount) 
       };
-      await withdrawServices.criarSaqueAdmin(token, data);
+      await withdrawServices.criarSaqueAdmin(data);
       handleNext();
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Ocorreu um erro ao criar o saque. Tente novamente.";

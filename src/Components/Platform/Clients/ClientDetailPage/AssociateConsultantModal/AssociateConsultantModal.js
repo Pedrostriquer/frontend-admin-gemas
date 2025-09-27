@@ -29,7 +29,6 @@ function AssociateConsultantModal({ isOpen, onClose, onAssociate }) {
       setIsSearching(true);
       try {
         const data = await consultantService.getConsultants(
-          token,
           debouncedSearch
         );
         setResults(data.items || []);

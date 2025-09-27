@@ -38,7 +38,6 @@ const useDebounce = (value, delay) => {
 };
 
 const ClientSelector = ({
-  token,
   selectedClients,
   onSelectionChange,
   sendToAll,
@@ -51,13 +50,13 @@ const ClientSelector = ({
 
   const searchClients = useCallback(
     async (search) => {
-      if (!token || !search) {
+      if (!search) {
         setSearchResults([]);
         return;
       }
       setIsSearching(true);
       try {
-        const data = await clientServices.getClients(token, search, 1, 15);
+        const data = await clientServices.getClients(search, 1, 15);
         setSearchResults(data.items || []);
       } catch (error) {
         console.error("Erro ao buscar clientes", error);
@@ -66,7 +65,7 @@ const ClientSelector = ({
         setIsSearching(false);
       }
     },
-    [token]
+    []
   );
 
   useEffect(() => {
@@ -156,7 +155,7 @@ const ClientSelector = ({
   );
 };
 
-const MessageCreationModal = ({ isOpen, onClose, onSubmit, token }) => {
+const MessageCreationModal = ({ isOpen, onClose, onSubmit }) => {
   const [newMessage, setNewMessage] = useState({
     title: "",
     text: "",
@@ -235,7 +234,6 @@ const MessageCreationModal = ({ isOpen, onClose, onSubmit, token }) => {
               style={{ ...styles.formInput, marginTop: "20px" }}
             />
             <ClientSelector
-              token={token}
               selectedClients={selectedClients}
               onSelectionChange={setSelectedClients}
               sendToAll={sendToAll}
@@ -384,7 +382,7 @@ const MessagesPage = () => {
     }
     setLoading(true);
     try {
-      const data = await messageService.getMessages(token);
+      const data = await messageService.getMessages();
       setMessages(data);
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
@@ -403,7 +401,7 @@ const MessagesPage = () => {
       return false;
     }
     try {
-      await messageService.createMessage(newMessage, token);
+      await messageService.createMessage(newMessage);
       await fetchMessages();
       return true;
     } catch (error) {
@@ -416,7 +414,7 @@ const MessagesPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir esta mensagem?")) {
       try {
-        await messageService.deleteMessage(id, token);
+        await messageService.deleteMessage(id);
         await fetchMessages();
       } catch (error) {
         console.error("Erro ao excluir mensagem:", error);
@@ -436,7 +434,6 @@ const MessagesPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        token={token}
       />
       <div style={styles.pageHeader}>
         <h1 style={styles.pageTitle}>Central de Mensagens</h1>

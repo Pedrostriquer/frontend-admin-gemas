@@ -59,7 +59,6 @@ function WithdrawalsPage() {
       try {
         startLoading();
         const data = await withdrawServices.getWithdrawals(
-          token,
           currentFilters,
           page,
           10
@@ -135,7 +134,6 @@ function WithdrawalsPage() {
     try {
       startLoading();
       await withdrawServices.updateWithdrawalStatus(
-        token,
         idsToUpdate,
         newStatus
       );

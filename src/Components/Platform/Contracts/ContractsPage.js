@@ -62,7 +62,6 @@ function ContractsPage() {
       try {
         startLoading();
         const data = await contractServices.getContracts(
-          token,
           currentFilters,
           page,
           10
@@ -134,7 +133,6 @@ function ContractsPage() {
     try {
       startLoading();
       await contractServices.updateContractStatus(
-        token,
         idsToUpdate,
         newStatus
       );

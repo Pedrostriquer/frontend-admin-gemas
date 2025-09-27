@@ -1,17 +1,9 @@
-import axios from "axios";
-
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const consultantService = {
-  createConsultant: async (token, consultantData) => {
+  createConsultant: async (consultantData) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}consultant`,
-        consultantData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post("consultant", consultantData);
       return response.data;
     } catch (error) {
       console.error("Erro ao criar consultor:", error);
@@ -19,12 +11,11 @@ const consultantService = {
     }
   },
 
-  getConsultants: async (token, searchTerm, pageNumber = 1, pageSize = 10) => {
+  getConsultants: async (searchTerm, pageNumber = 1, pageSize = 10) => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}consultant/search?searchTerm=${searchTerm}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.get("consultant/search", {
+        params: { searchTerm, pageNumber, pageSize },
+      });
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar consultores:", error);
@@ -32,46 +23,35 @@ const consultantService = {
     }
   },
 
-  getConsultantById: async (token, id) => {
+  getConsultantById: async (id) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}consultant/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`consultant/${id}`);
       return response.data;
-    } catch (error)
-    {
+    } catch (error) {
       console.error("Erro ao buscar consultor por ID:", error);
       throw error;
     }
   },
 
-  // NOVA FUNÇÃO PARA BUSCAR OS CLIENTES DO CONSULTOR
-  getClientsForConsultant: async (token, consultantId, pageNumber = 1, pageSize = 5) => {
+  getClientsForConsultant: async (
+    consultantId,
+    pageNumber = 1,
+    pageSize = 5
+  ) => {
     try {
-      const response = await axios.get(
-        // Usando a nova rota do backend
-        `${BASE_ROUTE}client/by-consultant/${consultantId}`, 
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { pageNumber, pageSize } // Passando os parâmetros de paginação
-        }
-      );
-      return response.data; // Espera-se que retorne { items: [], totalCount: X }
+      const response = await api.get(`client/by-consultant/${consultantId}`, {
+        params: { pageNumber, pageSize },
+      });
+      return response.data;
     } catch (error) {
       console.error("Erro ao buscar clientes do consultor:", error);
       throw error;
     }
   },
 
-  updateConsultant: async (token, id, consultantData) => {
+  updateConsultant: async (id, consultantData) => {
     try {
-      const response = await axios.put(
-        `${BASE_ROUTE}consultant/${id}`,
-        consultantData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.put(`consultant/${id}`, consultantData);
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar consultor:", error);
@@ -79,12 +59,13 @@ const consultantService = {
     }
   },
 
-  addBalance: async (token, consultantId, amount) => {
+  addBalance: async (consultantId, amount) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}consultant/${consultantId}/add-balance`,
-        { amount },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post(
+        `consultant/${consultantId}/add-balance`,
+        {
+          amount,
+        }
       );
       return response.data;
     } catch (error) {

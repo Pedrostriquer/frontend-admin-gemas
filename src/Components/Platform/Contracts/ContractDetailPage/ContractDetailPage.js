@@ -360,7 +360,7 @@ function ContractDetailPage() {
       setIsFetchingPayment(true);
       setPaymentError(null);
       try {
-        const data = await contractServices.getPaymentDetails(token, paymentId);
+        const data = await contractServices.getPaymentDetails(paymentId);
         setPaymentDetails(data);
       } catch (err) {
         setPaymentError("Não foi possível carregar os detalhes do pagamento.");
@@ -377,7 +377,7 @@ function ContractDetailPage() {
     setError(null);
     startLoading();
     try {
-      const data = await contractServices.getById(token, contractId);
+      const data = await contractServices.getById(contractId);
       setContract(data);
       setMedia(
         data.rockData?.map((url) => ({
@@ -424,7 +424,7 @@ function ContractDetailPage() {
       setIsAppreciating(true);
       startLoading();
       try {
-        await contractServices.appreciateContractForDay(token, contractId);
+        await contractServices.appreciateContractForDay(contractId);
         alert("Valorização diária executada com sucesso!");
         await fetchContract(); // Recarrega os dados para ver o lucro atualizado
       } catch (error) {
@@ -444,7 +444,7 @@ function ContractDetailPage() {
     setIsApprovingPayment(true);
     try {
       startLoading();
-      await contractServices.approveLocalPayment(token, contract.paymentId);
+      await contractServices.approveLocalPayment(contract.paymentId);
       alert("Pagamento aprovado com sucesso!");
       await fetchPaymentDetails(contract.paymentId);
     } catch (err) {
@@ -463,7 +463,6 @@ function ContractDetailPage() {
     try {
       startLoading();
       await contractServices.updateContractStatus(
-        token,
         [contractId],
         newStatus
       );
@@ -488,7 +487,6 @@ function ContractDetailPage() {
       startLoading();
       const newState = !contract.autoReinvest;
       await contractServices.atualizarAutoReinvestimentoCliente(
-        token,
         contractId,
         newState,
         contract.clientId
@@ -515,7 +513,6 @@ function ContractDetailPage() {
       const newState = !contract.reivestmentAvaliable;
       const updatedContract =
         await contractServices.setReinvestmentAvailability(
-          token,
           contractId,
           newState
         );
@@ -571,7 +568,6 @@ function ContractDetailPage() {
     try {
       startLoading();
       await contractServices.uploadContractFiles(
-        token,
         contractId,
         newCertificateFiles,
         newMediaFiles
@@ -614,7 +610,6 @@ function ContractDetailPage() {
     try {
       startLoading();
       await contractServices.deleteContractFile(
-        token,
         contractId,
         fileUrl,
         fileType
@@ -640,7 +635,6 @@ function ContractDetailPage() {
     try {
       startLoading();
       await contractServices.deleteAllContractFiles(
-        token,
         contractId,
         fileType
       );
@@ -658,7 +652,6 @@ function ContractDetailPage() {
     try {
       startLoading();
       await contractServices.addOrUpdateTracking(
-        token,
         contractId,
         trackingData
       );

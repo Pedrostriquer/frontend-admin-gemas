@@ -19,7 +19,7 @@ function CancelContractModal({ isOpen, onClose, contract }) {
     setError('');
 
     try {
-      await contractServices.cancelContract(token, contract.id, withdrawMoney);
+      await contractServices.cancelContract(contract.id, withdrawMoney);
       alert('Contrato cancelado com sucesso!');
       onClose();
       navigate('/platform/contracts');

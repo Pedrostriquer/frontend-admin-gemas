@@ -1,27 +1,21 @@
-import axios from "axios";
+// src/services/categoryServices.js
 
-const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const categoryServices = {
-    /**
-     * ATUALIZADO: Agora busca categorias e a contagem de produtos associados
-     * diretamente do novo endpoint da API.
-     */
     getAllCategories: async () => {
         try {
-            // Chamada para o novo endpoint que já inclui a contagem de produtos
-            const response = await axios.get(`${API_BASE_URL}Category/with-product-count`);
+            // Usa 'api' e a rota relativa SEM a barra inicial
+            const response = await api.get('Category/with-product-count');
             
-            // Mapeia a resposta para o formato que o frontend espera
             const categoriesWithData = response.data.map((cat, index) => ({
                 ...cat,
-                name: cat.categoryName, // Garante que a propriedade 'name' exista, caso o frontend a utilize
-                productCount: cat.productsAssociated, // Utiliza a contagem de produtos vinda da API
-                status: index % 4 === 0 ? 'Inativo' : 'Ativo', // Lógica de status mantida como simulação
+                name: cat.categoryName,
+                productCount: cat.productsAssociated,
+                status: index % 4 === 0 ? 'Inativo' : 'Ativo',
             }));
             return categoriesWithData;
         } catch (error) {
-            // Mensagem de erro atualizada para refletir a nova chamada
             console.error("Erro ao buscar categorias com contagem de produtos:", error.response?.data || error.message);
             throw error;
         }
@@ -29,7 +23,8 @@ const categoryServices = {
 
     getProductsForSelection: async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}Product/search?PageSize=1000`);
+            // Usando o objeto 'params' para mais clareza
+            const response = await api.get('Product/search', { params: { PageSize: 1000 } });
             return response.data.items.map(p => ({ id: p.id, name: p.name }));
         } catch (error) {
             console.error("Erro ao buscar produtos para seleção:", error.response?.data || error.message);
@@ -40,7 +35,8 @@ const categoryServices = {
     updateProductCategories: async (categoryIds, productIds) => {
         try {
             const updatePromises = productIds.map(productId => 
-                axios.patch(`${API_BASE_URL}Product/${productId}/categories`, { categoryIds })
+                // A rota é construída de forma relativa
+                api.patch(`Product/${productId}/categories`, { categoryIds })
             );
             await Promise.all(updatePromises);
         } catch (error) {
@@ -51,7 +47,7 @@ const categoryServices = {
 
     createCategory: async (categoryData) => {
         try {
-            const response = await axios.post(`${API_BASE_URL}Category`, { name: categoryData.name });
+            const response = await api.post('Category', { name: categoryData.name });
             return response.data;
         } catch (error) {
             console.error("Erro ao criar categoria:", error.response?.data || error.message);
@@ -61,7 +57,7 @@ const categoryServices = {
 
     updateCategory: async (id, categoryData) => {
         try {
-            await axios.put(`${API_BASE_URL}Category/${id}`, categoryData);
+            await api.put(`Category/${id}`, categoryData);
         } catch (error) {
             console.error(`Erro ao atualizar categoria ${id}:`, error.response?.data || error.message);
             throw error;
@@ -71,8 +67,8 @@ const categoryServices = {
     updateCategoryStatus: async (id, status) => {
         try {
             console.log(`Simulando atualização de status para categoria ${id}: ${status}`);
-            // Exemplo de como seria com uma API real:
-            // await axios.patch(`${API_BASE_URL}/Category/${id}/status`, { status });
+            // Exemplo de como seria com a API real:
+            // await api.patch(`Category/${id}/status`, { status });
             return Promise.resolve();
         } catch (error) {
             console.error(`Erro ao atualizar status da categoria ${id}:`, error.response?.data || error.message);
@@ -82,7 +78,7 @@ const categoryServices = {
 
     deleteCategory: async (id) => {
         try {
-            await axios.delete(`${API_BASE_URL}Category/${id}`);
+            await api.delete(`Category/${id}`);
         } catch (error) {
             console.error(`Erro ao deletar categoria ${id}:`, error.response?.data || error.message);
             throw error;

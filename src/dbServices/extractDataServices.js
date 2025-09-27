@@ -1,21 +1,15 @@
-// src/dbServices/extractDataServices.js
-
-import axios from "axios";
-
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const extractDataServices = {
-  // Esta função continua com o filtro, pois é SÓ PARA CLIENTES
-  downloadClientsCsv: async (token, searchFilter) => {
+  downloadClientsCsv: async (searchFilter) => {
     try {
-      const filterQuery = searchFilter ? `searchFilter=${encodeURIComponent(searchFilter)}` : "";
-      const response = await axios.get(
-        `${BASE_ROUTE}ExtractData/clients?${filterQuery}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      const config = {
+        responseType: "blob",
+      };
+      if (searchFilter) {
+        config.params = { searchFilter };
+      }
+      const response = await api.get("ExtractData/clients", config);
       return response;
     } catch (error) {
       console.error("Erro ao baixar CSV de clientes:", error);
@@ -23,16 +17,11 @@ const extractDataServices = {
     }
   },
 
-  // As funções abaixo agora são simples, sem filtros
-  downloadConsultantsCsv: async (token) => {
+  downloadConsultantsCsv: async () => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}ExtractData/consultants`, // URL sem filtros
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      const response = await api.get("ExtractData/consultants", {
+        responseType: "blob",
+      });
       return response;
     } catch (error) {
       console.error("Erro ao baixar CSV de consultores:", error);
@@ -40,15 +29,11 @@ const extractDataServices = {
     }
   },
 
-  downloadContractsCsv: async (token) => {
+  downloadContractsCsv: async () => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}ExtractData/contracts`, // URL sem filtros
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      const response = await api.get("ExtractData/contracts", {
+        responseType: "blob",
+      });
       return response;
     } catch (error) {
       console.error("Erro ao baixar CSV de contratos:", error);
@@ -56,15 +41,11 @@ const extractDataServices = {
     }
   },
 
-  downloadWithdrawsCsv: async (token) => {
+  downloadWithdrawsCsv: async () => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}ExtractData/withdraws`, // URL sem filtros
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        }
-      );
+      const response = await api.get("ExtractData/withdraws", {
+        responseType: "blob",
+      });
       return response;
     } catch (error) {
       console.error("Erro ao baixar CSV de saques:", error);
