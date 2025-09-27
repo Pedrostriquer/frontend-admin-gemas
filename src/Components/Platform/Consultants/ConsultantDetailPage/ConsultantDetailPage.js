@@ -34,7 +34,6 @@ function ConsultantDetailPage() {
       startLoading();
       try {
         const data = await consultantService.getClientsForConsultant(
-          token,
           consultantId,
           page,
           CLIENTS_PER_PAGE
@@ -60,7 +59,6 @@ function ConsultantDetailPage() {
     startLoading();
     try {
       const data = await consultantService.getConsultantById(
-        token,
         consultantId
       );
       setConsultant(data);
@@ -108,7 +106,6 @@ function ConsultantDetailPage() {
         commissionPercentage: parseFloat(consultant.commissionPercentage),
       };
       await consultantService.updateConsultant(
-        token,
         consultantId,
         updatedData
       );
@@ -127,7 +124,7 @@ function ConsultantDetailPage() {
     setIsSaving(true);
     try {
       startLoading();
-      await consultantService.addBalance(token, consultantId, amount);
+      await consultantService.addBalance(consultantId, amount);
       alert("Saldo adicionado com sucesso!");
       setIsBalanceModalOpen(false);
       await fetchConsultant();

@@ -1,26 +1,33 @@
-import axios from "axios";
-
-const API_URL = `${process.env.REACT_APP_BASE_ROUTE}messages`;
-
-const getAuthHeaders = (token) => ({
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
+import api from "./api/api";
 
 const messageService = {
-  getMessages: async (token) => {
-    const response = await axios.get(API_URL, getAuthHeaders(token));
-    return response.data;
+  getMessages: async () => {
+    try {
+      const response = await api.get("messages");
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar mensagens:", error);
+      throw error;
+    }
   },
 
-  createMessage: async (messageData, token) => {
-    const response = await axios.post(API_URL, messageData, getAuthHeaders(token));
-    return response.data;
+  createMessage: async (messageData) => {
+    try {
+      const response = await api.post("messages", messageData);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar mensagem:", error);
+      throw error;
+    }
   },
 
-  deleteMessage: async (id, token) => {
-    await axios.delete(`${API_URL}/${id}`, getAuthHeaders(token));
+  deleteMessage: async (id) => {
+    try {
+      await api.delete(`messages/${id}`);
+    } catch (error) {
+      console.error(`Erro ao deletar mensagem ${id}:`, error);
+      throw error;
+    }
   },
 };
 

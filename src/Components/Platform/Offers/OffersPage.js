@@ -92,9 +92,9 @@ function OffersPage() {
     if (!token) return;
     setLoading((prev) => ({ ...prev, page: true }));
     try {
-      const offersData = await offerService.getOffers(token);
+      const offersData = await offerService.getOffers();
       setOffers(offersData);
-      const categoriesData = await offerCategoryService.getCategories(token);
+      const categoriesData = await offerCategoryService.getCategories();
       setCategories(categoriesData);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
@@ -119,7 +119,7 @@ function OffersPage() {
     if (!file) return;
     setLoading((prev) => ({ ...prev, upload: true }));
     try {
-      const response = await offerService.uploadMidea(file, token);
+      const response = await offerService.uploadMidea(file);
       setNewOffer((prev) => ({
         ...prev,
         mideaUrl: response.url,
@@ -137,7 +137,7 @@ function OffersPage() {
     if (!newOffer.mideaUrl) return;
     setLoading((prev) => ({ ...prev, upload: true }));
     try {
-      await offerService.deleteMidea(newOffer.mideaUrl, token);
+      await offerService.deleteMidea(newOffer.mideaUrl);
       setNewOffer((prev) => ({ ...prev, mideaUrl: "", mideaSource: 1 }));
     } catch (error) {
       console.error("Erro ao deletar mídia:", error);
@@ -201,12 +201,10 @@ function OffersPage() {
       if (editingOffer) {
         await offerService.updateOffer(
           editingOffer.id,
-          { ...newOffer, id: editingOffer.id },
-          token
-        );
+          { ...newOffer, id: editingOffer.id }        );
         alert("Anúncio atualizado com sucesso!");
       } else {
-        await offerService.createOffer(newOffer, token);
+        await offerService.createOffer(newOffer);
         alert(`Anúncio "${newOffer.title}" criado com sucesso!`);
       }
       resetForm();
@@ -223,7 +221,7 @@ function OffersPage() {
     if (window.confirm("Tem certeza que deseja excluir este anúncio?")) {
       setLoading((prev) => ({ ...prev, page: true }));
       try {
-        await offerService.deleteOffer(offerId, token);
+        await offerService.deleteOffer(offerId);
         await fetchInitialData();
       } catch (error) {
         console.error("Erro ao excluir anúncio:", error);
@@ -242,7 +240,7 @@ function OffersPage() {
   const handleToggleStatus = async (offerId) => {
     setLoading((prev) => ({ ...prev, page: true }));
     try {
-      await offerService.toggleOfferStatus(offerId, token);
+      await offerService.toggleOfferStatus(offerId);
       await fetchInitialData();
     } catch (error) {
       console.error("Erro ao alterar status:", error);

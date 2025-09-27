@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const productServices = {
   searchProducts: async (filters, pageNumber = 1, pageSize = 5) => {
@@ -23,9 +21,7 @@ const productServices = {
       params.append("PageNumber", pageNumber);
       params.append("PageSize", pageSize);
 
-      const response = await axios.get(`${API_BASE_URL}Product/search`, {
-        params,
-      });
+      const response = await api.get("Product/search", { params });
       return response.data;
     } catch (error) {
       console.error(
@@ -36,10 +32,9 @@ const productServices = {
     }
   },
 
-  // ✨✨✨ FUNÇÃO ADICIONADA DE VOLTA AQUI, MIGA! ✨✨✨
   getProductById: async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}Product/${id}`);
+      const response = await api.get(`Product/${id}`);
       return response.data;
     } catch (error) {
       console.error(
@@ -52,7 +47,7 @@ const productServices = {
 
   getAllCategories: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}Category`);
+      const response = await api.get("Category");
       return response.data;
     } catch (error) {
       console.error(
@@ -65,7 +60,7 @@ const productServices = {
 
   createProduct: async (productData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}Product`, productData);
+      const response = await api.post("Product", productData);
       return response.data;
     } catch (error) {
       console.error(
@@ -78,10 +73,7 @@ const productServices = {
 
   updateProduct: async (id, productData) => {
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}Product/${id}`,
-        productData
-      );
+      const response = await api.put(`Product/${id}`, productData);
       return response.data;
     } catch (error) {
       console.error(
@@ -94,9 +86,7 @@ const productServices = {
 
   deleteProducts: async (ids) => {
     try {
-      const deletePromises = ids.map((id) =>
-        axios.delete(`${API_BASE_URL}Product/${id}`)
-      );
+      const deletePromises = ids.map((id) => api.delete(`Product/${id}`));
       await Promise.all(deletePromises);
     } catch (error) {
       console.error(
@@ -110,7 +100,7 @@ const productServices = {
   updateProductsStatus: async (ids, status) => {
     try {
       const updatePromises = ids.map((id) =>
-        axios.patch(`${API_BASE_URL}Product/${id}/status`, { status })
+        api.patch(`Product/${id}/status`, { status })
       );
       await Promise.all(updatePromises);
     } catch (error) {
@@ -123,29 +113,22 @@ const productServices = {
   },
 
   uploadProductMedia: async (productId, file) => {
-    // FormData é o formato necessário para enviar arquivos via HTTP
     const formData = new FormData();
-    formData.append("file", file); // 'file' deve corresponder ao nome do parâmetro no controller
+    formData.append("file", file);
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}product/${productId}/upload-media`,
+      const response = await api.post(
+        `product/${productId}/upload-media`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          // Opcional: para barras de progresso
-          // onUploadProgress: progressEvent => {
-          //     console.log(Math.round((progressEvent.loaded * 100) / progressEvent.total));
-          // }
         }
       );
-      // O controller retorna um objeto { mediaUrl: '...' }
       return response.data.mediaUrl;
     } catch (error) {
       console.error("Erro no upload da mídia:", error);
-      // Lança o erro para que o componente que chamou possa tratá-lo
       throw (
         error.response?.data?.message ||
         "Não foi possível fazer o upload do arquivo."
@@ -155,8 +138,7 @@ const productServices = {
 
   updateProductStock: async (productId, newStock) => {
     try {
-      // A api espera um objeto com a chave "stock"
-      await axios.patch(`${API_BASE_URL}product/${productId}/stock`, {
+      await api.patch(`product/${productId}/stock`, {
         stock: newStock,
       });
     } catch (error) {
@@ -170,7 +152,7 @@ const productServices = {
 
   updateProductCode: async (productId, newCode) => {
     try {
-      await axios.patch(`${API_BASE_URL}product/${productId}/code`, {
+      await api.patch(`product/${productId}/code`, {
         code: newCode,
       });
     } catch (error) {
@@ -178,7 +160,7 @@ const productServices = {
         `Erro ao atualizar código do produto ${productId}:`,
         error.response?.data || error.message
       );
-      throw error; // Lança o erro para ser tratado no componente
+      throw error;
     }
   },
 };

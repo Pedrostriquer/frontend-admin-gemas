@@ -41,7 +41,7 @@ function ReferralsPage() {
             const fetchClients = async () => {
                 setIsSearching(true);
                 try {
-                    const response = await clientServices.getClients(token, debouncedSearchTerm, 1, 10);
+                    const response = await clientServices.getClients(debouncedSearchTerm, 1, 10);
                     setClientResults(response.items || []);
                 } catch (error) {
                     console.error("Erro ao buscar clientes:", error);
@@ -68,7 +68,7 @@ function ReferralsPage() {
         setIsSubmitting(true);
         try {
             const amount = parseFloat(referralValue);
-            await clientServices.addExtraBalance(token, selectedClient.id, amount, "Bônus de Indicação");
+            await clientServices.addExtraBalance(selectedClient.id, amount, "Bônus de Indicação");
             alert(`Indicação de ${amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} adicionada para ${selectedClient.name} com sucesso!`);
             setSelectedClient(null);
             setReferralValue('');

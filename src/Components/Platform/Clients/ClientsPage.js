@@ -49,7 +49,6 @@ function ClientsPage() {
       startLoading();
       try {
         const data = await clientServices.getClients(
-          token,
           search,
           page,
           ITEMS_PER_PAGE,

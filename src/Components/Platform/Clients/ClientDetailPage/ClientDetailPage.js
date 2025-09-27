@@ -73,12 +73,11 @@ function ClientDetailPage() {
     setContractsLoading(true);
     startLoading();
     try {
-      const data = await clientServices.getById(token, clientId);
+      const data = await clientServices.getById(clientId);
       setClient(data);
       setEditableClient(data);
 
       const contractsData = await contractServices.obterContratosDoCliente(
-        token,
         clientId
       );
       setAllContracts(contractsData || []);
@@ -111,9 +110,9 @@ function ClientDetailPage() {
 
   const handleLoginAsClient = async () => {
     try {
-      const authResponse = await clientServices.loginAsClient(token, clientId);
+      const authResponse = await clientServices.loginAsClient(clientId);
       const clientToken = authResponse.token;
-      const clientPlatformUrl = `http://gemas.demelloagent.app/login?token=${clientToken}`;
+      const clientPlatformUrl = `http://gemas.demelloagent.app/plataforma/login?token=${clientToken}`;
       window.open(clientPlatformUrl, "_blank");
     } catch (error) {
       alert("Não foi possível logar como cliente. Tente novamente.");
@@ -122,7 +121,7 @@ function ClientDetailPage() {
   const handleAddBalance = async ({ amount }) => {
     try {
       startLoading();
-      await clientServices.addExtraBalance(token, clientId, amount);
+      await clientServices.addExtraBalance(clientId, amount);
       alert("Saldo adicionado com sucesso!");
       setIsBalanceModalOpen(false);
       fetchClientData();
@@ -135,7 +134,7 @@ function ClientDetailPage() {
   const handleChangePassword = async ({ password }) => {
     try {
       startLoading();
-      await clientServices.changePasswordByAdmin(token, clientId, password);
+      await clientServices.changePasswordByAdmin(clientId, password);
       alert("Senha alterada com sucesso!");
       setIsPasswordModalOpen(false);
     } catch (error) {
@@ -147,7 +146,7 @@ function ClientDetailPage() {
   const handleAssociateConsultant = async (consultantId) => {
     try {
       startLoading();
-      await clientServices.associateConsultant(token, clientId, consultantId);
+      await clientServices.associateConsultant(clientId, consultantId);
       setIsAssociateModalOpen(false);
       await fetchClientData();
     } catch (error) {
@@ -164,7 +163,7 @@ function ClientDetailPage() {
     ) {
       startLoading();
       try {
-        await clientServices.removeConsultant(token, clientId);
+        await clientServices.removeConsultant(clientId);
         await fetchClientData();
       } catch (error) {
         alert("Falha ao remover consultor.");
@@ -181,7 +180,7 @@ function ClientDetailPage() {
     ) {
       try {
         startLoading();
-        await clientServices.deleteProfilePicture(clientId, token);
+        await clientServices.deleteProfilePicture(clientId);
         alert("Foto de perfil removida com sucesso.");
         fetchClientData();
       } catch (error) {
@@ -229,7 +228,7 @@ function ClientDetailPage() {
     }
     try {
       startLoading();
-      await clientServices.updateClientPartial(clientId, updates, token);
+      await clientServices.updateClientPartial(clientId, updates);
       alert("Cliente atualizado com sucesso!");
       setIsEditing(false);
       await fetchClientData();

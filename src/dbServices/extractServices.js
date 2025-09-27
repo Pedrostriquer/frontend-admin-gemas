@@ -1,12 +1,10 @@
-import axios from "axios";
-
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const extractServices = {
-  getExtracts: async (token, idCliente) => {
+  getExtracts: async (idCliente) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}extract`, {
-        headers: { Authorization: `Bearer ${token}`, "Client-ID-Ref": idCliente },
+      const response = await api.get("extract", {
+        headers: { "Client-ID-Ref": idCliente },
       });
       return response.data;
     } catch (error) {

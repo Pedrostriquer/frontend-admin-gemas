@@ -25,10 +25,10 @@ const formatStatus = (status, map) => map[status] || status;
 const DATA_SOURCES = {
   Clientes: {
     // Para Clientes, o searchTerm do filtro é usado diretamente
-    fetchFunction: (token, filters, page) =>
-      clientServices.getClients(token, filters.searchTerm, page, 10),
-    downloadFunction: (token, filters) =>
-      extractDataServices.downloadClientsCsv(token, filters.searchTerm),
+    fetchFunction: (filters, page) =>
+      clientServices.getClients(filters.searchTerm, page, 10),
+    downloadFunction: (filters) =>
+      extractDataServices.downloadClientsCsv(filters.searchTerm),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Nome", accessor: "name" },
@@ -44,15 +44,14 @@ const DATA_SOURCES = {
   Consultores: {
     // ✨✨✨ CORREÇÃO APLICADA AQUI ✨✨✨
     // Para Consultores, se o searchTerm não existir, passamos uma string vazia ""
-    fetchFunction: (token, filters, page) =>
+    fetchFunction: (filters, page) =>
       consultantService.getConsultants(
-        token,
         filters.searchTerm || "",
         page,
         10
       ),
-    downloadFunction: (token) =>
-      extractDataServices.downloadConsultantsCsv(token), // O download não precisa de filtro
+    downloadFunction: () =>
+      extractDataServices.downloadConsultantsCsv(), // O download não precisa de filtro
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Nome", accessor: "name" },
@@ -66,10 +65,10 @@ const DATA_SOURCES = {
     ],
   },
   Contratos: {
-    fetchFunction: (token, filters, page) =>
-      contractServices.getContracts(token, { status: "Todos" }, page, 10),
-    downloadFunction: (token) =>
-      extractDataServices.downloadContractsCsv(token),
+    fetchFunction: (filters, page) =>
+      contractServices.getContracts({ status: "Todos" }, page, 10),
+    downloadFunction: () =>
+      extractDataServices.downloadContractsCsv(),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Cliente", accessor: "client.name" },
@@ -97,10 +96,10 @@ const DATA_SOURCES = {
     ],
   },
   Saques: {
-    fetchFunction: (token, filters, page) =>
-      withdrawServices.getWithdrawals(token, { status: "Todos" }, page, 10),
-    downloadFunction: (token) =>
-      extractDataServices.downloadWithdrawsCsv(token),
+    fetchFunction: (filters, page) =>
+      withdrawServices.getWithdrawals({ status: "Todos" }, page, 10),
+    downloadFunction: () =>
+      extractDataServices.downloadWithdrawsCsv(),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Cliente", accessor: "client.name" },
@@ -124,7 +123,7 @@ const DATA_SOURCES = {
   },
   // O resto das configurações permanece o mesmo
   Produtos: {
-    fetchFunction: (token, filters, page) =>
+    fetchFunction: (filters, page) =>
       productServices.searchProducts(
         { status: "Todos", itemType: "Todos" },
         page,
@@ -151,7 +150,7 @@ const DATA_SOURCES = {
     ],
   },
   Categorias: {
-    fetchFunction: async (token) => {
+    fetchFunction: async () => {
       const data = await categoryServices.getAllCategories();
       return { items: data, totalCount: data.length, pageSize: data.length };
     },
@@ -163,8 +162,8 @@ const DATA_SOURCES = {
     ],
   },
   Formulários: {
-    fetchFunction: async (token) => {
-      const data = await formServices.getAllForms(token);
+    fetchFunction: async () => {
+      const data = await formServices.getAllForms();
       return { items: data, totalCount: data.length, pageSize: data.length };
     },
     columns: [
@@ -180,8 +179,8 @@ const DATA_SOURCES = {
     ],
   },
   Promoções: {
-    fetchFunction: async (token) => {
-      const data = await promotionServices.getAllPromotions(token);
+    fetchFunction: async () => {
+      const data = await promotionServices.getAllPromotions();
       return { items: data, totalCount: data.length, pageSize: data.length };
     },
     columns: [
@@ -193,8 +192,8 @@ const DATA_SOURCES = {
     ],
   },
   Pedidos: {
-    fetchFunction: (token, filters, page) =>
-      saleServices.getAllSales(token, {}, page, 10),
+    fetchFunction: (filters, page) =>
+      saleServices.getAllSales({}, page, 10),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Cliente", accessor: "client.name" },
@@ -275,7 +274,6 @@ function ExtractData() {
     setIsLoading(true);
     try {
       const result = await currentConfig.fetchFunction(
-        token,
         filters,
         pagination.currentPage
       );
@@ -320,7 +318,7 @@ function ExtractData() {
       return;
     }
     try {
-      const response = await currentConfig.downloadFunction(token, filters);
+      const response = await currentConfig.downloadFunction(filters);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;

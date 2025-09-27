@@ -67,7 +67,6 @@ function CreateConsultantPage() {
         commissionPercentage: parseFloat(consultantData.commissionPercentage),
       };
       const created = await consultantService.createConsultant(
-        token,
         dataToSend
       );
       alert(`Consultor ${created.name} criado com sucesso!`);

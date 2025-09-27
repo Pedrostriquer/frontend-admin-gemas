@@ -1,16 +1,8 @@
-import axios from "axios";
-
-const API_URL = `${process.env.REACT_APP_BASE_ROUTE}offercategories`;
-
-const getAuthHeaders = (token) => ({
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
+import api from "./api/api";
 
 const offerCategoryService = {
-  getCategories: async (token) => {
-    const response = await axios.get(API_URL, getAuthHeaders(token));
+  getCategories: async () => {
+    const response = await api.get("offercategories");
     return response.data;
   },
 };

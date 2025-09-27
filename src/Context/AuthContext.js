@@ -1,104 +1,68 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useLoad } from "./LoadContext";
+import api from "../dbServices/api/api"; // <-- IMPORTANTE: Importe sua instância 'api'
 
 const AuthContext = createContext(null);
-
-const API_URL = process.env.REACT_APP_BASE_ROUTE;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(
-    localStorage.getItem("authTokenAdmin") || sessionStorage.getItem("authTokenAdmin")
+    localStorage.getItem("authTokenAdmin") ||
+      sessionStorage.getItem("authTokenAdmin")
   );
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { startLoading, stopLoading, loadState } = useLoad();
+  const { startLoading, stopLoading } = useLoad();
 
+  // Função de logout centralizada
   const logout = () => {
     setUser(null);
     setToken(null);
-    sessionStorage.removeItem("authTokenAdmin");
-    sessionStorage.removeItem("refreshTokenAdmin");
     localStorage.removeItem("authTokenAdmin");
     localStorage.removeItem("refreshTokenAdmin");
-    delete axios.defaults.headers.common["Authorization"];
+    sessionStorage.removeItem("authTokenAdmin");
+    sessionStorage.removeItem("refreshTokenAdmin");
     navigate("/login");
   };
 
+  // Efeito para buscar dados do usuário ao carregar
   useEffect(() => {
     const initializeAuth = async () => {
       if (token) {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         try {
-          const response = await axios.get(`${API_URL}admin/me`);
+          // Usa a instância 'api' que já tem o token configurado
+          const response = await api.get("admin/me");
           setUser(response.data);
-          console.log(response.data)
         } catch (error) {
-          logout();
+          // O interceptor de resposta do api.js já vai tentar o refresh.
+          // Se falhar mesmo assim, o evento 'forceLogout' será disparado.
+          console.error("Falha na autenticação inicial", error);
         }
       }
       setIsLoading(false);
     };
     initializeAuth();
+  }, [token]);
+
+  // Efeito para escutar o evento de logout forçado do interceptor
+  useEffect(() => {
+    const handleForceLogout = () => {
+      logout();
+    };
+    window.addEventListener("forceLogout", handleForceLogout);
+    return () => {
+      window.removeEventListener("forceLogout", handleForceLogout);
+    };
   }, []);
 
-  useEffect(() => {
-    const responseInterceptor = axios.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-          const refreshToken =
-            localStorage.getItem("refreshTokenAdmin") ||
-            sessionStorage.getItem("refreshTokenAdmin");
-
-          if (!refreshToken) {
-            logout();
-            return Promise.reject(error);
-          }
-
-          try {
-            const response = await axios.post(`${API_URL}auth/refresh`, {
-              refreshToken,
-            });
-            const { token: newAccessToken, refreshToken: newRefreshToken } =
-              response.data;
-
-            setToken(newAccessToken);
-            axios.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
-            originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-
-            if (localStorage.getItem("refreshTokenAdmin")) {
-              localStorage.setItem("authTokenAdmin", newAccessToken);
-              localStorage.setItem("refreshTokenAdmin", newRefreshToken);
-            } else {
-              sessionStorage.setItem("authTokenAdmin", newAccessToken);
-              sessionStorage.setItem("refreshTokenAdmin", newRefreshToken);
-            }
-
-            return axios(originalRequest);
-          } catch (refreshError) {
-            logout();
-            return Promise.reject(refreshError);
-          }
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      axios.interceptors.response.eject(responseInterceptor);
-    };
-  }, [navigate]);
-
+  // Função de login simplificada
   const login = async (email, password, rememberMe = false) => {
     try {
       startLoading();
-      const response = await axios.post(`${API_URL}auth/login/admin`, {
+      // Usa a instância 'api' para a chamada de login
+      const response = await api.post("auth/login/admin", {
         email,
         password,
         rememberMe,
@@ -106,21 +70,18 @@ export const AuthProvider = ({ children }) => {
       const { token: newToken, refreshToken } = response.data;
 
       setToken(newToken);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
+      // Salva os tokens no local correto
       if (rememberMe) {
         localStorage.setItem("authTokenAdmin", newToken);
         localStorage.setItem("refreshTokenAdmin", refreshToken);
-        sessionStorage.removeItem("authTokenAdmin");
-        sessionStorage.removeItem("refreshTokenAdmin");
       } else {
         sessionStorage.setItem("authTokenAdmin", newToken);
         sessionStorage.setItem("refreshTokenAdmin", refreshToken);
-        localStorage.removeItem("authTokenAdmin");
-        localStorage.removeItem("refreshTokenAdmin");
       }
 
-      const userResponse = await axios.get(`${API_URL}admin/me`);
+      // Busca os dados do usuário após o login bem-sucedido
+      const userResponse = await api.get("admin/me");
       setUser(userResponse.data);
       navigate("/platform/dashboard");
     } catch (error) {

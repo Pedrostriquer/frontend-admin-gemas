@@ -1,8 +1,4 @@
-// src/dbServices/contractServices.js
-
-import axios from "axios";
-
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const normalizeSearchString = (str) => {
   if (!str) return "";
@@ -13,14 +9,11 @@ const normalizeSearchString = (str) => {
 };
 
 const contractServices = {
-  setReinvestmentAvailability: async (token, contractId, isAvailable) => {
+  setReinvestmentAvailability: async (contractId, isAvailable) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/${contractId}/reinvestment-availability`,
-        { isAvailable },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.post(
+        `contract/${contractId}/reinvestment-availability`,
+        { isAvailable }
       );
       return response.data;
     } catch (error) {
@@ -32,25 +25,19 @@ const contractServices = {
     }
   },
 
-  // --- FUNÇÃO CORRIGIDA AQUI ---
   atualizarAutoReinvestimentoCliente: async (
-    token,
     contractId,
     autoReinvestState,
-    idCliente // Este parâmetro pode não ser necessário se a validação for só pelo token
+    idCliente
   ) => {
     try {
-      // O corpo da requisição agora é um objeto
       const body = { autoReinvestState: autoReinvestState };
-      const response = await axios.patch(
-        `${BASE_ROUTE}contract/${contractId}/auto-reinvest`,
-        body, // Enviando o objeto
+      const response = await api.patch(
+        `contract/${contractId}/auto-reinvest`,
+        body,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-            // A validação no backend que você me mostrou usa o token,
-            // então o Client-ID-Ref pode não ser estritamente necessário aqui, mas mantemos por consistência.
             "Client-ID-Ref": idCliente,
           },
         }
@@ -62,45 +49,30 @@ const contractServices = {
     }
   },
 
-  updateContractStatus: async (token, ids, newStatus) => {
+  updateContractStatus: async (ids, newStatus) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/update-status`,
-        { ids, newStatus },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post("contract/update-status", {
+        ids,
+        newStatus,
+      });
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar status do contrato:", error);
       throw error;
     }
   },
-  getContracts: async (token, filters, pageNumber = 1, pageSize = 10) => {
+
+  getContracts: async (filters, pageNumber = 1, pageSize = 10) => {
     try {
-      const normalizedFilter = normalizeSearchString(filters.searchTerm);
-
-      let url = `${BASE_ROUTE}contract/search?searchTerm=${normalizedFilter}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
-
+      const params = {
+        searchTerm: normalizeSearchString(filters.searchTerm),
+        pageNumber,
+        pageSize,
+      };
       if (filters.status && filters.status !== "Todos") {
-        url += `&status=${filters.status}`;
+        params.status = filters.status;
       }
-
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Erro ao buscar contratos:", error);
-      throw error;
-    }
-  },
-  getById: async (token, id) => {
-    try {
-      const response = await axios.get(`${BASE_ROUTE}contract/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("contract/search", { params });
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar contratos:", error);
@@ -108,11 +80,19 @@ const contractServices = {
     }
   },
 
-  obterRegras: async (token) => {
+  getById: async (id) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}contract/rules`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`contract/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao buscar contratos:", error);
+      throw error;
+    }
+  },
+
+  obterRegras: async () => {
+    try {
+      const response = await api.get("contract/rules");
       return response.data;
     } catch (error) {
       console.error("Erro ao obter regras:", error);
@@ -120,13 +100,10 @@ const contractServices = {
     }
   },
 
-  obterContratoCliente: async (token, id, idCliente) => {
+  obterContratoCliente: async (id, idCliente) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}contract/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Client-ID-Ref": idCliente,
-        },
+      const response = await api.get(`contract/${id}`, {
+        headers: { "Client-ID-Ref": idCliente },
       });
       return response.data;
     } catch (error) {
@@ -135,15 +112,9 @@ const contractServices = {
     }
   },
 
-  simularContrato: async (token, data) => {
+  simularContrato: async (data) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/simulate`,
-        data,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post("contract/simulate", data);
       return response.data;
     } catch (error) {
       console.error("Erro ao simular contrato:", error);
@@ -151,13 +122,10 @@ const contractServices = {
     }
   },
 
-  criarContratoCliente: async (token, data, idCliente) => {
+  criarContratoCliente: async (data, idCliente) => {
     try {
-      const response = await axios.post(`${BASE_ROUTE}contract`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Client-ID-Ref": idCliente,
-        },
+      const response = await api.post("contract", data, {
+        headers: { "Client-ID-Ref": idCliente },
       });
       return response.data;
     } catch (error) {
@@ -166,14 +134,9 @@ const contractServices = {
     }
   },
 
-  obterMesesDisponiveis: async (token) => {
+  obterMesesDisponiveis: async () => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}contract/rules/available-months`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.get("contract/rules/available-months");
       return response.data;
     } catch (error) {
       console.error("Erro ao obter meses disponíveis:", error);
@@ -181,13 +144,10 @@ const contractServices = {
     }
   },
 
-  reinvestirLucroCliente: async (token, data, idCliente) => {
+  reinvestirLucroCliente: async (data, idCliente) => {
     try {
-      const response = await axios.post(`${BASE_ROUTE}reinvestment`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Client-ID-Ref": idCliente,
-        },
+      const response = await api.post("reinvestment", data, {
+        headers: { "Client-ID-Ref": idCliente },
       });
       return response.data;
     } catch (error) {
@@ -196,13 +156,10 @@ const contractServices = {
     }
   },
 
-  obterContratosDoCliente: async (token, idCliente) => {
+  obterContratosDoCliente: async (idCliente) => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}contract/my-contracts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Client-ID-Ref": idCliente,
-        },
+      const response = await api.get("contract/my-contracts", {
+        headers: { "Client-ID-Ref": idCliente },
       });
       return response.data;
     } catch (error) {
@@ -211,14 +168,11 @@ const contractServices = {
     }
   },
 
-  cancelContract: async (token, contractId, withdrawMoney) => {
+  cancelContract: async (contractId, withdrawMoney) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/cancel/${contractId}?withdrawMoney=${withdrawMoney}`,
-        null, // O corpo da requisição é vazio
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.post(
+        `contract/cancel/${contractId}?withdrawMoney=${withdrawMoney}`,
+        null
       );
       return response.data;
     } catch (error) {
@@ -227,11 +181,9 @@ const contractServices = {
     }
   },
 
-  getContractRules: async (token) => {
+  getContractRules: async () => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}contractrules`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("contractrules");
       return response.data;
     } catch (error) {
       console.error("Erro ao obter regras de contrato:", error);
@@ -239,15 +191,9 @@ const contractServices = {
     }
   },
 
-  createContractRule: async (token, ruleData) => {
+  createContractRule: async (ruleData) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contractrules`,
-        ruleData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post("contractrules", ruleData);
       return response.data;
     } catch (error) {
       console.error("Erro ao criar regra de contrato:", error);
@@ -255,26 +201,19 @@ const contractServices = {
     }
   },
 
-  updateContractRule: async (token, ruleId, ruleData) => {
+  updateContractRule: async (ruleId, ruleData) => {
     try {
-      const response = await axios.put(
-        `${BASE_ROUTE}contractrules/${ruleId}`,
-        ruleData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.put(`contractrules/${ruleId}`, ruleData);
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar regra de contrato:", error);
       throw error;
     }
   },
-  getContractSettings: async (token) => {
+
+  getContractSettings: async () => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}contractsettings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("contractsettings");
       return response.data;
     } catch (error) {
       console.error("Erro ao obter configurações de contrato:", error);
@@ -282,15 +221,9 @@ const contractServices = {
     }
   },
 
-  updateContractSettings: async (token, settingsData) => {
+  updateContractSettings: async (settingsData) => {
     try {
-      const response = await axios.put(
-        `${BASE_ROUTE}contractsettings`,
-        settingsData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.put("contractsettings", settingsData);
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar configurações de contrato:", error);
@@ -298,14 +231,9 @@ const contractServices = {
     }
   },
 
-  deleteContractRule: async (token, ruleId) => {
+  deleteContractRule: async (ruleId) => {
     try {
-      const response = await axios.delete(
-        `${BASE_ROUTE}contractrules/${ruleId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.delete(`contractrules/${ruleId}`);
       return response.data;
     } catch (error) {
       console.error("Erro ao deletar regra de contrato:", error);
@@ -313,31 +241,20 @@ const contractServices = {
     }
   },
 
-  uploadContractFiles: async (
-    token,
-    contractId,
-    certificateFiles,
-    mediaFiles
-  ) => {
+  uploadContractFiles: async (contractId, certificateFiles, mediaFiles) => {
     const formData = new FormData();
-
     certificateFiles.forEach((file) => {
       formData.append("certificates", file, file.name);
     });
-
     mediaFiles.forEach((file) => {
       formData.append("media", file, file.name);
     });
-
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/${contractId}/files`,
+      const response = await api.post(
+        `contract/${contractId}/files`,
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
       return response.data;
@@ -347,15 +264,12 @@ const contractServices = {
     }
   },
 
-  deleteContractFile: async (token, contractId, fileUrl, fileType) => {
+  deleteContractFile: async (contractId, fileUrl, fileType) => {
     try {
-      const response = await axios.delete(
-        `${BASE_ROUTE}contract/${contractId}/files?fileUrl=${encodeURIComponent(
+      const response = await api.delete(
+        `contract/${contractId}/files?fileUrl=${encodeURIComponent(
           fileUrl
-        )}&fileType=${fileType}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        )}&fileType=${fileType}`
       );
       return response.data;
     } catch (error) {
@@ -364,13 +278,10 @@ const contractServices = {
     }
   },
 
-  deleteAllContractFiles: async (token, contractId, fileType) => {
+  deleteAllContractFiles: async (contractId, fileType) => {
     try {
-      const response = await axios.delete(
-        `${BASE_ROUTE}contract/${contractId}/files/all?fileType=${fileType}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.delete(
+        `contract/${contractId}/files/all?fileType=${fileType}`
       );
       return response.data;
     } catch (error) {
@@ -379,14 +290,11 @@ const contractServices = {
     }
   },
 
-  addOrUpdateTracking: async (token, contractId, trackingData) => {
+  addOrUpdateTracking: async (contractId, trackingData) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/${contractId}/tracking`,
-        trackingData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.post(
+        `contract/${contractId}/tracking`,
+        trackingData
       );
       return response.data;
     } catch (error) {
@@ -395,14 +303,9 @@ const contractServices = {
     }
   },
 
-  getPaymentDetails: async (token, paymentId) => {
+  getPaymentDetails: async (paymentId) => {
     try {
-      const response = await axios.get(
-        `${BASE_ROUTE}payment/${paymentId}/details`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.get(`payment/${paymentId}/details`);
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar detalhes do pagamento:", error);
@@ -410,16 +313,11 @@ const contractServices = {
     }
   },
 
-  // NOVO: Função para aprovar um pagamento localmente (para testes)
-  approveLocalPayment: async (token, paymentId) => {
+  approveLocalPayment: async (paymentId) => {
     try {
-      // Geralmente ações assim são feitas com POST, mesmo sem corpo de requisição
-      const response = await axios.post(
-        `${BASE_ROUTE}payment/test/approve-local/${paymentId}`,
-        {}, // Corpo da requisição vazio
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.post(
+        `payment/test/approve-local/${paymentId}`,
+        {}
       );
       return response.data;
     } catch (error) {
@@ -428,14 +326,11 @@ const contractServices = {
     }
   },
 
-  appreciateContractForDay: async (token, contractId) => {
+  appreciateContractForDay: async (contractId) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}contract/${contractId}/appreciate-day`,
-        {}, // Corpo da requisição vazio
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.post(
+        `contract/${contractId}/appreciate-day`,
+        {}
       );
       return response.data;
     } catch (error) {

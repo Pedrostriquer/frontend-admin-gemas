@@ -25,8 +25,8 @@ const formatStatus = (status, map) => map[status] || status;
 const DATA_SOURCES = {
   // --- PLATAFORMA ---
   Clientes: {
-    fetchFunction: (token, filters) =>
-      clientServices.getClients(token, filters.searchTerm, 1, 1000),
+    fetchFunction: (filters) =>
+      clientServices.getClients(filters.searchTerm, 1, 1000),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Nome", accessor: "name" },
@@ -40,8 +40,8 @@ const DATA_SOURCES = {
     ],
   },
   Consultores: {
-    fetchFunction: (token, filters) =>
-      consultantService.getConsultants(token, filters.searchTerm, 1, 1000),
+    fetchFunction: (filters) =>
+      consultantService.getConsultants(filters.searchTerm, 1, 1000),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Nome", accessor: "name" },
@@ -55,9 +55,8 @@ const DATA_SOURCES = {
     ],
   },
   Contratos: {
-    fetchFunction: (token, filters) =>
+    fetchFunction: (filters) =>
       contractServices.getContracts(
-        token,
         { ...filters, status: "Todos" },
         1,
         1000
@@ -89,9 +88,8 @@ const DATA_SOURCES = {
     ],
   },
   Saques: {
-    fetchFunction: (token, filters) =>
+    fetchFunction: (filters) =>
       withdrawServices.getWithdrawals(
-        token,
         { ...filters, status: "Todos" },
         1,
         1000
@@ -119,7 +117,7 @@ const DATA_SOURCES = {
   },
   // --- E-COMMERCE ---
   Produtos: {
-    fetchFunction: (token, filters) =>
+    fetchFunction: (filters) =>
       productServices.searchProducts(
         { ...filters, status: "Todos", itemType: "Todos" },
         1,
@@ -147,7 +145,7 @@ const DATA_SOURCES = {
   },
   Categorias: {
     // ✨ CORREÇÃO: A função getAllCategories retorna um array, então nós o envolvemos em um objeto { items: ... }
-    fetchFunction: async (token) => {
+    fetchFunction: async () => {
       const data = await categoryServices.getAllCategories();
       return { items: data };
     },
@@ -160,8 +158,8 @@ const DATA_SOURCES = {
   },
   Formulários: {
     // ✨ CORREÇÃO: Mesma lógica para getAllForms
-    fetchFunction: async (token) => {
-      const data = await formServices.getAllForms(token);
+    fetchFunction: async () => {
+      const data = await formServices.getAllForms();
       return { items: data };
     },
     columns: [
@@ -178,8 +176,8 @@ const DATA_SOURCES = {
   },
   Promoções: {
     // ✨ CORREÇÃO: Mesma lógica para getAllPromotions
-    fetchFunction: async (token) => {
-      const data = await promotionServices.getAllPromotions(token);
+    fetchFunction: async () => {
+      const data = await promotionServices.getAllPromotions();
       return { items: data };
     },
     columns: [
@@ -191,8 +189,8 @@ const DATA_SOURCES = {
     ],
   },
   Pedidos: {
-    fetchFunction: (token, filters) =>
-      saleServices.getAllSales(token, filters, 1, 1000),
+    fetchFunction: (filters) =>
+      saleServices.getAllSales(filters, 1, 1000),
     columns: [
       { header: "ID", accessor: "id" },
       { header: "Cliente", accessor: "client.name" },
@@ -270,7 +268,7 @@ function ExtractData() {
     setIsLoading(true);
     try {
       startLoading();
-      const result = await currentConfig.fetchFunction(token, filters);
+      const result = await currentConfig.fetchFunction(filters);
       setData(result.items || []);
     } catch (error) {
       console.error(`Erro ao buscar ${selectedDataType}:`, error);

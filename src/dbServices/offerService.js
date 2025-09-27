@@ -1,74 +1,41 @@
-import axios from "axios";
-
-const API_URL = `${process.env.REACT_APP_BASE_ROUTE}offers`;
-
-const getAuthHeaders = (token) => ({
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-
-const getAuthHeadersFormData = (token) => ({
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "multipart/form-data",
-  },
-});
+import api from "./api/api";
 
 const offerService = {
-  getOffers: async (token) => {
-    const response = await axios.get(API_URL, getAuthHeaders(token));
+  getOffers: async () => {
+    const response = await api.get("offers");
     return response.data;
   },
 
-  createOffer: async (offerData, token) => {
-    const response = await axios.post(
-      API_URL,
-      offerData,
-      getAuthHeaders(token)
-    );
+  createOffer: async (offerData) => {
+    const response = await api.post("offers", offerData);
     return response.data;
   },
 
-  updateOffer: async (id, offerData, token) => {
-    const response = await axios.put(
-      `${API_URL}/${id}`,
-      offerData,
-      getAuthHeaders(token)
-    );
+  updateOffer: async (id, offerData) => {
+    const response = await api.put(`offers/${id}`, offerData);
     return response.data;
   },
 
-  deleteOffer: async (id, token) => {
-    await axios.delete(`${API_URL}/${id}`, getAuthHeaders(token));
+  deleteOffer: async (id) => {
+    await api.delete(`offers/${id}`);
   },
 
-  toggleOfferStatus: async (id, token) => {
-    const response = await axios.patch(
-      `${API_URL}/${id}/toggle-status`,
-      {},
-      getAuthHeaders(token)
-    );
+  toggleOfferStatus: async (id) => {
+    const response = await api.patch(`offers/${id}/toggle-status`, {});
     return response.data;
   },
 
-  uploadMidea: async (file, token) => {
+  uploadMidea: async (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await axios.post(
-      `${API_URL}/upload-midea`,
-      formData,
-      getAuthHeadersFormData(token)
-    );
+    const response = await api.post("offers/upload-midea", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 
-  deleteMidea: async (fileUrl, token) => {
-    await axios.post(
-      `${API_URL}/delete-midea`,
-      { url: fileUrl },
-      getAuthHeaders(token)
-    );
+  deleteMidea: async (fileUrl) => {
+    await api.post("offers/delete-midea", { url: fileUrl });
   },
 };
 

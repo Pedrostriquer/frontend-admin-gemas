@@ -1,19 +1,9 @@
-import axios from "axios";
-
-// Pega a URL base da sua API a partir das variáveis de ambiente
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const depositAccountService = {
-  /**
-   * Busca todas as contas de depósito.
-   * @param {string} token - O token JWT para autenticação.
-   * @returns {Promise<Array>} Uma lista de contas de depósito.
-   */
-  getAll: async (token) => {
+  getAll: async () => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}deposit-accounts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("deposit-accounts");
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar contas de depósito:", error);
@@ -21,21 +11,9 @@ const depositAccountService = {
     }
   },
 
-  /**
-   * Cria uma nova conta de depósito.
-   * @param {string} token - O token JWT para autenticação.
-   * @param {object} accountData - Os dados da nova conta.
-   * @returns {Promise<object>} O objeto da conta criada.
-   */
-  create: async (token, accountData) => {
+  create: async (accountData) => {
     try {
-      const response = await axios.post(
-        `${BASE_ROUTE}deposit-accounts`,
-        accountData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.post("deposit-accounts", accountData);
       return response.data;
     } catch (error) {
       console.error("Erro ao criar conta de depósito:", error);
@@ -43,21 +21,11 @@ const depositAccountService = {
     }
   },
 
-  /**
-   * Atualiza uma conta de depósito existente.
-   * @param {string} token - O token JWT para autenticação.
-   * @param {number} accountId - O ID da conta a ser atualizada.
-   * @param {object} accountData - Os novos dados da conta.
-   * @returns {Promise<object>} O objeto da conta atualizada.
-   */
-  update: async (token, accountId, accountData) => {
+  update: async (accountId, accountData) => {
     try {
-      const response = await axios.put(
-        `${BASE_ROUTE}deposit-accounts/${accountId}`,
-        accountData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await api.put(
+        `deposit-accounts/${accountId}`,
+        accountData
       );
       return response.data;
     } catch (error) {
@@ -66,17 +34,9 @@ const depositAccountService = {
     }
   },
 
-  /**
-   * Deleta uma conta de depósito.
-   * @param {string} token - O token JWT para autenticação.
-   * @param {number} accountId - O ID da conta a ser deletada.
-   * @returns {Promise<void>}
-   */
-  delete: async (token, accountId) => {
+  delete: async (accountId) => {
     try {
-      await axios.delete(`${BASE_ROUTE}deposit-accounts/${accountId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`deposit-accounts/${accountId}`);
     } catch (error) {
       console.error("Erro ao deletar conta de depósito:", error);
       throw error.response?.data || error;

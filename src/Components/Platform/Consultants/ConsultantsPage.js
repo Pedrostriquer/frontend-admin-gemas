@@ -37,7 +37,6 @@ function ConsultantsPage() {
       try {
         startLoading();
         const data = await consultantService.getConsultants(
-          token,
           search,
           page,
           10

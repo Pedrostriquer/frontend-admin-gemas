@@ -1,13 +1,12 @@
-import axios from "axios";
+// src/services/adminServices.js
 
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api"; // <-- 1. IMPORTA A INSTÂNCIA CENTRAL
 
 const adminServices = {
-  getAllAdmins: async (token) => {
+  getAllAdmins: async () => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}admin`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Usa 'api' e não precisa mais do header de autorização
+      const response = await api.get("admin");
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar usuários administradores:", error);
@@ -15,12 +14,9 @@ const adminServices = {
     }
   },
 
-  // --- NOVA FUNÇÃO ADICIONADA AQUI ---
-  getCurrentAdmin: async (token) => {
+  getCurrentAdmin: async () => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}admin/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("admin/me");
       return response.data;
     } catch (error) {
       console.error("Erro ao buscar dados do admin logado:", error);

@@ -1,13 +1,9 @@
-import axios from "axios";
-
-const BASE_ROUTE = process.env.REACT_APP_BASE_ROUTE;
+import api from "./api/api";
 
 const indicationService = {
-  getRule: async (token) => {
+  getRule: async () => {
     try {
-      const response = await axios.get(`${BASE_ROUTE}indicationrule`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("indicationrule");
       return response.data;
     } catch (error) {
       console.error("Erro ao obter regra de indicação:", error);
@@ -15,11 +11,9 @@ const indicationService = {
     }
   },
 
-  updateRule: async (token, ruleData) => {
+  updateRule: async (ruleData) => {
     try {
-      const response = await axios.put(`${BASE_ROUTE}indicationrule`, ruleData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.put("indicationrule", ruleData);
       return response.data;
     } catch (error) {
       console.error("Erro ao atualizar regra de indicação:", error);

@@ -270,7 +270,7 @@ function PromotionsPage() {
     startLoading();
     try {
       const [promoData, productData] = await Promise.all([
-        promotionServices.getAllPromotions(token),
+        promotionServices.getAllPromotions(),
         productServices.searchProducts({}, 1, 1000),
       ]);
       setAllPromotions(promoData || []);
@@ -306,9 +306,9 @@ function PromotionsPage() {
     startLoading();
     try {
       if (promoData.id) {
-        await promotionServices.updatePromotion(token, promoData.id, promoData);
+        await promotionServices.updatePromotion(promoData.id, promoData);
       } else {
-        await promotionServices.createPromotion(token, promoData);
+        await promotionServices.createPromotion(promoData);
       }
       handleCloseModal();
       await fetchInitialData();
@@ -322,7 +322,7 @@ function PromotionsPage() {
   const handleUpdateStatus = async (id, newStatus) => {
     startLoading();
     try {
-      await promotionServices.updatePromotionStatus(token, id, newStatus);
+      await promotionServices.updatePromotionStatus(id, newStatus);
       handleCloseModal();
       await fetchInitialData();
     } catch (error) {

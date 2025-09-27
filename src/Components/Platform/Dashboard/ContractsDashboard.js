@@ -66,7 +66,7 @@ function ContractsDashboard() {
       try {
         setIsLoading(true);
         startLoading();
-        const dashboardData = await platformServices.getDashboardData(token);
+        const dashboardData = await platformServices.getDashboardData();
         setData(dashboardData);
       } catch (error) {
         console.error("Falha ao buscar dados do dashboard:", error);
