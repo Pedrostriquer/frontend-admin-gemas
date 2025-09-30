@@ -65,6 +65,20 @@ const styles = {
     alignItems: "center",
     gap: "8px",
   },
+  // NOVO ESTILO ADICIONADO PARA O TEXTO FIXO
+  sortLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    height: '42px',
+    padding: '0 16px',
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: "0.9rem",
+    color: "#374151",
+    backgroundColor: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: "12px",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  },
   sortSelect: {
     fontFamily: "'Poppins', sans-serif",
     fontSize: "0.9rem",

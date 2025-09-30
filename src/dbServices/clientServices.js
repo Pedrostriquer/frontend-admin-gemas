@@ -1,6 +1,4 @@
-// src/services/clientServices.js
-
-import api from "./api/api"; // <-- MUDANÇA: Importa a instância central 'api'
+import api from "./api/api";
 
 const normalizeSearchString = (str) => {
   if (!str) return "";
@@ -40,12 +38,25 @@ const clientServices = {
     }
   },
   
-  getClients: async (searchFilter, pageNumber = 1, pageSize = 10) => {
+  // FUNÇÃO ATUALIZADA PARA ACEITAR PARÂMETROS DE ORDENAÇÃO
+  getClients: async (
+    searchFilter,
+    pageNumber = 1,
+    pageSize = 10,
+    sortBy = "id", // Parâmetro de ordenação
+    sortDirection = "desc" // Parâmetro de direção
+  ) => {
     try {
       const normalizedFilter = normalizeSearchString(searchFilter);
-      // Usando 'params' para uma URL mais limpa
+      // Usando 'params' para uma URL mais limpa e adicionando ordenação
       const response = await api.get('client/search', {
-        params: { searchFilter: normalizedFilter, pageNumber, pageSize }
+        params: {
+          searchFilter: normalizedFilter,
+          pageNumber,
+          pageSize,
+          sortBy, // Enviando o campo de ordenação
+          order: sortDirection, // Enviando a direção (conforme seu swagger)
+        },
       });
       return response.data;
     } catch (error) {

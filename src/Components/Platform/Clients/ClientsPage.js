@@ -8,6 +8,17 @@ import { useLoad } from "../../../Context/LoadContext";
 
 const formatCurrency = (value) =>
   (value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const formatDate = (dateString) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
 const ITEMS_PER_PAGE = 10;
 
 const useDebounce = (value, delay) => {
@@ -35,13 +46,12 @@ function ClientsPage() {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const { startLoading, stopLoading } = useLoad();
 
-  // NOVOS ESTADOS PARA ORDENAÇÃO
-  const [sortBy, setSortBy] = useState("id");
-  const [sortDirection, setSortDirection] = useState("desc");
+  // MUDANÇA: O sortBy agora é fixo, então não precisamos mais do `setSortBy`.
+  const [sortBy] = useState("id");
+  const [sortDirection, setSortDirection] = useState("desc"); // 'desc' = mais recentes primeiro
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // FUNÇÃO DE BUSCA ATUALIZADA
   const fetchClients = useCallback(
     async (page, search, sortBy, sortDirection) => {
       if (!token) return;
@@ -52,8 +62,8 @@ function ClientsPage() {
           search,
           page,
           ITEMS_PER_PAGE,
-          sortBy, // Novo parâmetro
-          sortDirection // Novo parâmetro
+          sortBy,
+          sortDirection
         );
         setClients(data.items || []);
         setTotalPages(Math.ceil(data.totalCount / ITEMS_PER_PAGE));
@@ -63,20 +73,20 @@ function ClientsPage() {
         setTotalPages(0);
       } finally {
         setIsLoading(false);
-        stopLoading()
+        stopLoading();
       }
     },
-    [token] // A dependência do token é a principal aqui
+    [token]
   );
 
-  // USEEFFECT ATUALIZADO PARA REAGIR ÀS MUDANÇAS DE ORDENAÇÃO
   useEffect(() => {
     fetchClients(currentPage, debouncedSearchTerm, sortBy, sortDirection);
   }, [debouncedSearchTerm, currentPage, sortBy, sortDirection, fetchClients]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, sortBy, sortDirection]);
+    // MUDANÇA: sortBy foi removido do array pois é constante
+  }, [debouncedSearchTerm, sortDirection]);
 
   return (
     <div style={styles.clientsPageContainer}>
@@ -100,29 +110,26 @@ function ClientsPage() {
             />
           </div>
 
+          {/* MUDANÇA: O <select> foi removido e substituído por um texto e um botão com novos ícones */}
           <div style={styles.sortContainer}>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={styles.sortSelect}
-            >
-              <option value="id">Ordenar por ID</option>
-              <option value="name">Ordenar por Nome</option>
-              <option value="balance">Ordenar por Saldo</option>
-            </select>
+            <div style={styles.sortLabel}>
+              <span>Ordenar por: Data de Criação</span>
+            </div>
             <button
               onClick={() =>
                 setSortDirection((d) => (d === "asc" ? "desc" : "asc"))
               }
               style={styles.sortDirectionButton}
-              title={`Mudar para ${
-                sortDirection === "asc" ? "Decrescente" : "Crescente"
-              }`}
+              title={
+                sortDirection === 'desc'
+                  ? "Mudar para Mais Antigos (Ascendente)"
+                  : "Mudar para Mais Recentes (Descendente)"
+              }
             >
               {sortDirection === "asc" ? (
-                <i className="fa-solid fa-arrow-up-a-z"></i>
+                <i className="fa-solid fa-arrow-up-long"></i>
               ) : (
-                <i className="fa-solid fa-arrow-down-z-a"></i>
+                <i className="fa-solid fa-arrow-down-long"></i>
               )}
             </button>
           </div>
@@ -143,6 +150,7 @@ function ClientsPage() {
       </div>
 
       <div style={styles.clientsTableCard}>
+        {/* O restante do seu código da tabela continua o mesmo... */}
         <table style={styles.clientsTable}>
           <thead>
             <tr>
@@ -152,6 +160,7 @@ function ClientsPage() {
               <th style={styles.tableCell}>CPF/CNPJ</th>
               <th style={styles.tableCell}>Email</th>
               <th style={styles.tableCell}>Celular</th>
+              <th style={styles.tableCell}>Data de Criação</th>
               <th style={styles.tableCell}>Saldo em Conta</th>
             </tr>
           </thead>
@@ -159,7 +168,7 @@ function ClientsPage() {
             {isLoading ? (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   Carregando...
@@ -195,6 +204,9 @@ function ClientsPage() {
                   </td>
                   <td style={styles.tableCell}>{client.phoneNumber}</td>
                   <td style={styles.tableCell}>
+                    {formatDate(client.dateCreated)}
+                  </td>
+                  <td style={styles.tableCell}>
                     {formatCurrency(client.balance)}
                   </td>
                 </tr>
@@ -202,7 +214,7 @@ function ClientsPage() {
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   Nenhum cliente encontrado.
