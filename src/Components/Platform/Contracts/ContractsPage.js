@@ -55,12 +55,15 @@ function ContractsPage() {
   const debouncedFilters = useDebounce(filters, 500);
   const { startLoading, stopLoading } = useLoad();
 
+  // ***** CORREÇÃO APLICADA AQUI *****
+  // A dependência foi restaurada para a versão original e correta,
+  // contendo apenas o 'token' para evitar o loop.
   const fetchContracts = useCallback(
     async (page, currentFilters) => {
       if (!token) return;
       setIsLoading(true);
+      startLoading();
       try {
-        startLoading();
         const data = await contractServices.getContracts(
           currentFilters,
           page,
@@ -76,7 +79,7 @@ function ContractsPage() {
         stopLoading();
       }
     },
-    [token]
+    [token] // Apenas 'token' como dependência
   );
 
   useEffect(() => {
@@ -151,6 +154,7 @@ function ContractsPage() {
 
   const isAllSelectedOnPage =
     contracts.length > 0 &&
+    contracts.filter((c) => c.status === 1).length > 0 &&
     contracts.filter((c) => c.status === 1).every((c) => selectedIds.has(c.id));
 
   return (
@@ -222,6 +226,9 @@ function ContractsPage() {
               </th>
               <th style={{ ...styles.tableCell, ...styles.tableHeader }}>ID</th>
               <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
+                Data de Criação
+              </th>
+              <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
                 Cliente
               </th>
               <th style={{ ...styles.tableCell, ...styles.tableHeader }}>
@@ -245,7 +252,7 @@ function ContractsPage() {
             {isLoading ? (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="9"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   Buscando contratos...
@@ -281,6 +288,12 @@ function ContractsPage() {
                     onClick={() => handleNavigateToContract(contract.id)}
                   >
                     #{contract.id}
+                  </td>
+                  <td
+                    style={styles.tableCell}
+                    onClick={() => handleNavigateToContract(contract.id)}
+                  >
+                    {formatDate(contract.dateCreated)}
                   </td>
                   <td
                     style={styles.tableCell}
@@ -348,7 +361,7 @@ function ContractsPage() {
             ) : (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="9"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
                   Nenhum contrato encontrado para os filtros selecionados.
