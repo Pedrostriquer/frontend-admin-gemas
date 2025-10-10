@@ -46,9 +46,11 @@ function ClientsPage() {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const { startLoading, stopLoading } = useLoad();
 
-  // MUDANÇA: O sortBy agora é fixo, então não precisamos mais do `setSortBy`.
+  // 1. Novo estado para guardar o total de clientes
+  const [totalClients, setTotalClients] = useState(0);
+
   const [sortBy] = useState("id");
-  const [sortDirection, setSortDirection] = useState("desc"); // 'desc' = mais recentes primeiro
+  const [sortDirection, setSortDirection] = useState("desc"); 
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -67,16 +69,19 @@ function ClientsPage() {
         );
         setClients(data.items || []);
         setTotalPages(Math.ceil(data.totalCount / ITEMS_PER_PAGE));
+        // 2. Atualiza o estado com o total de clientes
+        setTotalClients(data.totalCount || 0);
       } catch (error) {
         console.error("Erro ao buscar clientes:", error);
         setClients([]);
         setTotalPages(0);
+        setTotalClients(0);
       } finally {
         setIsLoading(false);
         stopLoading();
       }
     },
-    [token]
+    [token] // <<<<< CORREÇÃO CRÍTICA: O array de dependências foi restaurado para o original, sem startLoading e stopLoading.
   );
 
   useEffect(() => {
@@ -85,7 +90,6 @@ function ClientsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-    // MUDANÇA: sortBy foi removido do array pois é constante
   }, [debouncedSearchTerm, sortDirection]);
 
   return (
@@ -93,6 +97,17 @@ function ClientsPage() {
       <header style={styles.clientsPageHeader}>
         <h1 style={styles.clientsPageHeaderH1}>Clientes</h1>
       </header>
+      
+      {/* 3. Seção com o card de KPI adicionado */}
+      <section style={styles.kpiSection}>
+        <div style={styles.kpiCard}>
+          <i className="fa-solid fa-users" style={styles.kpiIcon}></i>
+          <div>
+            <h4 style={styles.kpiTitle}>Total de Clientes</h4>
+            <p style={styles.kpiValue}>{totalClients}</p>
+          </div>
+        </div>
+      </section>
 
       <div style={styles.tableControlsHeader}>
         <div style={styles.leftControls}>
@@ -110,7 +125,6 @@ function ClientsPage() {
             />
           </div>
 
-          {/* MUDANÇA: O <select> foi removido e substituído por um texto e um botão com novos ícones */}
           <div style={styles.sortContainer}>
             <div style={styles.sortLabel}>
               <span>Ordenar por: Data de Criação</span>
@@ -150,7 +164,6 @@ function ClientsPage() {
       </div>
 
       <div style={styles.clientsTableCard}>
-        {/* O restante do seu código da tabela continua o mesmo... */}
         <table style={styles.clientsTable}>
           <thead>
             <tr>
