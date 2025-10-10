@@ -33,6 +33,7 @@ const defaultHomeData = {
     reviews: []
 };
 
+// MODIFICADO: Trocamos addressLink e addressTitle por um array 'addresses'
 const defaultFooterData = {
     phones: [
         { number: '', label: '' },
@@ -44,8 +45,7 @@ const defaultFooterData = {
     facebook: '',
     tiktok: '',
     youtube: '',
-    addressLink: '',
-    addressTitle: ''
+    addresses: [] // NOVO: Array para múltiplos endereços
 };
 
 const HomeManager = () => {
@@ -92,7 +92,18 @@ const HomeManager = () => {
                         phones.push({ number: '', label: '' });
                     }
                     
-                    setFooterData({ ...defaultFooterData, ...firestoreData, phones: phones.slice(0, 2) });
+                    // MODIFICADO: Lógica para migrar endereço antigo para o novo formato
+                    let addresses = firestoreData.addresses || [];
+                    if (!firestoreData.addresses && firestoreData.addressLink) {
+                        addresses.push({
+                            id: uuidv4(),
+                            title: firestoreData.addressTitle || 'Nosso Endereço',
+                            link: firestoreData.addressLink,
+                            show: true
+                        });
+                    }
+
+                    setFooterData({ ...defaultFooterData, ...firestoreData, phones: phones.slice(0, 2), addresses });
                 } else {
                     setFooterData(defaultFooterData);
                 }
@@ -132,6 +143,34 @@ const HomeManager = () => {
             newPhones[index] = { ...newPhones[index], [field]: value };
             return { ...prev, phones: newPhones };
         });
+    };
+
+    // NOVA FUNÇÃO: Manipula mudanças nos campos de endereço
+    const handleAddressChange = (index, field, value) => {
+        setFooterData(prev => {
+            const newAddresses = [...prev.addresses];
+            newAddresses[index] = { ...newAddresses[index], [field]: value };
+            return { ...prev, addresses: newAddresses };
+        });
+    };
+
+    // NOVA FUNÇÃO: Adiciona um novo endereço à lista
+    const handleAddAddress = () => {
+        setFooterData(prev => ({
+            ...prev,
+            addresses: [
+                ...(prev.addresses || []),
+                { id: uuidv4(), title: '', link: '', show: true }
+            ]
+        }));
+    };
+
+    // NOVA FUNÇÃO: Remove um endereço da lista
+    const handleRemoveAddress = (indexToRemove) => {
+        setFooterData(prev => ({
+            ...prev,
+            addresses: prev.addresses.filter((_, index) => index !== indexToRemove)
+        }));
     };
 
     const handleMediaUpload = async (path, file) => {
@@ -202,6 +241,10 @@ const HomeManager = () => {
                 finalFooterData.phones.pop();
             }
             delete finalFooterData.phone;
+
+            // MODIFICADO: Remove os campos antigos antes de salvar para limpar o banco
+            delete finalFooterData.addressLink;
+            delete finalFooterData.addressTitle;
 
             await Promise.all([
                 setDoc(homeDocRef, homeData, { merge: true }),
@@ -408,7 +451,6 @@ const HomeManager = () => {
                             />
                         </div>
                     </div>
-
                     <div className="form-group-compound">
                         <label>Telefone Opcional</label>
                         <div className="input-group">
@@ -426,7 +468,6 @@ const HomeManager = () => {
                             />
                         </div>
                     </div>
-
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
                         <input type="email" id="email" name="email" value={footerData.email || ''} onChange={handleFooterChange} placeholder="Ex: contato@gemasbrilhantes.com" />
@@ -451,20 +492,44 @@ const HomeManager = () => {
                         <label htmlFor="youtube">Link do YouTube</label>
                         <input type="url" id="youtube" name="youtube" value={footerData.youtube || ''} onChange={handleFooterChange} placeholder="https://www.youtube.com/c/..." />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="addressTitle">Título do Endereço</label>
-                        <input 
-                            type="text" 
-                            id="addressTitle" 
-                            name="addressTitle" 
-                            value={footerData.addressTitle || ''} 
-                            onChange={handleFooterChange} 
-                            placeholder="Ex: Loja São Paulo" 
-                        />
+                </div>
+
+                {/* MODIFICADO: Seção para gerenciar múltiplos endereços */}
+                <div className="sub-section">
+                    <h4 className="editor-title">Endereços</h4>
+                    <div className="dynamic-list">
+                        {(footerData.addresses || []).map((address, index) => (
+                            <div className="dynamic-list-item" key={address.id || index}>
+                                <div className="item-inputs">
+                                    <input 
+                                        type="text" 
+                                        value={address.title} 
+                                        onChange={(e) => handleAddressChange(index, 'title', e.target.value)} 
+                                        placeholder="Título do Endereço (Ex: Loja São Paulo)" 
+                                        className="item-input-title" 
+                                    />
+                                    <input 
+                                        type="url" 
+                                        value={address.link} 
+                                        onChange={(e) => handleAddressChange(index, 'link', e.target.value)} 
+                                        placeholder="Link do Google Maps" 
+                                    />
+                                    <div className="control-group checkbox" style={{ marginTop: '10px' }}>
+                                        <input 
+                                            type="checkbox" 
+                                            id={`showAddress-${address.id}`} 
+                                            checked={address.show} 
+                                            onChange={(e) => handleAddressChange(index, 'show', e.target.checked)}
+                                        />
+                                        <label htmlFor={`showAddress-${address.id}`}>Exibir este endereço no site</label>
+                                    </div>
+                                </div>
+                                <button onClick={() => handleRemoveAddress(index)} className="btn-remove"><i className="fas fa-trash"></i></button>
+                            </div>
+                        ))}
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="addressLink">Link do Endereço (Google Maps)</label>
-                        <input type="url" id="addressLink" name="addressLink" value={footerData.addressLink || ''} onChange={handleFooterChange} placeholder="https://maps.app.goo.gl/..." />
+                    <div className="editor-actions">
+                        <button onClick={handleAddAddress} className="btn-primary">Adicionar Endereço</button>
                     </div>
                 </div>
             </div>
