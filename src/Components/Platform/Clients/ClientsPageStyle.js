@@ -17,6 +17,47 @@ const styles = {
     color: "#1a202c",
   },
 
+  // --- ESTILOS PARA O CARD DE KPI ---
+  kpiSection: {
+    marginBottom: '24px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '24px',
+  },
+  kpiCard: {
+    background: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+    padding: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  kpiIcon: {
+    fontSize: '1.8rem',
+    color: '#3b82f6',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    width: '52px',
+    height: '52px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kpiTitle: {
+    margin: '0 0 4px 0',
+    fontSize: '0.9rem',
+    fontWeight: 500,
+    color: '#4a5568',
+  },
+  kpiValue: {
+    margin: 0,
+    fontSize: '2rem',
+    fontWeight: 700,
+    color: '#1a202c',
+  },
+  // --- FIM DOS ESTILOS DE KPI ---
+
   // Controles da Tabela (ÁREA MELHORADA COM ORDENAÇÃO)
   tableControlsHeader: {
     display: "flex",
@@ -59,13 +100,11 @@ const styles = {
     transition: "border-color 0.2s, box-shadow 0.2s",
     boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
   },
-  // NOVOS ESTILOS PARA ORDENAÇÃO
   sortContainer: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
   },
-  // NOVO ESTILO ADICIONADO PARA O TEXTO FIXO
   sortLabel: {
     display: 'flex',
     alignItems: 'center',
@@ -105,7 +144,6 @@ const styles = {
     transition: "background-color 0.2s, border-color 0.2s",
     boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
   },
-  // FIM DOS NOVOS ESTILOS
   addClientButton: {
     display: "flex",
     alignItems: "center",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -68,7 +68,7 @@ function ContractsDashboard() {
         startLoading();
         const dashboardData = await platformServices.getDashboardData();
         setData(dashboardData);
-      } catch (error) {
+      } catch (error) { // <-- SINTAXE CORRIGIDA AQUI
         console.error("Falha ao buscar dados do dashboard:", error);
       } finally {
         setIsLoading(false);
@@ -76,7 +76,20 @@ function ContractsDashboard() {
       }
     };
     fetchData();
-  }, [token]);
+  }, [token]); // <-- DEPENDÊNCIA RESTAURADA PARA A ORIGINAL, SEM LOOP
+
+  // Lógica para processar a lista de clientes, filtrando e ordenando
+  const processedBestClients = useMemo(() => {
+    // Retorna um array vazio se não houver dados para evitar erros
+    if (!data || !Array.isArray(data.bestClients)) {
+      return [];
+    }
+    // 1. Filtra para manter apenas clientes com valor > 0
+    // 2. Ordena a lista filtrada do maior para o menor valor
+    return data.bestClients
+      .filter(client => client.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+  }, [data]); // Recalcula apenas quando 'data' for atualizado
 
   if (isLoading) {
     return <div>Carregando dados do dashboard...</div>;
@@ -98,39 +111,21 @@ function ContractsDashboard() {
       title: "Contratos Ativos",
       value: data.activeContracts || 0,
       data: [
-        { v: 10 },
-        { v: 20 },
-        { v: 15 },
-        { v: 30 },
-        { v: 25 },
-        { v: 40 },
-        { v: 35 },
+        { v: 10 }, { v: 20 }, { v: 15 }, { v: 30 }, { v: 25 }, { v: 40 }, { v: 35 },
       ],
     },
     {
       title: "Saques no Mês",
       value: formatCurrencyShort(data.monthlyWithdraw),
       data: [
-        { v: 30 },
-        { v: 20 },
-        { v: 40 },
-        { v: 35 },
-        { v: 50 },
-        { v: 40 },
-        { v: 60 },
+        { v: 30 }, { v: 20 }, { v: 40 }, { v: 35 }, { v: 50 }, { v: 40 }, { v: 60 },
       ],
     },
     {
       title: "Ticket Médio",
       value: formatCurrencyShort(data.mediumTicket),
       data: [
-        { v: 20 },
-        { v: 18 },
-        { v: 25 },
-        { v: 22 },
-        { v: 30 },
-        { v: 28 },
-        { v: 35 },
+        { v: 20 }, { v: 18 }, { v: 25 }, { v: 22 }, { v: 30 }, { v: 28 }, { v: 35 },
       ],
     },
   ];
@@ -142,9 +137,8 @@ function ContractsDashboard() {
     }))
     .reverse();
 
-  const topClientGoal = data.bestClients?.[0]?.amount || 1;
-
-  // http://localhost:3000/platform/clients/1
+  // A meta da barra de progresso agora é baseada no primeiro cliente da lista JÁ PROCESSADA
+  const topClientGoal = processedBestClients[0]?.amount || 1;
 
   const goToClient = (id) => {
     navigate(`/platform/clients/${id}`);
@@ -262,8 +256,9 @@ function ContractsDashboard() {
         >
           <h3 style={styles.cardTitle}>Melhores Clientes</h3>
           <ul style={styles.sellersList}>
-            {data.bestClients?.map((client, index) => (
-              <li onClick={() => goToClient(client.id)} key={index} style={styles.sellerItem}>
+            {/* A renderização agora usa a lista processada */}
+            {processedBestClients.map((client) => (
+              <li onClick={() => goToClient(client.id)} key={client.id} style={styles.sellerItem}>
                 <ImageWithLoader
                   src={
                     client.profilePictureUrl ||

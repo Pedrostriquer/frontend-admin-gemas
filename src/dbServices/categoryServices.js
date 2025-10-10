@@ -5,16 +5,32 @@ import api from "./api/api";
 const categoryServices = {
     getAllCategories: async () => {
         try {
-            // Usa 'api' e a rota relativa SEM a barra inicial
+            // A API já retorna os dados que precisamos, vamos apenas ajustar os nomes dos campos.
             const response = await api.get('Category/with-product-count');
             
-            const categoriesWithData = response.data.map((cat, index) => ({
-                ...cat,
+            // Mapeia a resposta da API para o formato que o frontend espera, sem adicionar um status falso.
+            const categoriesWithData = response.data.map(cat => ({
+                id: cat.id, // Supondo que a API também retorne o ID aqui, se não, pode ser necessário ajustar.
                 name: cat.categoryName,
                 productCount: cat.productsAssociated,
-                status: index % 4 === 0 ? 'Inativo' : 'Ativo',
             }));
-            return categoriesWithData;
+            // Se o endpoint /with-product-count não retorna o ID, você pode precisar fazer outra chamada ou ajustar o backend.
+            // Para este exemplo, vamos assumir que o ID está presente ou que o nome é único por enquanto.
+            // Se o ID não vier de /with-product-count, será preciso buscar de /api/Category e combinar os dados.
+            // A forma mais simples é ajustar o backend para incluir o ID na rota /with-product-count.
+            // Por enquanto, vamos pegar todos os Ids da rota principal e juntar.
+            
+            const allCategoriesResponse = await api.get('Category');
+            const idMap = new Map(allCategoriesResponse.data.map(c => [c.name, c.id]));
+
+            const finalCategories = response.data.map(cat => ({
+                id: idMap.get(cat.categoryName), // Pega o ID correspondente pelo nome
+                name: cat.categoryName,
+                productCount: cat.productsAssociated,
+            }));
+
+
+            return finalCategories;
         } catch (error) {
             console.error("Erro ao buscar categorias com contagem de produtos:", error.response?.data || error.message);
             throw error;
@@ -23,7 +39,6 @@ const categoryServices = {
 
     getProductsForSelection: async () => {
         try {
-            // Usando o objeto 'params' para mais clareza
             const response = await api.get('Product/search', { params: { PageSize: 1000 } });
             return response.data.items.map(p => ({ id: p.id, name: p.name }));
         } catch (error) {
@@ -35,7 +50,6 @@ const categoryServices = {
     updateProductCategories: async (categoryIds, productIds) => {
         try {
             const updatePromises = productIds.map(productId => 
-                // A rota é construída de forma relativa
                 api.patch(`Product/${productId}/categories`, { categoryIds })
             );
             await Promise.all(updatePromises);
@@ -47,6 +61,7 @@ const categoryServices = {
 
     createCategory: async (categoryData) => {
         try {
+            // O corpo da requisição deve ser apenas { name: "string" }
             const response = await api.post('Category', { name: categoryData.name });
             return response.data;
         } catch (error) {
@@ -57,24 +72,16 @@ const categoryServices = {
 
     updateCategory: async (id, categoryData) => {
         try {
-            await api.put(`Category/${id}`, categoryData);
+            // O corpo da requisição PUT é { id: 0, name: "string" } conforme o swagger
+            await api.put(`Category/${id}`, { id: id, name: categoryData.name });
         } catch (error) {
             console.error(`Erro ao atualizar categoria ${id}:`, error.response?.data || error.message);
             throw error;
         }
     },
     
-    updateCategoryStatus: async (id, status) => {
-        try {
-            console.log(`Simulando atualização de status para categoria ${id}: ${status}`);
-            // Exemplo de como seria com a API real:
-            // await api.patch(`Category/${id}/status`, { status });
-            return Promise.resolve();
-        } catch (error) {
-            console.error(`Erro ao atualizar status da categoria ${id}:`, error.response?.data || error.message);
-            throw error;
-        }
-    },
+    // REMOVIDA - A função updateCategoryStatus foi removida pois não existe na API
+    // updateCategoryStatus: async (id, status) => { ... },
 
     deleteCategory: async (id) => {
         try {
