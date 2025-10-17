@@ -130,3 +130,83 @@
     text-align: center;
     padding: 50px;
 }
+
+/* --- ESTILOS ADICIONADOS PARA A SEÇÃO DE FAQ --- */
+
+/* Container para a lista de itens (perguntas, avaliações, etc.) */
+.dynamic-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Estilo de cada item individual na lista */
+.dynamic-list-item {
+    display: flex;
+    align-items: flex-start; /* Alinha o botão de remover ao topo */
+    gap: 15px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+/* Container para os campos de input dentro de um item */
+.item-inputs {
+    flex-grow: 1; /* Faz com que os inputs ocupem todo o espaço disponível */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Estilo específico para o input de título (a pergunta) */
+.item-inputs .item-input-title {
+    font-weight: 600;
+    font-size: 1.05em;
+}
+
+/* Botão de remoção para cada item */
+.btn-remove {
+    background-color: transparent;
+    border: 1px solid #e2e8f0;
+    color: #ef4444; /* Vermelho para indicar perigo/deleção */
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Impede que o botão encolha */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+}
+
+.btn-remove:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+}
+
+/* Container para os botões de ação (ex: "Adicionar Pergunta") */
+.editor-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Estilo do botão de ação primário */
+.btn-primary {
+    background-color: #10b981; /* Verde para ação de adicionar */
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #059669;
+}

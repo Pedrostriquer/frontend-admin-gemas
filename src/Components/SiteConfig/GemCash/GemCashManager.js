@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
+import { v4 as uuidv4 } from 'uuid'; // IMPORTADO
 import './GemCashManager.css';
 
 const defaultGemCashData = {
@@ -31,7 +32,8 @@ const defaultGemCashData = {
             { id: 5, title: "Transparência Online", characteristic: "Acesse sua Área do Cliente para acompanhar remunerações e gerenciar sua compra.", benefit: "Controle e visibilidade total, com processo transparente." },
             { id: 6, title: "Liberdade Final", characteristic: "Ao final do período, devolva a gema e reaveja o valor integral, ou mantenha-a.", benefit: "Máxima autonomia na decisão do destino do seu ativo." }
         ]
-    }
+    },
+    faq: [] // ADICIONADO
 };
 
 const GemCashManager = () => {
@@ -49,7 +51,8 @@ const GemCashManager = () => {
                 setGemCashData({
                     intro: { ...defaultGemCashData.intro, ...firestoreData.intro },
                     problemSolution: { ...defaultGemCashData.problemSolution, ...firestoreData.problemSolution },
-                    howItWorks: { ...defaultGemCashData.howItWorks, ...firestoreData.howItWorks }
+                    howItWorks: { ...defaultGemCashData.howItWorks, ...firestoreData.howItWorks },
+                    faq: firestoreData.faq || defaultGemCashData.faq // ADICIONADO
                 });
             } else {
                 setGemCashData(defaultGemCashData);
@@ -72,6 +75,34 @@ const GemCashManager = () => {
             return newData;
         });
     };
+
+    // --- FUNÇÕES ADICIONADAS PARA O FAQ ---
+    const handleDynamicListChange = (section, index, field, value) => {
+        setGemCashData(prevData => {
+            const newData = JSON.parse(JSON.stringify(prevData));
+            newData[section][index][field] = value;
+            return newData;
+        });
+    };
+
+    const handleAddListItem = (section, newItem) => {
+        setGemCashData(prevData => ({
+            ...prevData,
+            [section]: [...(prevData[section] || []), newItem]
+        }));
+    };
+    
+    const handleRemoveListItem = (section, indexToRemove) => {
+        setGemCashData(prevData => {
+            const newList = [...prevData[section]];
+            newList.splice(indexToRemove, 1);
+            return {
+                ...prevData,
+                [section]: newList
+            };
+        });
+    };
+    // --- FIM DAS FUNÇÕES ADICIONADAS ---
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -97,6 +128,7 @@ const GemCashManager = () => {
                     {isSaving ? 'Salvando...' : 'Salvar Todas as Alterações'}
                 </button>
             </div>
+            {/* Seção de Introdução (sem alterações) */}
             <div className="management-section">
                 <h3 className="editor-title">Seção de Introdução</h3>
                 <div className="form-group">
@@ -108,6 +140,7 @@ const GemCashManager = () => {
                     <textarea value={gemCashData.intro.subtitle} onChange={e => handleChange('intro', 'subtitle', e.target.value)} rows="3" />
                 </div>
             </div>
+            {/* Seção "Problema & Solução" (sem alterações) */}
             <div className="management-section">
                 <h3 className="editor-title">Seção "Problema & Solução"</h3>
                 <div className="form-group">
@@ -139,6 +172,7 @@ const GemCashManager = () => {
                     </div>
                  </div>
             </div>
+            {/* Seção "Como Funciona" (sem alterações) */}
              <div className="management-section">
                 <h3 className="editor-title">Seção "Como Funciona / Detalhes"</h3>
                 <div className="form-group">
@@ -164,6 +198,27 @@ const GemCashManager = () => {
                     ))}
                 </div>
             </div>
+
+            {/* --- SEÇÃO DE FAQ ADICIONADA --- */}
+            <div className="management-section">
+                <h3 className="editor-title">FAQ da GemCash (Perguntas Frequentes)</h3>
+                <div className="dynamic-list">
+                    {(gemCashData.faq || []).map((item, index) => (
+                        <div className="dynamic-list-item" key={item.id || index}>
+                            <div className="item-inputs">
+                                <input type="text" value={item.question} onChange={(e) => handleDynamicListChange('faq', index, 'question', e.target.value)} placeholder="Pergunta" className="item-input-title" />
+                                <textarea value={item.answer} onChange={(e) => handleDynamicListChange('faq', index, 'answer', e.target.value)} placeholder="Resposta" rows="3" />
+                            </div>
+                            <button onClick={() => handleRemoveListItem('faq', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
+                        </div>
+                    ))}
+                </div>
+                <div className="editor-actions">
+                    <button onClick={() => handleAddListItem('faq', { id: uuidv4(), question: '', answer: '' })} className="btn-primary">Adicionar Pergunta</button>
+                </div>
+            </div>
+            {/* --- FIM DA SEÇÃO DE FAQ --- */}
+
         </div>
     );
 };
