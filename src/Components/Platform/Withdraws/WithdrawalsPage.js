@@ -37,7 +37,7 @@ const statusOptions = [
   { value: 1, label: "Pendente" },
   { value: 2, label: "Pago" },
   { value: 3, label: "Cancelado" },
-  { value: 4, label: "Processando" },
+  { value: 4, label: "Recusado" },
 ];
 
 function WithdrawalsPage() {

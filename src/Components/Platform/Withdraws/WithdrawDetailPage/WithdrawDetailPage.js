@@ -16,12 +16,12 @@ const formatDate = (d) =>
         year: "numeric",
       })
     : "N/A";
-const statusMap = { 1: "Pendente", 2: "Aprovado", 3: "Negado", 4: "Cancelado" };
+const statusMap = { 1: "Pendente", 2: "Aprovado", 3: "Cancelado", 4: "Recusado" };
 const statusStyleMap = {
   1: "statusPendente",
   2: "statusAprovado",
-  3: "statusNegado",
-  4: "statusCancelado",
+  3: "statusCancelado",
+  4: "statusRecusado",
 };
 
 function WithdrawDetailPage() {
