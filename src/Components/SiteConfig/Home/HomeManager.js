@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore'; 
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../firebase/config';
 import { v4 as uuidv4 } from 'uuid';
 import './HomeManager.css';
 
 const defaultHomeData = {
-    banner: { speed: 5000, showArrows: true, width: 1920, height: 550, slides: [] },
-    aboutSection: { 
+    // 'showArrows' global foi removido daqui
+    banner: { speed: 5000, width: 1920, height: 550, slides: [], showBanner: true },
+    aboutSection: {
         quemSomosTitle: 'Quem Somos',
         quemSomosText1: '',
         quemSomosText2: '',
@@ -33,7 +34,6 @@ const defaultHomeData = {
     reviews: []
 };
 
-// MODIFICADO: Trocamos addressLink e addressTitle por um array 'addresses'
 const defaultFooterData = {
     phones: [
         { number: '', label: '' },
@@ -45,12 +45,12 @@ const defaultFooterData = {
     facebook: '',
     tiktok: '',
     youtube: '',
-    addresses: [] // NOVO: Array para múltiplos endereços
+    addresses: []
 };
 
 const HomeManager = () => {
     const [homeData, setHomeData] = useState(null);
-    const [footerData, setFooterData] = useState(null); 
+    const [footerData, setFooterData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -69,8 +69,25 @@ const HomeManager = () => {
 
                 if (homeDocSnap.exists()) {
                     const firestoreData = homeDocSnap.data();
-                    setHomeData({ 
-                        banner: { ...defaultHomeData.banner, ...firestoreData.banner },
+
+                    // Pega o 'showArrows' global antigo (do firebase), ou assume 'true' se não existir
+                    const globalShowArrows = firestoreData.banner?.showArrows ?? true;
+                    
+                    // Mapeia os slides existentes
+                    const migratedSlides = (firestoreData.banner?.slides || []).map(slide => ({
+                        ...slide,
+                        // Se o slide individual não tiver 'showArrows', usa o valor global antigo como fallback
+                        showArrows: slide.showArrows ?? globalShowArrows,
+                        // Se o slide individual não tiver 'isVisible', assume 'true'
+                        isVisible: slide.isVisible ?? true 
+                    }));
+
+                    setHomeData({
+                        banner: {
+                            ...defaultHomeData.banner,
+                            ...firestoreData.banner,
+                            slides: migratedSlides // Usa os slides já migrados
+                        },
                         aboutSection: { ...defaultHomeData.aboutSection, ...firestoreData.aboutSection },
                         featureSections: {
                             gemas: { ...defaultHomeData.featureSections.gemas, ...firestoreData.featureSections?.gemas },
@@ -85,14 +102,12 @@ const HomeManager = () => {
                 }
 
                 if (footerDocSnap.exists()) {
+                    // ... Lógica do Footer (sem alteração)
                     const firestoreData = footerDocSnap.data();
                     let phones = firestoreData.phones || [ { number: firestoreData.phone || '', label: '' }];
-                    
                     while (phones.length < 2) {
                         phones.push({ number: '', label: '' });
                     }
-                    
-                    // MODIFICADO: Lógica para migrar endereço antigo para o novo formato
                     let addresses = firestoreData.addresses || [];
                     if (!firestoreData.addresses && firestoreData.addressLink) {
                         addresses.push({
@@ -102,7 +117,6 @@ const HomeManager = () => {
                             show: true
                         });
                     }
-
                     setFooterData({ ...defaultFooterData, ...firestoreData, phones: phones.slice(0, 2), addresses });
                 } else {
                     setFooterData(defaultFooterData);
@@ -131,12 +145,12 @@ const HomeManager = () => {
             return newData;
         });
     };
-    
+
     const handleFooterChange = (e) => {
         const { name, value } = e.target;
         setFooterData(prev => ({ ...prev, [name]: value }));
     };
-    
+
     const handlePhoneChange = (index, field, value) => {
         setFooterData(prev => {
             const newPhones = JSON.parse(JSON.stringify(prev.phones || defaultFooterData.phones));
@@ -145,7 +159,6 @@ const HomeManager = () => {
         });
     };
 
-    // NOVA FUNÇÃO: Manipula mudanças nos campos de endereço
     const handleAddressChange = (index, field, value) => {
         setFooterData(prev => {
             const newAddresses = [...prev.addresses];
@@ -154,7 +167,6 @@ const HomeManager = () => {
         });
     };
 
-    // NOVA FUNÇÃO: Adiciona um novo endereço à lista
     const handleAddAddress = () => {
         setFooterData(prev => ({
             ...prev,
@@ -165,7 +177,6 @@ const HomeManager = () => {
         }));
     };
 
-    // NOVA FUNÇÃO: Remove um endereço da lista
     const handleRemoveAddress = (indexToRemove) => {
         setFooterData(prev => ({
             ...prev,
@@ -180,9 +191,7 @@ const HomeManager = () => {
             const fileRef = ref(storage, `site_home/${Date.now()}_${file.name}`);
             const snapshot = await uploadBytes(fileRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
-            
             handleDataChange(path, downloadURL);
-
             const finalKey = path[path.length - 1];
             if (finalKey === 'src' || finalKey === 'mediaSrc') {
                 const typePath = [...path];
@@ -196,15 +205,18 @@ const HomeManager = () => {
             setIsUploading(false);
         }
     };
-    
+
     const handleDynamicListChange = (section, index, field, value) => handleDataChange([section, index, field], value);
 
     const handleAddListItem = (section, newItem) => {
         if (section === 'banner.slides') {
+            // Adiciona novas propriedades por padrão ao criar um slide
             const newSlide = {
                 id: uuidv4(), type: 'image', src: '', link: '',
                 overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' },
-                duration: 5000, playUntilEnd: false
+                duration: 5000, playUntilEnd: false,
+                showArrows: true, // Adicionado
+                isVisible: true  // Adicionado
             };
             const currentSlides = homeData.banner.slides || [];
             handleDataChange(['banner', 'slides'], [...currentSlides, newSlide]);
@@ -225,8 +237,8 @@ const HomeManager = () => {
             parent[listKey].splice(indexToRemove, 1);
             return newData;
         });
-    };    
-    
+    };
+
     const handleSlideChange = (index, field, value) => handleDataChange(['banner', 'slides', index, field], value);
     const handleOverlayChange = (index, field, value) => handleDataChange(['banner', 'slides', index, 'overlay', field], value);
 
@@ -235,19 +247,23 @@ const HomeManager = () => {
         try {
             const homeDocRef = doc(db, 'siteContent', 'homePage');
             const footerDocRef = doc(db, 'siteContent', 'footer');
-            
+
+            const finalHomeData = JSON.parse(JSON.stringify(homeData));
+            // Limpa o 'showArrows' global obsoleto do objeto banner antes de salvar
+            if (finalHomeData.banner) {
+                delete finalHomeData.banner.showArrows;
+            }
+
             const finalFooterData = JSON.parse(JSON.stringify(footerData));
             if (finalFooterData.phones && finalFooterData.phones[1] && !finalFooterData.phones[1].number && !finalFooterData.phones[1].label) {
                 finalFooterData.phones.pop();
             }
             delete finalFooterData.phone;
-
-            // MODIFICADO: Remove os campos antigos antes de salvar para limpar o banco
             delete finalFooterData.addressLink;
             delete finalFooterData.addressTitle;
 
             await Promise.all([
-                setDoc(homeDocRef, homeData, { merge: true }),
+                setDoc(homeDocRef, finalHomeData, { merge: true }),
                 setDoc(footerDocRef, finalFooterData, { merge: true })
             ]);
 
@@ -259,7 +275,7 @@ const HomeManager = () => {
             setIsSaving(false);
         }
     };
-    
+
     if (loading || !homeData || !footerData) return <p className="loading-message">Carregando...</p>;
 
     return (
@@ -274,7 +290,15 @@ const HomeManager = () => {
                 <div className="editor-controls-grid">
                     <div className="control-group"><label>Largura (px)</label><input type="number" value={homeData.banner.width} onChange={e => handleDataChange(['banner', 'width'], Number(e.target.value))} /></div>
                     <div className="control-group"><label>Altura (px)</label><input type="number" value={homeData.banner.height} onChange={e => handleDataChange(['banner', 'height'], Number(e.target.value))} /></div>
-                    <div className="control-group checkbox"><input type="checkbox" id="showArrows" checked={homeData.banner.showArrows} onChange={(e) => handleDataChange(['banner', 'showArrows'], e.target.checked)} /><label htmlFor="showArrows">Exibir setas</label></div>
+                    <div className="control-group checkbox">
+                        <input
+                            type="checkbox"
+                            id="showBanner"
+                            checked={homeData.banner.showBanner ?? true}
+                            onChange={(e) => handleDataChange(['banner', 'showBanner'], e.target.checked)}
+                        />
+                        <label htmlFor="showBanner">Exibir banner no site</label>
+                    </div>
                 </div>
                 <h4 className="slides-title">Slides</h4>
                 <div className="slides-editor-list">
@@ -289,14 +313,14 @@ const HomeManager = () => {
                                     <button onClick={() => handleRemoveListItem('banner.slides', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
                                 </div>
                             </div>
-                            
+
                             <div className="slide-timing-controls">
                                 <div className="control-group">
                                     <label htmlFor={`duration-${slide.id}`}>Duração (ms)</label>
-                                    <input 
-                                        type="number" 
+                                    <input
+                                        type="number"
                                         id={`duration-${slide.id}`}
-                                        value={slide.duration ?? ''} 
+                                        value={slide.duration ?? ''}
                                         onChange={(e) => {
                                             const value = e.target.value;
                                             handleSlideChange(index, 'duration', value === '' ? '' : Number(value));
@@ -307,15 +331,35 @@ const HomeManager = () => {
                                 </div>
                                 {slide.type === 'video' && (
                                     <div className="control-group checkbox">
-                                        <input 
-                                            type="checkbox" 
-                                            id={`playUntilEnd-${slide.id}`} 
-                                            checked={slide.playUntilEnd || false} 
-                                            onChange={(e) => handleSlideChange(index, 'playUntilEnd', e.target.checked)} 
+                                        <input
+                                            type="checkbox"
+                                            id={`playUntilEnd-${slide.id}`}
+                                            checked={slide.playUntilEnd || false}
+                                            onChange={(e) => handleSlideChange(index, 'playUntilEnd', e.target.checked)}
                                         />
                                         <label htmlFor={`playUntilEnd-${slide.id}`}>Exibir vídeo até o final</label>
                                     </div>
                                 )}
+                                <div className="control-group checkbox">
+                                    <input
+                                        type="checkbox"
+                                        id={`showArrows-${slide.id}`}
+                                        checked={slide.showArrows ?? true}
+                                        onChange={(e) => handleSlideChange(index, 'showArrows', e.target.checked)}
+                                    />
+                                    <label htmlFor={`showArrows-${slide.id}`}>Exibir setas de navegação</label>
+                                </div>
+                                
+                                {/* Checkbox de visibilidade individual */}
+                                <div className="control-group checkbox">
+                                    <input
+                                        type="checkbox"
+                                        id={`isVisible-${slide.id}`}
+                                        checked={slide.isVisible ?? true}
+                                        onChange={(e) => handleSlideChange(index, 'isVisible', e.target.checked)}
+                                    />
+                                    <label htmlFor={`isVisible-${slide.id}`}>Exibir este slide</label>
+                                </div>
                             </div>
 
                             <div className="slide-overlay-controls">
@@ -429,7 +473,7 @@ const HomeManager = () => {
                     <button onClick={() => handleAddListItem('reviews', { id: uuidv4(), name: '', comment: '' })} className="btn-primary">Adicionar Avaliação</button>
                 </div>
             </div>
-            
+
             {/* Footer Editor */}
             <div className="management-section">
                 <h3 className="editor-title">Gerenciar Rodapé</h3>
@@ -437,16 +481,16 @@ const HomeManager = () => {
                     <div className="form-group-compound">
                         <label>Telefone Principal</label>
                         <div className="input-group">
-                            <input 
-                                type="text" 
-                                value={footerData?.phones[0]?.number || ''} 
-                                onChange={(e) => handlePhoneChange(0, 'number', e.target.value)} 
+                            <input
+                                type="text"
+                                value={footerData?.phones[0]?.number || ''}
+                                onChange={(e) => handlePhoneChange(0, 'number', e.target.value)}
                                 placeholder="Nº Principal. Ex: (11) 99999-8888"
                             />
-                            <input 
-                                type="text" 
-                                value={footerData?.phones[0]?.label || ''} 
-                                onChange={(e) => handlePhoneChange(0, 'label', e.target.value)} 
+                            <input
+                                type="text"
+                                value={footerData?.phones[0]?.label || ''}
+                                onChange={(e) => handlePhoneChange(0, 'label', e.target.value)}
                                 placeholder="Texto opcional. Ex: WhatsApp"
                             />
                         </div>
@@ -454,16 +498,16 @@ const HomeManager = () => {
                     <div className="form-group-compound">
                         <label>Telefone Opcional</label>
                         <div className="input-group">
-                            <input 
-                                type="text" 
-                                value={footerData?.phones[1]?.number || ''} 
-                                onChange={(e) => handlePhoneChange(1, 'number', e.target.value)} 
+                            <input
+                                type="text"
+                                value={footerData?.phones[1]?.number || ''}
+                                onChange={(e) => handlePhoneChange(1, 'number', e.target.value)}
                                 placeholder="Nº Opcional"
                             />
-                            <input 
-                                type="text" 
-                                value={footerData?.phones[1]?.label || ''} 
-                                onChange={(e) => handlePhoneChange(1, 'label', e.target.value)} 
+                            <input
+                                type="text"
+                                value={footerData?.phones[1]?.label || ''}
+                                onChange={(e) => handlePhoneChange(1, 'label', e.target.value)}
                                 placeholder="Texto opcional"
                             />
                         </div>
@@ -494,31 +538,30 @@ const HomeManager = () => {
                     </div>
                 </div>
 
-                {/* MODIFICADO: Seção para gerenciar múltiplos endereços */}
                 <div className="sub-section">
                     <h4 className="editor-title">Endereços</h4>
                     <div className="dynamic-list">
                         {(footerData.addresses || []).map((address, index) => (
                             <div className="dynamic-list-item" key={address.id || index}>
                                 <div className="item-inputs">
-                                    <input 
-                                        type="text" 
-                                        value={address.title} 
-                                        onChange={(e) => handleAddressChange(index, 'title', e.target.value)} 
-                                        placeholder="Título do Endereço (Ex: Loja São Paulo)" 
-                                        className="item-input-title" 
+                                    <input
+                                        type="text"
+                                        value={address.title}
+                                        onChange={(e) => handleAddressChange(index, 'title', e.target.value)}
+                                        placeholder="Título do Endereço (Ex: Loja São Paulo)"
+                                        className="item-input-title"
                                     />
-                                    <input 
-                                        type="url" 
-                                        value={address.link} 
-                                        onChange={(e) => handleAddressChange(index, 'link', e.target.value)} 
-                                        placeholder="Link do Google Maps" 
+                                    <input
+                                        type="url"
+                                        value={address.link}
+                                        onChange={(e) => handleAddressChange(index, 'link', e.target.value)}
+                                        placeholder="Link do Google Maps"
                                     />
                                     <div className="control-group checkbox" style={{ marginTop: '10px' }}>
-                                        <input 
-                                            type="checkbox" 
-                                            id={`showAddress-${address.id}`} 
-                                            checked={address.show} 
+                                        <input
+                                            type="checkbox"
+                                            id={`showAddress-${address.id}`}
+                                            checked={address.show}
                                             onChange={(e) => handleAddressChange(index, 'show', e.target.checked)}
                                         />
                                         <label htmlFor={`showAddress-${address.id}`}>Exibir este endereço no site</label>
@@ -533,7 +576,7 @@ const HomeManager = () => {
                     </div>
                 </div>
             </div>
-            
+
             <button onClick={handleSave} className="save-btn-full" disabled={isSaving || isUploading}>
                 {isSaving ? 'Salvando...' : (isUploading ? 'Aguarde o upload...' : 'Salvar Todas as Alterações')}
             </button>
