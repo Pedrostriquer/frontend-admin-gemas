@@ -114,6 +114,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Saques', icon: 'fa-solid fa-money-bill-wave', path: '/platform/withdraws' },
         { name: 'Notificações', icon: 'fa-solid fa-bell', path: '/platform/notifications' },
         { name: 'Ofertas', icon: 'fa-solid fa-newspaper', path: '/platform/offers' },
+        { name: 'Catalogo GemCash', icon: 'fa-solid fa-newspaper', path: '/platform/catalogo-gemcash' },
         { name: 'Controlador', icon: 'fa-solid fa-sliders', path: '/platform/controller' },
     ];
     const ecommerceMenu = [
