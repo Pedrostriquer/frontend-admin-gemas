@@ -47,6 +47,8 @@ import HomeManager from "./Components/SiteConfig/Home/HomeManager";
 import GemCashManager from "./Components/SiteConfig/GemCash/GemCashManager";
 import BlogAdminPage from "./Components/Ecommerce/BlogAdminPage/BlogAdminPage"; 
 import NotificationsPage from "./Components/Notifications/NotificationContainer";
+import SupportPage from "./Components/Support/SupportPage";
+
 
 
 
@@ -71,6 +73,9 @@ const AppContent = () => {
             <Route path="users" element={<UsersPage />} />
             <Route path="profile" element={<UserProfile />} />
             <Route path="extract-data" element={<ExtractData />} />
+            <Route path="support" element={<SupportPage />} />
+            <Route path="support/:ticketId" element={<SupportPage />} />
+
 
             {/* Rotas da Plataforma */}
             <Route path="platform/dashboard" element={<ContractsDashboard />} />

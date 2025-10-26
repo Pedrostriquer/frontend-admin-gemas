@@ -132,6 +132,10 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
     ];
 
     const getMenu = () => {
+        // Se o caminho ativo for '/support', nenhum menu de contexto é exibido
+        if (activePath.startsWith('/support')) {
+            return [];
+        }
         switch(activeContext) {
             case 'platform': return platformMenu;
             case 'ecommerce': return ecommerceMenu;
@@ -174,6 +178,15 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
                         <ContextButton isActive={activeContext === 'platform'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('platform')} icon="fa-solid fa-briefcase">Plataforma</ContextButton>
                         <ContextButton isActive={activeContext === 'ecommerce'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('ecommerce')} icon="fa-solid fa-store">Gemas Preciosas</ContextButton>
                         <ContextButton isActive={activeContext === 'site'} isCollapsed={isSidebarCollapsed} onClick={() => handleContextClick('site')} icon="fa-solid fa-globe">Site</ContextButton>
+                        {/* BOTÃO DE SUPORTE ADICIONADO ABAIXO */}
+                        <ContextButton 
+                            isActive={activePath === '/support'} 
+                            isCollapsed={isSidebarCollapsed} 
+                            onClick={() => onLinkClick('/support')} 
+                            icon="fa-solid fa-headset"
+                        >
+                            Suporte
+                        </ContextButton>
                     </div>
                     
                     <div style={styles.menuContainer}>

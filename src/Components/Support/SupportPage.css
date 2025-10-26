@@ -1,0 +1,204 @@
+/* ===============================================================
+   ESTILOS PARA A PÁGINA DE SUPORTE (SupportPage.js)
+   =============================================================== */
+
+/* ---- Container Principal (Fundo Branco) ---- */
+.SupportPage-container {
+    padding: 2rem;
+    background-color: #f8fafc; 
+    min-height: 100vh;
+}
+
+/* ---- Cabeçalho da Página ---- */
+.SupportPage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.SupportPage-header h1 {
+    font-size: 2.2rem; color: #212529; font-weight: 700;
+}
+
+.SupportPage-new-ticket-button {
+    background-color: #0d6efd; color: white; border: none; padding: 12px 24px;
+    border-radius: 8px; font-size: 1rem; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+.SupportPage-new-ticket-button:hover { background-color: #0b5ed7; }
+.SupportPage-new-ticket-button:active { transform: scale(0.98); }
+
+/* ---- Grid de Cards de Ticket ---- */
+.SupportPage-ticket-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;
+}
+
+.SupportPage-ticket-card {
+    background-color: #ffffff; border-radius: 8px; border: 1px solid #dee2e6;
+    padding: 1.5rem; transition: box-shadow 0.2s ease, transform 0.2s ease; cursor: pointer;
+    display: flex; flex-direction: column; text-decoration: none; color: inherit;
+    border-left: 6px solid;
+}
+.SupportPage-ticket-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); }
+
+/* Cores da borda por categoria */
+.SupportPage-ticket-card.category-bug { border-left-color: #dc3545; }
+.SupportPage-ticket-card.category-atualizacao { border-left-color: #0d6efd; }
+.SupportPage-ticket-card.category-duvida { border-left-color: #ffc107; }
+/* Adicionamos fallback para categorias "não visuais" */
+.SupportPage-ticket-card.category-cliente, .SupportPage-ticket-card.category-contratos, .SupportPage-ticket-card.category-outro, .SupportPage-ticket-card.category-urgente { border-left-color: #6c757d; }
+
+.SupportPage-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.SupportPage-ticket-id { font-weight: 600; color: #6c757d; font-size: 0.85rem; letter-spacing: 0.5px; }
+.SupportPage-status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: white; text-transform: uppercase; }
+.SupportPage-status-pendente { background-color: #ffc107; color: #333; }
+.SupportPage-status-andamento { background-color: #17a2b8; }
+.SupportPage-status-concluido { background-color: #198754; }
+.SupportPage-card-body h3 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #343a40; font-weight: 600; }
+.SupportPage-card-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; font-size: 0.85rem; color: #6c757d; }
+
+/* ---- Modal de Criação (Novo Design) ---- */
+.SupportPage-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
+    display: flex; justify-content: center; align-items: center; z-index: 1050; animation: fadeIn 0.3s ease;
+}
+.SupportPage-modal-content {
+    background: #ffffff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    width: 90%; max-width: 600px; overflow: hidden; animation: slideIn 0.3s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.SupportPage-modal-header { padding: 1.5rem 2rem; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
+.SupportPage-modal-header h2 { margin: 0; font-size: 1.5rem; color: #343a40; }
+.SupportPage-modal-close-button { background: none; border: none; font-size: 2rem; color: #6c757d; cursor: pointer; }
+.SupportPage-modal-body { padding: 2rem; }
+.SupportPage-form-group { margin-bottom: 1.5rem; }
+.SupportPage-form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057; }
+
+/* <<< CORREÇÃO DO CSS APLICADA AQUI >>> */
+.SupportPage-form-group input,
+.SupportPage-form-group select,
+.SupportPage-form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box; /* <<< ESTA LINHA CORRIGE O PROBLEMA DA BORDA */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.SupportPage-form-group input:focus,
+.SupportPage-form-group select:focus,
+.SupportPage-form-group textarea:focus {
+    border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); outline: none;
+}
+.SupportPage-form-group textarea { min-height: 120px; resize: vertical; }
+
+.SupportPage-modal-footer { padding: 1.5rem 2rem; background-color: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; }
+.SupportPage-submit-ticket-button { background-color: #198754; color: white; border: none; padding: 12px 28px; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+.SupportPage-submit-ticket-button:hover { background-color: #157347; }
+
+/* ---- Estilos da Tela de Detalhes (mantidos e prefixados) ---- */
+/* O resto do CSS permanece o mesmo e está correto */
+.SupportPage-ticket-detail-view {animation: fadeIn 0.5s ease;}
+.SupportPage-detail-header {display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;}
+.SupportPage-back-button {background: #e9ecef; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: background-color 0.2s; font-size: 1.2rem;}
+.SupportPage-back-button:hover {background: #ced4da;}
+.SupportPage-detail-title h2 {margin: 0; font-size: 2rem;}
+.SupportPage-detail-title .SupportPage-ticket-id {font-size: 1rem; color: #6c757d;}
+.SupportPage-ticket-detail-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;}
+.SupportPage-info-panel, .SupportPage-chat-panel {background: #f8f9fa; border-radius: 12px; padding: 2rem; border: 1px solid #dee2e6;}
+.SupportPage-info-item {margin-bottom: 1.5rem;}
+.SupportPage-info-item label {display: block; font-size: 0.8rem; color: #6c757d; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;}
+.SupportPage-info-item p {margin: 0; font-size: 1rem; color: #212529; white-space: pre-wrap;}
+.SupportPage-chat-container {display: flex; flex-direction: column; height: 60vh;}
+.SupportPage-chat-messages {flex-grow: 1; overflow-y: auto; padding-right: 1rem; margin-bottom: 1rem;}
+.SupportPage-chat-message {display: flex; flex-direction: column; margin-bottom: 1rem; max-width: 80%;}
+.SupportPage-message-bubble {padding: 10px 15px; border-radius: 18px; font-size: 0.95rem;}
+.SupportPage-message-meta {font-size: 0.75rem; color: #6c757d; margin-top: 4px;}
+.SupportPage-message-received {align-self: flex-start;}
+.SupportPage-message-received .SupportPage-message-bubble {background-color: #e9ecef; color: #212529; border-bottom-left-radius: 4px;}
+.SupportPage-message-received .SupportPage-message-meta {text-align: left; padding-left: 5px;}
+.SupportPage-message-sent {align-self: flex-end;}
+.SupportPage-message-sent .SupportPage-message-bubble {background-color: #0d6efd; color: white; border-bottom-right-radius: 4px;}
+.SupportPage-message-sent .SupportPage-message-meta {text-align: right; padding-right: 5px;}
+.SupportPage-chat-input-form {display: flex; gap: 10px; border-top: 1px solid #e9ecef; padding-top: 1rem;}
+.SupportPage-chat-input-form textarea {flex-grow: 1; border-radius: 20px; padding: 10px 15px; border: 1px solid #ced4da; resize: none; min-height: 44px;}
+.SupportPage-chat-input-form button {border: none; background-color: #0d6efd; color: white; border-radius: 50%; width: 44px; height: 44px; font-size: 1.2rem; cursor: pointer; transition: background-color 0.2s; flex-shrink: 0;}
+.SupportPage-chat-input-form button:hover {background-color: #0b5ed7;}
+/* ---- BARRA DE FILTROS E BUSCA (NOVO) ---- */
+.SupportPage-filters-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.SupportPage-search-input {
+    flex-grow: 1; /* Ocupa o máximo de espaço disponível */
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.SupportPage-status-select {
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    min-width: 200px; /* Largura mínima para o seletor */
+}
+
+/* ---- PAGINAÇÃO (NOVO) ---- */
+.SupportPage-pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.SupportPage-pagination-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.SupportPage-pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.SupportPage-pagination-button {
+    padding: 8px 16px;
+    border: 1px solid #ced4da;
+    background-color: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.SupportPage-pagination-button:hover:not(:disabled) {
+    background-color: #f8f9fa;
+}
+
+.SupportPage-pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* ---- BADGES DE STATUS (ATUALIZADOS) ---- */
+.SupportPage-status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: white; text-transform: uppercase; }
+.SupportPage-status-pendente { background-color: #ffc107; color: #333; }
+.SupportPage-status-em_andamento { background-color: #0dcaf0; }
+.SupportPage-status-em_testes { background-color: #6f42c1; } /* Roxo */
+.SupportPage-status-entregue { background-color: #198754; } /* Verde */
+.SupportPage-status-recusado { background-color: #fd7e14; } /* Laranja */
+.SupportPage-status-cancelado { background-color: #6c757d; } /* Cinza */
+
+
+.SupportPage-card-body h3 { font-size: 1.2rem; margin: 0 0 0.5rem 0; color: #343a40; font-weight: 600; }
+.SupportPage-card-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid #e9ecef; display: flex; justify-content: space-between; font-size: 0.85rem; color: #6c757d; }
