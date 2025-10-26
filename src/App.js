@@ -51,7 +51,6 @@ import Catalog from "./Components/Platform/Catalog/Catalog";
 
 // --- RESOLVI O CONFLITO AQUI ---
 import SupportPage from "./Components/Support/SupportPage"; // Linha da branch-do-pedrinho
-import Catalog from "./Components/Platform/Catalog/Catalog"; // Linha da branch main
 // ------------------------------
 
 
