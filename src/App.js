@@ -49,6 +49,10 @@ import BlogAdminPage from "./Components/Ecommerce/BlogAdminPage/BlogAdminPage";
 import NotificationsPage from "./Components/Notifications/NotificationContainer";
 import Catalog from "./Components/Platform/Catalog/Catalog";
 
+// --- RESOLVI O CONFLITO AQUI ---
+import SupportPage from "./Components/Support/SupportPage"; // Linha da branch-do-pedrinho
+import Catalog from "./Components/Platform/Catalog/Catalog"; // Linha da branch main
+// ------------------------------
 
 
 // ✨ MUDANÇA PRINCIPAL: CRIAMOS ESTE COMPONENTE INTERNO ✨
@@ -72,6 +76,9 @@ const AppContent = () => {
             <Route path="users" element={<UsersPage />} />
             <Route path="profile" element={<UserProfile />} />
             <Route path="extract-data" element={<ExtractData />} />
+            <Route path="support" element={<SupportPage />} />
+            <Route path="support/:ticketId" element={<SupportPage />} />
+
 
             {/* Rotas da Plataforma */}
             <Route path="platform/dashboard" element={<ContractsDashboard />} />
