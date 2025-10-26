@@ -47,9 +47,11 @@ import HomeManager from "./Components/SiteConfig/Home/HomeManager";
 import GemCashManager from "./Components/SiteConfig/GemCash/GemCashManager";
 import BlogAdminPage from "./Components/Ecommerce/BlogAdminPage/BlogAdminPage"; 
 import NotificationsPage from "./Components/Notifications/NotificationContainer";
-import SupportPage from "./Components/Support/SupportPage";
 
-
+// --- RESOLVI O CONFLITO AQUI ---
+import SupportPage from "./Components/Support/SupportPage"; // Linha da branch-do-pedrinho
+import Catalog from "./Components/Platform/Catalog/Catalog"; // Linha da branch main
+// ------------------------------
 
 
 // ✨ MUDANÇA PRINCIPAL: CRIAMOS ESTE COMPONENTE INTERNO ✨
@@ -95,6 +97,7 @@ const AppContent = () => {
             <Route path="platform/messages" element={<MessagesPage />} />
             <Route path="clients/create" element={<CreateClientPage />} />
             <Route path="platform/notifications" element={<MessagesPage />} />
+            <Route path="platform/catalogo-gemcash" element={<Catalog />} />
 
 
             {/* Rotas do E-commerce Admin */}
