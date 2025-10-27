@@ -130,6 +130,7 @@ function Sidebar({ activeContext, onContextChange, isSidebarCollapsed, onToggle,
         { name: 'Home', icon: 'fa-solid fa-house', path: '/site/home' },
         { name: 'GemCash', icon: 'fa-solid fa-coins', path: '/site/gemcash' },
         { name: 'Jóias', icon: 'fa-solid fa-ring', path: '/site/personalizadas' },
+        { name: 'Leads Simulação', icon: 'fa-solid fa-users-line', path: '/site/leads' },
     ];
 
     const getMenu = () => {

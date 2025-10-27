@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import './HomeManager.css';
 
 const defaultHomeData = {
-    // 'showArrows' global foi removido daqui
     banner: { speed: 5000, width: 1920, height: 550, slides: [], showBanner: true },
     aboutSection: {
         quemSomosTitle: 'Quem Somos',
@@ -26,9 +25,9 @@ const defaultHomeData = {
         ]
     },
     featureSections: {
-        gemas: { title: 'Gemas Brilhantes Selecionadas', text: '', buttonText: 'Saiba Mais', mediaSrc: '', mediaType: 'image' },
-        gemcash: { title: 'GemCash: Seu Brilho, Seu Benefício', text: '', buttonText: 'Conheça o GemCash', mediaSrc: '', mediaType: 'image' },
-        joias: { title: 'Joias que Contam Histórias', text: '', buttonText: 'Saiba Mais', mediaSrc: '', mediaType: 'image' }
+        gemas: { title: 'Gemas Brilhantes Selecionadas', text: '', buttonText: 'Saiba Mais', mediaSrc: '', mediaType: 'image', isVisible: true, order: 1 },
+        gemcash: { title: 'GemCash: Seu Brilho, Seu Benefício', text: '', buttonText: 'Conheça o GemCash', mediaSrc: '', mediaType: 'image', isVisible: true, order: 2 },
+        joias: { title: 'Joias que Contam Histórias', text: '', buttonText: 'Saiba Mais', mediaSrc: '', mediaType: 'image', isVisible: true, order: 3 }
     },
     faq: [],
     reviews: []
@@ -69,24 +68,18 @@ const HomeManager = () => {
 
                 if (homeDocSnap.exists()) {
                     const firestoreData = homeDocSnap.data();
-
-                    // Pega o 'showArrows' global antigo (do firebase), ou assume 'true' se não existir
                     const globalShowArrows = firestoreData.banner?.showArrows ?? true;
-                    
-                    // Mapeia os slides existentes
                     const migratedSlides = (firestoreData.banner?.slides || []).map(slide => ({
                         ...slide,
-                        // Se o slide individual não tiver 'showArrows', usa o valor global antigo como fallback
                         showArrows: slide.showArrows ?? globalShowArrows,
-                        // Se o slide individual não tiver 'isVisible', assume 'true'
-                        isVisible: slide.isVisible ?? true 
+                        isVisible: slide.isVisible ?? true
                     }));
 
                     setHomeData({
                         banner: {
                             ...defaultHomeData.banner,
                             ...firestoreData.banner,
-                            slides: migratedSlides // Usa os slides já migrados
+                            slides: migratedSlides
                         },
                         aboutSection: { ...defaultHomeData.aboutSection, ...firestoreData.aboutSection },
                         featureSections: {
@@ -102,9 +95,8 @@ const HomeManager = () => {
                 }
 
                 if (footerDocSnap.exists()) {
-                    // ... Lógica do Footer (sem alteração)
                     const firestoreData = footerDocSnap.data();
-                    let phones = firestoreData.phones || [ { number: firestoreData.phone || '', label: '' }];
+                    let phones = firestoreData.phones || [{ number: firestoreData.phone || '', label: '' }];
                     while (phones.length < 2) {
                         phones.push({ number: '', label: '' });
                     }
@@ -210,18 +202,17 @@ const HomeManager = () => {
 
     const handleAddListItem = (section, newItem) => {
         if (section === 'banner.slides') {
-            // Adiciona novas propriedades por padrão ao criar um slide
             const newSlide = {
                 id: uuidv4(), type: 'image', src: '', link: '',
                 overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' },
                 duration: 5000, playUntilEnd: false,
-                showArrows: true, // Adicionado
-                isVisible: true  // Adicionado
+                showArrows: true,
+                isVisible: true
             };
             const currentSlides = homeData.banner.slides || [];
             handleDataChange(['banner', 'slides'], [...currentSlides, newSlide]);
         } else {
-             handleDataChange([section], [...(homeData[section] || []), newItem]);
+            handleDataChange([section], [...(homeData[section] || []), newItem]);
         }
     };
 
@@ -249,7 +240,6 @@ const HomeManager = () => {
             const footerDocRef = doc(db, 'siteContent', 'footer');
 
             const finalHomeData = JSON.parse(JSON.stringify(homeData));
-            // Limpa o 'showArrows' global obsoleto do objeto banner antes de salvar
             if (finalHomeData.banner) {
                 delete finalHomeData.banner.showArrows;
             }
@@ -313,7 +303,6 @@ const HomeManager = () => {
                                     <button onClick={() => handleRemoveListItem('banner.slides', index)} className="btn-remove"><i className="fas fa-trash"></i></button>
                                 </div>
                             </div>
-
                             <div className="slide-timing-controls">
                                 <div className="control-group">
                                     <label htmlFor={`duration-${slide.id}`}>Duração (ms)</label>
@@ -349,8 +338,6 @@ const HomeManager = () => {
                                     />
                                     <label htmlFor={`showArrows-${slide.id}`}>Exibir setas de navegação</label>
                                 </div>
-                                
-                                {/* Checkbox de visibilidade individual */}
                                 <div className="control-group checkbox">
                                     <input
                                         type="checkbox"
@@ -361,7 +348,6 @@ const HomeManager = () => {
                                     <label htmlFor={`isVisible-${slide.id}`}>Exibir este slide</label>
                                 </div>
                             </div>
-
                             <div className="slide-overlay-controls">
                                 <div className="overlay-header"><h5>Conteúdo Sobreposto</h5><div className="control-group checkbox"><input type="checkbox" id={`showOverlay-${slide.id}`} checked={slide.overlay?.show ?? true} onChange={(e) => handleOverlayChange(index, 'show', e.target.checked)} /><label htmlFor={`showOverlay-${slide.id}`}>Exibir</label></div></div>
                                 {(slide.overlay?.show ?? true) && (
@@ -422,6 +408,26 @@ const HomeManager = () => {
                     {Object.keys(homeData.featureSections).map(key => (
                         <div key={key} className="feature-editor-card">
                             <h4>Seção "{key.charAt(0).toUpperCase() + key.slice(1)}"</h4>
+                            <div className="editor-controls-grid" style={{ marginBottom: '1rem', gridTemplateColumns: '1fr 100px' }}>
+                                <div className="control-group checkbox">
+                                    <input
+                                        type="checkbox"
+                                        id={`feature-visible-${key}`}
+                                        checked={homeData.featureSections[key].isVisible ?? true}
+                                        onChange={e => handleDataChange(['featureSections', key, 'isVisible'], e.target.checked)}
+                                    />
+                                    <label htmlFor={`feature-visible-${key}`}>Exibir esta seção</label>
+                                </div>
+                                <div className="control-group">
+                                    <label>Ordem</label>
+                                    <input
+                                        type="number"
+                                        value={homeData.featureSections[key].order || ''}
+                                        onChange={e => handleDataChange(['featureSections', key, 'order'], Number(e.target.value))}
+                                        style={{ maxWidth: '80px' }}
+                                    />
+                                </div>
+                            </div>
                             <div className="form-group"><label>Título</label><input type="text" value={homeData.featureSections[key].title} onChange={e => handleDataChange(['featureSections', key, 'title'], e.target.value)} /></div>
                             <div className="form-group"><label>Texto</label><textarea value={homeData.featureSections[key].text} onChange={e => handleDataChange(['featureSections', key, 'text'], e.target.value)} rows="4" /></div>
                             <div className="form-group"><label>Texto do Botão</label><input type="text" value={homeData.featureSections[key].buttonText} onChange={e => handleDataChange(['featureSections', key, 'buttonText'], e.target.value)} /></div>
