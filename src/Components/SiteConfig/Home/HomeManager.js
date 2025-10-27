@@ -205,7 +205,9 @@ const HomeManager = () => {
             const newSlide = {
                 id: uuidv4(), type: 'image', src: '', link: '',
                 overlay: { show: true, title: '', subtitle: '', buttonText: '', buttonLink: '' },
-                duration: 5000, playUntilEnd: false,
+                duration: 5000,
+                playUntilEnd: false,
+                loopVideo: true, // NOVO: Adiciona a propriedade de loop por padrão
                 showArrows: true,
                 isVisible: true
             };
@@ -319,15 +321,27 @@ const HomeManager = () => {
                                     />
                                 </div>
                                 {slide.type === 'video' && (
-                                    <div className="control-group checkbox">
-                                        <input
-                                            type="checkbox"
-                                            id={`playUntilEnd-${slide.id}`}
-                                            checked={slide.playUntilEnd || false}
-                                            onChange={(e) => handleSlideChange(index, 'playUntilEnd', e.target.checked)}
-                                        />
-                                        <label htmlFor={`playUntilEnd-${slide.id}`}>Exibir vídeo até o final</label>
-                                    </div>
+                                    <>
+                                        <div className="control-group checkbox">
+                                            <input
+                                                type="checkbox"
+                                                id={`playUntilEnd-${slide.id}`}
+                                                checked={slide.playUntilEnd || false}
+                                                onChange={(e) => handleSlideChange(index, 'playUntilEnd', e.target.checked)}
+                                            />
+                                            <label htmlFor={`playUntilEnd-${slide.id}`}>Exibir vídeo até o final</label>
+                                        </div>
+                                        {/* NOVO CHECKBOX DE LOOP */}
+                                        <div className="control-group checkbox">
+                                            <input
+                                                type="checkbox"
+                                                id={`loopVideo-${slide.id}`}
+                                                checked={slide.loopVideo ?? false}
+                                                onChange={(e) => handleSlideChange(index, 'loopVideo', e.target.checked)}
+                                            />
+                                            <label htmlFor={`loopVideo-${slide.id}`}>Ficar em loop (repetir)</label>
+                                        </div>
+                                    </>
                                 )}
                                 <div className="control-group checkbox">
                                     <input
