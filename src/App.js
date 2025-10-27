@@ -48,6 +48,8 @@ import GemCashManager from "./Components/SiteConfig/GemCash/GemCashManager";
 import BlogAdminPage from "./Components/Ecommerce/BlogAdminPage/BlogAdminPage"; 
 import NotificationsPage from "./Components/Notifications/NotificationContainer";
 import Catalog from "./Components/Platform/Catalog/Catalog";
+import LeadsPage from "./Components/SiteConfig/Leads/LeadsPage";
+
 
 // --- RESOLVI O CONFLITO AQUI ---
 import SupportPage from "./Components/Support/SupportPage"; // Linha da branch-do-pedrinho
@@ -113,6 +115,7 @@ const AppContent = () => {
             <Route path="site/home" element={<HomeManager />} />
             <Route path="site/gemcash" element={<GemCashManager />} />
             <Route path="site/personalizadas" element={<PersonalizadasManager />} />
+            <Route path="site/leads" element={<LeadsPage />} />
           </Route>
         </Route>
 

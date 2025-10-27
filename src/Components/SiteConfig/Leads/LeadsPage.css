@@ -1,0 +1,211 @@
+.LeadsPage-container {
+    padding: 2rem;
+    background-color: #ffffff;
+}
+
+.LeadsPage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.LeadsPage-header h1 {
+    font-size: 2.2rem;
+    color: #212529;
+}
+
+.LeadsPage-filters-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.LeadsPage-search-input,
+.LeadsPage-status-select {
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.LeadsPage-search-input {
+    flex-grow: 1;
+}
+
+.LeadsPage-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.LeadsPage-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.LeadsPage-table th,
+.LeadsPage-table td {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.LeadsPage-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.LeadsPage-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.LeadsPage-table tbody tr {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.LeadsPage-table tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.LeadsPage-status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.LeadsPage-status-true { background-color: #198754; }
+.LeadsPage-status-false { background-color: #ffc107; color: #333;}
+
+.LeadsPage-actions-cell button {
+    margin-right: 0.5rem;
+}
+
+.LeadsPage-action-button {
+    border: none;
+    background: none;
+    padding: 6px;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+.LeadsPage-action-button:hover {
+    background-color: #e9ecef;
+}
+
+.LeadsPage-whatsapp-button { color: #25d366; }
+.LeadsPage-status-button.contacted { color: #dc3545; }
+.LeadsPage-status-button.uncontacted { color: #198754; }
+
+.LeadsPage-pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 0.5rem;
+}
+
+.LeadsPage-pagination-button {
+    padding: 8px 16px;
+    border: 1px solid #ced4da;
+    background-color: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    font-weight: 500;
+}
+
+.LeadsPage-pagination-button:hover:not(:disabled) {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.LeadsPage-pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- MODAL MELHORADO ---- */
+.LeadsPage-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); display: flex;
+    justify-content: center; align-items: center; z-index: 1050;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.LeadsPage-modal-content {
+    background: #fff; border-radius: 12px; width: 90%; max-width: 700px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.LeadsPage-modal-header {
+    padding: 1.5rem 2rem; border-bottom: 1px solid #dee2e6;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.LeadsPage-modal-header h2 { margin: 0; font-size: 1.5rem; }
+.LeadsPage-modal-close-button { background: none; border: none; font-size: 2rem; cursor: pointer; color: #6c757d; }
+.LeadsPage-modal-body { padding: 2rem; }
+.LeadsPage-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+.LeadsPage-info-item label { display: block; font-size: 0.8rem; color: #6c757d; font-weight: 600; margin-bottom: 0.25rem; text-transform: uppercase; }
+.LeadsPage-info-item p { margin: 0; font-size: 1rem; word-break: break-word; }
+
+/* <<< CORREÇÃO DO FOOTER E BOTÕES DO MODAL >>> */
+.LeadsPage-modal-footer {
+    padding: 1rem 1.5rem; /* Diminui o padding vertical e horizontal */
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between; /* Mantém um de cada lado */
+    align-items: center;
+    background-color: #f8f9fa;
+}
+
+.LeadsPage-modal-footer .actions-right {
+    display: flex;
+    gap: 0.75rem; /* Adiciona um espaço entre os botões da direita */
+}
+
+/* Ajusta o tamanho e o espaçamento interno dos botões */
+.LeadsPage-modal-action-button {
+    padding: 10px 18px; /* Diminui o padding horizontal */
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem; /* Diminui o tamanho da fonte */
+    transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+.LeadsPage-modal-action-button:hover {
+    filter: brightness(0.9);
+}
+.LeadsPage-modal-action-button:active {
+    transform: scale(0.98);
+}
+
+.LeadsPage-modal-whatsapp { background-color: #25d366; color: white; }
+.LeadsPage-modal-status { background-color: #0d6efd; color: white; }
+.LeadsPage-modal-delete { background-color: #dc3545; color: white; }
